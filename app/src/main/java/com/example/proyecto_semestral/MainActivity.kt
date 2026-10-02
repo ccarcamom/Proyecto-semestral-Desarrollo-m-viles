@@ -5,7 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.proyecto_semestral.ui.HomeScreen
+import com.example.proyecto_semestral.ui.screens.LoginScreen
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,7 +19,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ProyectoSemestralTheme {
-                HomeScreen()
+                var isLoggedIn by rememberSaveable { mutableStateOf(false) }
+
+                if (isLoggedIn) {
+                    HomeScreen()
+                } else {
+                    LoginScreen(
+                        onLoginSuccess = { isLoggedIn = true },
+                        onRegisterClick = { }
+                    )
+                }
             }
         }
     }
