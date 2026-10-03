@@ -51,7 +51,13 @@ fun PasswordTextField(
         trailingIcon = {
             IconButton(onClick = { onPasswordVisibilityChange(!passwordVisible) }) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    painter = painterResource(
+                        id = if (passwordVisible) {
+                            R.drawable.ic_visibility_off
+                        } else {
+                            R.drawable.ic_visibility
+                        }
+                    ),
                     contentDescription = if (passwordVisible) {
                         "Ocultar contraseña"
                     } else {
