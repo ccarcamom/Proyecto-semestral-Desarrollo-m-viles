@@ -7,7 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.example.proyecto_semestral.ui.HomeScreen
+import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
 
