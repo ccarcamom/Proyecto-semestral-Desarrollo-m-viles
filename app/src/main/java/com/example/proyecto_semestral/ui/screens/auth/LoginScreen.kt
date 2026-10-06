@@ -65,7 +65,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Tu próximA gran creación empieza aquí.",
+                text = "Tu próxima gran creación empieza aquí.",
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center

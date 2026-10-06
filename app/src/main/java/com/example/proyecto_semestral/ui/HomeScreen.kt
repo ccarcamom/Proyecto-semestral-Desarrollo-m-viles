@@ -26,7 +26,9 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onLogout: () -> Unit = {}
+) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -52,8 +54,8 @@ fun HomeScreen() {
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleLarge
             )
-            Button(onClick = { /*Acción futura*/ }) {
-                Text("Presioname")
+            Button(onClick = onLogout) {
+                Text("Cerrar sesion")
             }
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_background),
