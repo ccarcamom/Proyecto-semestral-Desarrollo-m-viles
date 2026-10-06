@@ -14,15 +14,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_semestral.viewmodel.FormularioViewModel
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.PasswordTextField
@@ -35,13 +33,8 @@ fun LoginScreen(
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var showErrors by rememberSaveable { mutableStateOf(false) }
-
-    val emailError = showErrors && !email.isValidEmail()
-    val passwordError = showErrors && password.isBlank()
+    val formularioViewModel: FormularioViewModel = viewModel(key = "login_formulario")
+    val uiState = formularioViewModel.uiState
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -83,38 +76,29 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             AppTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email,
+                onValueChange = formularioViewModel::onEmailChange,
                 label = "Correo electronico",
                 placeholder = "demo@mastermartini.cl",
-                isError = emailError,
-                supportingText = if (emailError) {
-                    "Ingresa un correo valido."
-                } else {
-                    null
-                }
+                isError = uiState.errors.email != null,
+                supportingText = uiState.errors.email
             )
 
             Spacer(modifier = Modifier.height(16.dp))
             PasswordTextField(
-                value = password,
-                onValueChange = { password = it },
-                isError = passwordError,
-                supportingText = if (passwordError) {
-                    "Ingresa tu contraseña."
-                } else {
-                    null
-                },
-                passwordVisible = passwordVisible,
-                onPasswordVisibilityChange = { passwordVisible = it }
+                value = uiState.password,
+                onValueChange = formularioViewModel::onPasswordChange,
+                isError = uiState.errors.password != null,
+                supportingText = uiState.errors.password,
+                passwordVisible = uiState.passwordVisible,
+                onPasswordVisibilityChange = formularioViewModel::onPasswordVisibilityChange
             )
 
             Spacer(modifier = Modifier.height(24.dp))
             PrimaryButton(
                 text = "Iniciar sesion",
                 onClick = {
-                    showErrors = true
-                    if (email.isValidEmail() && password.isNotBlank()) {
+                    if (formularioViewModel.validateLogin()) {
                         onLoginSuccess()
                     }
                 }
@@ -133,10 +117,6 @@ fun LoginScreen(
             }
         }
     }
-}
-
-private fun String.isValidEmail(): Boolean {
-    return isNotBlank() && contains("@") && substringAfter("@").contains(".")
 }
 
 @Preview(showBackground = true)
