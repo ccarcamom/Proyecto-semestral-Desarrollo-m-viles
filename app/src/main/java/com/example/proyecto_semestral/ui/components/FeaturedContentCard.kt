@@ -139,7 +139,7 @@ private fun FeaturedContentCardPreview() {
             category = "Recetas / Galletas",
             title = "Galletas con chips de chocolate",
             duration = "35 min",
-            image = painterResource(R.drawable.ic_launcher_background),
+            image = painterResource(R.drawable.galletas),
             onClick = {},
             modifier = Modifier.padding(24.dp)
         )

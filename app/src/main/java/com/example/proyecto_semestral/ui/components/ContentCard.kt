@@ -150,7 +150,7 @@ private fun ContentCardPreview() {
             eyebrow = "Receta",
             title = "Galletas con chips de chocolate",
             metadata = "Galletas • 35 min",
-            image = painterResource(id = R.drawable.ic_launcher_background),
+            image = painterResource(id = R.drawable.galletas),
             onClick = {},
             modifier = Modifier.padding(24.dp)
         )

@@ -125,7 +125,7 @@ fun HomeScreen(
                 category = "Recetas / Galletas",
                 title = "Galletas con chips de chocolate",
                 duration = "35 min",
-                image = painterResource(R.drawable.ic_launcher_background),
+                image = painterResource(R.drawable.galletas),
                 onClick = { selectedBottomItem = BottomBarItem.Explore }
             )
 
@@ -158,7 +158,7 @@ fun HomeScreen(
                 eyebrow = "Curso",
                 title = "Fundamentos de chocolatería",
                 metadata = "Chocolatería · 30 min",
-                image = painterResource(R.drawable.ic_launcher_background),
+                image = painterResource(R.drawable.chocolate),
                 onClick = { selectedBottomItem = BottomBarItem.Explore }
             )
             Spacer(modifier = Modifier.height(14.dp))
@@ -166,7 +166,7 @@ fun HomeScreen(
                 eyebrow = "Curso",
                 title = "Introducción a la bollería",
                 metadata = "Bollería · 35 min",
-                image = painterResource(R.drawable.ic_launcher_background),
+                image = painterResource(R.drawable.bolleria),
                 onClick = { selectedBottomItem = BottomBarItem.Explore }
             )
             Spacer(modifier = Modifier.height(24.dp))
