@@ -11,7 +11,15 @@ class RouterGuard(context: Context) {
     )
 
     fun canAccessDashboard(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED, false)
+        val isLoggedIn = sharedPreferences.getBoolean(KEY_IS_LOGGED, false)
+        val userName = getUserName()
+
+        if (isLoggedIn && userName.isBlank()) {
+            logout()
+            return false
+        }
+
+        return isLoggedIn && userName.isNotBlank()
     }
 
     fun saveSession(isLoggedIn: Boolean) {
