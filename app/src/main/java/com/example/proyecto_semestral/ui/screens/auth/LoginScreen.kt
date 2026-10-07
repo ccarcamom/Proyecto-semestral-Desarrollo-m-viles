@@ -29,7 +29,7 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (email: String, password: String) -> Boolean,
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -99,7 +99,10 @@ fun LoginScreen(
                 text = "Iniciar sesion",
                 onClick = {
                     if (formularioViewModel.validateLogin()) {
-                        onLoginSuccess()
+                        val isLoggedIn = onLoginSuccess(uiState.email, uiState.password)
+                        if (!isLoggedIn) {
+                            formularioViewModel.showLoginError()
+                        }
                     }
                 }
             )
@@ -124,7 +127,7 @@ fun LoginScreen(
 private fun LoginScreenPreview() {
     ProyectoSemestralTheme {
         LoginScreen(
-            onLoginSuccess = {},
+            onLoginSuccess = { _, _ -> true },
             onRegisterClick = {}
         )
     }

@@ -29,7 +29,7 @@ import com.example.proyecto_semestral.viewmodel.FormularioViewModel
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (name: String, email: String, password: String) -> Boolean,
     onLoginClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -115,7 +115,14 @@ fun RegisterScreen(
                 text = "Crear cuenta",
                 onClick = {
                     if (formularioViewModel.validateRegister()) {
-                        onRegisterSuccess()
+                        val isRegistered = onRegisterSuccess(
+                            uiState.name,
+                            uiState.email,
+                            uiState.password
+                        )
+                        if (!isRegistered) {
+                            formularioViewModel.showEmailAlreadyRegisteredError()
+                        }
                     }
                 }
             )
@@ -140,7 +147,7 @@ fun RegisterScreen(
 private fun RegisterScreenPreview() {
     ProyectoSemestralTheme {
         RegisterScreen(
-            onRegisterSuccess = {},
+            onRegisterSuccess = { _, _, _ -> true },
             onLoginClick = {}
         )
     }

@@ -47,6 +47,7 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @Composable
 fun HomeScreen(
+    userName: String,
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -84,7 +85,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "Hola, Andrea.",
+                text = "Hola, $userName.",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 38.sp,
@@ -287,6 +288,6 @@ private fun SearchGlyph(color: Color, modifier: Modifier = Modifier) {
 @Composable
 private fun HomeScreenPreview() {
     ProyectoSemestralTheme {
-        HomeScreen()
+        HomeScreen(userName = "Andrea")
     }
 }

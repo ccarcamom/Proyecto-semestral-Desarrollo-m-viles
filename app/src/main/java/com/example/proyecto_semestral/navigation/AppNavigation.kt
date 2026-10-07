@@ -24,21 +24,33 @@ fun AppNavigation() {
             }
         )
     }
+    var currentUserName by rememberSaveable {
+        mutableStateOf(routerGuard.getUserName().ifBlank { "Usuario" })
+    }
 
     when (currentRoute) {
         AppRoute.Home -> {
             if (routerGuard.canAccessDashboard()) {
                 HomeScreen(
+                    userName = currentUserName,
                     onLogout = {
                         routerGuard.logout()
+                        currentUserName = "Usuario"
                         currentRoute = AppRoute.Login
                     }
                 )
             } else {
                 LoginScreen(
-                    onLoginSuccess = {
-                        routerGuard.saveSession(true)
-                        currentRoute = AppRoute.Home
+                    onLoginSuccess = { email, password ->
+                        val user = UserStore.findUser(email, password)
+                        if (user != null) {
+                            currentUserName = user.name
+                            routerGuard.saveSession(true, user.name)
+                            currentRoute = AppRoute.Home
+                            true
+                        } else {
+                            false
+                        }
                     },
                     onRegisterClick = { currentRoute = AppRoute.Register }
                 )
@@ -46,17 +58,29 @@ fun AppNavigation() {
         }
 
         AppRoute.Register -> RegisterScreen(
-            onRegisterSuccess = {
-                routerGuard.saveSession(true)
-                currentRoute = AppRoute.Home
+            onRegisterSuccess = { name, email, password ->
+                val isRegistered = UserStore.registerUser(name, email, password)
+                if (isRegistered) {
+                    currentUserName = name.trim()
+                    routerGuard.saveSession(true, currentUserName)
+                    currentRoute = AppRoute.Home
+                }
+                isRegistered
             },
             onLoginClick = { currentRoute = AppRoute.Login }
         )
 
         AppRoute.Login -> LoginScreen(
-            onLoginSuccess = {
-                routerGuard.saveSession(true)
-                currentRoute = AppRoute.Home
+            onLoginSuccess = { email, password ->
+                val user = UserStore.findUser(email, password)
+                if (user != null) {
+                    currentUserName = user.name
+                    routerGuard.saveSession(true, user.name)
+                    currentRoute = AppRoute.Home
+                    true
+                } else {
+                    false
+                }
             },
             onRegisterClick = { currentRoute = AppRoute.Register }
         )
