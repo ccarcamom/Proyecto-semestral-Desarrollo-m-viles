@@ -48,18 +48,17 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 @Composable
 fun HomeScreen(
     userName: String,
+    onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedBottomItem by rememberSaveable { mutableStateOf(BottomBarItem.Home) }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppBottomBar(
-                selectedItem = selectedBottomItem,
-                onItemSelected = { selectedBottomItem = it }
+                selectedItem = BottomBarItem.Home,
+                onItemSelected = onBottomBarItemSelected
             )
         }
     ) { innerPadding ->
@@ -127,7 +126,7 @@ fun HomeScreen(
                 title = "Galletas con chips de chocolate",
                 duration = "35 min",
                 image = painterResource(R.drawable.galletas),
-                onClick = { selectedBottomItem = BottomBarItem.Explore }
+                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -150,7 +149,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    modifier = Modifier.clickable { selectedBottomItem = BottomBarItem.Explore }
+                    modifier = Modifier.clickable { onBottomBarItemSelected(BottomBarItem.Explore) }
                 )
             }
 
@@ -160,7 +159,7 @@ fun HomeScreen(
                 title = "Fundamentos de chocolatería",
                 metadata = "Chocolatería · 30 min",
                 image = painterResource(R.drawable.chocolate),
-                onClick = { selectedBottomItem = BottomBarItem.Explore }
+                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
             )
             Spacer(modifier = Modifier.height(14.dp))
             ContentCard(
@@ -168,7 +167,7 @@ fun HomeScreen(
                 title = "Introducción a la bollería",
                 metadata = "Bollería · 35 min",
                 image = painterResource(R.drawable.bolleria),
-                onClick = { selectedBottomItem = BottomBarItem.Explore }
+                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
             )
             Spacer(modifier = Modifier.height(24.dp))
         }

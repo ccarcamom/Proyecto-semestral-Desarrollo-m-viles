@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.example.proyecto_semestral.ui.components.BottomBarItem
+import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
@@ -33,6 +35,11 @@ fun AppNavigation() {
             if (routerGuard.canAccessDashboard()) {
                 HomeScreen(
                     userName = currentUserName,
+                    onBottomBarItemSelected = { item ->
+                        if (item == BottomBarItem.Explore) {
+                            currentRoute = AppRoute.Explore
+                        }
+                    },
                     onLogout = {
                         routerGuard.logout()
                         currentUserName = "Usuario"
@@ -47,6 +54,33 @@ fun AppNavigation() {
                             currentUserName = user.name
                             routerGuard.saveSession(true, user.name)
                             currentRoute = AppRoute.Home
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                    onRegisterClick = { currentRoute = AppRoute.Register }
+                )
+            }
+        }
+
+        AppRoute.Explore -> {
+            if (routerGuard.canAccessDashboard()) {
+                ExploreScreen(
+                    onBottomBarItemSelected = { item ->
+                        if (item == BottomBarItem.Home) {
+                            currentRoute = AppRoute.Home
+                        }
+                    }
+                )
+            } else {
+                LoginScreen(
+                    onLoginSuccess = { email, password ->
+                        val user = UserStore.findUser(email, password)
+                        if (user != null) {
+                            currentUserName = user.name
+                            routerGuard.saveSession(true, user.name)
+                            currentRoute = AppRoute.Explore
                             true
                         } else {
                             false
@@ -90,5 +124,6 @@ fun AppNavigation() {
 private enum class AppRoute {
     Login,
     Register,
-    Home
+    Home,
+    Explore
 }
