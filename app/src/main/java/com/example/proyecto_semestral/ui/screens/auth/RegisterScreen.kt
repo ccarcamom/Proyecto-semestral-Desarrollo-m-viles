@@ -14,6 +14,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -22,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BrandLogo
+import com.example.proyecto_semestral.ui.components.CheckBox
 import com.example.proyecto_semestral.ui.components.PasswordTextField
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
@@ -35,6 +41,8 @@ fun RegisterScreen(
 ) {
     val formularioViewModel: FormularioViewModel = viewModel(key = "register_formulario")
     val uiState = formularioViewModel.uiState
+    var acceptTerms by rememberSaveable { mutableStateOf(false) }
+    var termsError by remember { mutableStateOf<String?>(null) }
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -110,11 +118,23 @@ fun RegisterScreen(
                 onPasswordVisibilityChange = formularioViewModel::onConfirmPasswordVisibilityChange
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+            CheckBox(
+                valor = acceptTerms,
+                onChecked = {
+                    acceptTerms = it
+                    termsError = null
+                },
+                error = termsError
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
             PrimaryButton(
                 text = "Crear cuenta",
                 onClick = {
-                    if (formularioViewModel.validateRegister()) {
+                    if (!acceptTerms) {
+                        termsError = "Debes aceptar los términos y condiciones."
+                    } else if (formularioViewModel.validateRegister()) {
                         onRegisterSuccess()
                     }
                 }
