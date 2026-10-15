@@ -1,7 +1,8 @@
 package com.example.proyecto_semestral.ui.screens.explore
 
+import androidx.compose.foundation.text.BasicTextField
+
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -175,7 +176,7 @@ private fun ExploreSearchField(
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
-        androidx.compose.foundation.text.BasicTextField(
+        BasicTextField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
