@@ -14,6 +14,7 @@ import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
 import com.example.proyecto_semestral.ui.screens.recipe.RecipeDetailScreen
+import com.example.proyecto_semestral.ui.screens.video.VideoScreen
 
 @Composable
 fun AppNavigation() {
@@ -34,6 +35,8 @@ fun AppNavigation() {
     var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
     var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
     var selectedRecipeId by rememberSaveable { mutableStateOf("") }
+    var selectedVideoId by rememberSaveable { mutableStateOf("") }
+    var videoReturnRoute by rememberSaveable { mutableStateOf(AppRoute.Explore) }
 
     when (currentRoute) {
         AppRoute.Home -> {
@@ -84,6 +87,11 @@ fun AppNavigation() {
                     onRecipeClick = { recipeId ->
                         selectedRecipeId = recipeId
                         currentRoute = AppRoute.Recipe
+                    },
+                    onVideoClick = { videoId ->
+                        selectedVideoId = videoId
+                        videoReturnRoute = AppRoute.Explore
+                        currentRoute = AppRoute.Video
                     }
                 )
             } else {
@@ -135,7 +143,18 @@ fun AppNavigation() {
         AppRoute.Recipe -> RecipeDetailScreen(
             recipeId = selectedRecipeId,
             onBack = { currentRoute = AppRoute.Explore },
-            onRelatedVideoClick = { }
+            onRelatedVideoClick = { videoId ->
+                selectedVideoId = videoId
+                videoReturnRoute = AppRoute.Recipe
+                currentRoute = AppRoute.Video
+            }
+        )
+
+        AppRoute.Video -> VideoScreen(
+            videoId = selectedVideoId,
+            onBack = { currentRoute = videoReturnRoute },
+            onNextLesson = { },
+            onReturnToCourse = { currentRoute = AppRoute.Explore }
         )
     }
 }
@@ -145,5 +164,6 @@ private enum class AppRoute {
     Register,
     Home,
     Explore,
-    Recipe
+    Recipe,
+    Video
 }
