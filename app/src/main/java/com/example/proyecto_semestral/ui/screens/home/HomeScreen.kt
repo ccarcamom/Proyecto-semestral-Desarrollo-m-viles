@@ -1,6 +1,7 @@
 package com.example.proyecto_semestral.ui.screens.home
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -81,10 +82,10 @@ fun HomeScreen(
             ) {
                 BrandLogo(modifier = Modifier.weight(1f))
                 TextButton(onClick = { showLogoutDialog = true }) {
-                    Text(
-                        text = "Cerrar sesión",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelLarge
+                    Image(
+                        painter = painterResource(R.drawable.logout),
+                        contentDescription = "Cerrar sesión",
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
