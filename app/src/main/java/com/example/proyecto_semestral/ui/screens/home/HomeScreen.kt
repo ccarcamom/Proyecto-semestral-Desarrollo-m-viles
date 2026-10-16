@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.ContentCard
+import com.example.proyecto_semestral.ui.components.ConfirmationDialog
 import com.example.proyecto_semestral.ui.components.FeaturedContentCard
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
@@ -52,6 +54,8 @@ fun HomeScreen(
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -70,7 +74,20 @@ fun HomeScreen(
                 .padding(horizontal = 22.dp)
         ) {
             Spacer(modifier = Modifier.height(14.dp))
-            BrandLogo()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BrandLogo(modifier = Modifier.weight(1f))
+                TextButton(onClick = { showLogoutDialog = true }) {
+                    Text(
+                        text = "Cerrar sesión",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(26.dp))
             Text(
@@ -171,6 +188,16 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (showLogoutDialog) {
+        ConfirmationDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            }
+        )
     }
 }
 
