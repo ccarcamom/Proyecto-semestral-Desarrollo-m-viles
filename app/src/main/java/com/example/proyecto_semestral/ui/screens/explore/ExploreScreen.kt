@@ -24,7 +24,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,11 +50,13 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 @Composable
 fun ExploreScreen(
     onBottomBarItemSelected: (BottomBarItem) -> Unit,
+    selectedFilter: ContentFilter,
+    searchQuery: String,
+    onFilterSelected: (ContentFilter) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onRecipeClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-
     val visibleItems = exploreItems.filter { item ->
         val matchesFilter = when (selectedFilter) {
             ContentFilter.All -> true
@@ -111,13 +112,13 @@ fun ExploreScreen(
             Spacer(modifier = Modifier.height(24.dp))
             ExploreSearchField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it }
+                onValueChange = onSearchQueryChange
             )
 
             Spacer(modifier = Modifier.height(18.dp))
             ContentFilters(
                 selectedFilter = selectedFilter,
-                onFilterSelected = { selectedFilter = it }
+                onFilterSelected = onFilterSelected
             )
 
             Spacer(modifier = Modifier.height(22.dp))
@@ -140,7 +141,11 @@ fun ExploreScreen(
             visibleItems.forEachIndexed { index, item ->
                 ExploreContentRow(
                     item = item,
-                    onClick = {}
+                    onClick = {
+                        if (item.type == ContentFilter.Recipes) {
+                            onRecipeClick(item.id)
+                        }
+                    }
                 )
                 if (index != visibleItems.lastIndex) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
@@ -246,20 +251,34 @@ private fun ChevronDownIcon(color: Color, modifier: Modifier = Modifier) {
 }
 
 private val exploreItems = listOf(
-    ExploreContent("RECETA", "Galletas con chips de chocolate", "Galletas · 35 min", ContentFilter.Recipes, R.drawable.galletas),
-    ExploreContent("RECETA", "Empanadas de queso al horno", "Empanadas · 50 min", ContentFilter.Recipes, R.drawable.bolleria),
-    ExploreContent("RECETA", "Postre de chocolate en vaso", "Chocolatería · 25 min + frío", ContentFilter.Recipes, R.drawable.chocolate),
-    ExploreContent("VIDEO TÉCNICO", "Introducción al templado de chocolate", "Chocolatería · 8 min", ContentFilter.Videos, R.drawable.chocolate),
-    ExploreContent("VIDEO TÉCNICO", "Técnica básica de laminado", "Masas de hoja · 10 min", ContentFilter.Videos, R.drawable.bolleria),
-    ExploreContent("VIDEO TÉCNICO", "Decoración de pastelería de vitrina", "Pastelería de vitrina · 7 min", ContentFilter.Videos, R.drawable.galletas),
-    ExploreContent("CURSO", "Fundamentos de chocolatería", "Chocolatería · 30 min", ContentFilter.Courses, R.drawable.chocolate),
-    ExploreContent("CURSO", "Introducción a la bollería", "Bollería · 35 min", ContentFilter.Courses, R.drawable.bolleria)
+    ExploreContent("RECETA", "Galletas con chips de chocolate", "Galletas · 35 min", ContentFilter.Recipes, R.drawable.galletas, "galletas-chips-chocolate"),
+    ExploreContent("RECETA", "Empanadas de queso al horno", "Empanadas · 50 min", ContentFilter.Recipes, R.drawable.bolleria, "empanadas-queso-horno"),
+    ExploreContent("RECETA", "Postre de chocolate en vaso", "Chocolatería · 25 min + frío", ContentFilter.Recipes, R.drawable.chocolate, "postre-chocolate-vaso"),
+    ExploreContent("VIDEO TÉCNICO", "Introducción al templado de chocolate", "Chocolatería · 8 min", ContentFilter.Videos, R.drawable.chocolate, "video-templado-chocolate"),
+    ExploreContent("VIDEO TÉCNICO", "Técnica básica de laminado", "Masas de hoja · 10 min", ContentFilter.Videos, R.drawable.bolleria, "video-laminado"),
+    ExploreContent("VIDEO TÉCNICO", "Decoración de pastelería de vitrina", "Pastelería de vitrina · 7 min", ContentFilter.Videos, R.drawable.galletas, "video-decoracion-vitrina"),
+    ExploreContent("CURSO", "Fundamentos de chocolatería", "Chocolatería · 30 min", ContentFilter.Courses, R.drawable.chocolate, "curso-chocolateria"),
+    ExploreContent("CURSO", "Introducción a la bollería", "Bollería · 35 min", ContentFilter.Courses, R.drawable.bolleria, "curso-bolleria")
 )
 
 @Preview(showBackground = true)
 @Composable
 private fun ExploreScreenPreview() {
-    ProyectoSemestralTheme {
-        ExploreScreen(onBottomBarItemSelected = {})
+        ProyectoSemestralTheme {
+        var selectedFilter by rememberSaveable {
+            androidx.compose.runtime.mutableStateOf(ContentFilter.All)
+        }
+        var searchQuery by rememberSaveable {
+            androidx.compose.runtime.mutableStateOf("")
+        }
+
+        ExploreScreen(
+            onBottomBarItemSelected = {},
+            selectedFilter = selectedFilter,
+            searchQuery = searchQuery,
+            onFilterSelected = { selectedFilter = it },
+            onSearchQueryChange = { searchQuery = it },
+            onRecipeClick = {}
+        )
     }
 }
