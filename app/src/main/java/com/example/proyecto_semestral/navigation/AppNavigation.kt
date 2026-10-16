@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.ContentFilter
+import com.example.proyecto_semestral.ui.screens.contact.ContactScreen
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
@@ -44,8 +45,10 @@ fun AppNavigation() {
                 HomeScreen(
                     userName = currentUserName,
                     onBottomBarItemSelected = { item ->
-                        if (item == BottomBarItem.Explore) {
-                            currentRoute = AppRoute.Explore
+                        when (item) {
+                            BottomBarItem.Explore -> currentRoute = AppRoute.Explore
+                            BottomBarItem.Contact -> currentRoute = AppRoute.Contact
+                            else -> Unit
                         }
                     },
                     onLogout = {
@@ -76,8 +79,10 @@ fun AppNavigation() {
             if (routerGuard.canAccessDashboard()) {
                 ExploreScreen(
                     onBottomBarItemSelected = { item ->
-                        if (item == BottomBarItem.Home) {
-                            currentRoute = AppRoute.Home
+                        when (item) {
+                            BottomBarItem.Home -> currentRoute = AppRoute.Home
+                            BottomBarItem.Contact -> currentRoute = AppRoute.Contact
+                            else -> Unit
                         }
                     },
                     selectedFilter = selectedExploreFilter,
@@ -156,6 +161,23 @@ fun AppNavigation() {
             onNextLesson = { },
             onReturnToCourse = { currentRoute = AppRoute.Explore }
         )
+
+        AppRoute.Contact -> {
+            if (routerGuard.canAccessDashboard()) {
+                ContactScreen(
+                    initialName = currentUserName,
+                    onBottomBarItemSelected = { item ->
+                        when (item) {
+                            BottomBarItem.Home -> currentRoute = AppRoute.Home
+                            BottomBarItem.Explore -> currentRoute = AppRoute.Explore
+                            else -> Unit
+                        }
+                    }
+                )
+            } else {
+                currentRoute = AppRoute.Login
+            }
+        }
     }
 }
 
@@ -165,5 +187,6 @@ private enum class AppRoute {
     Home,
     Explore,
     Recipe,
-    Video
+    Video,
+    Contact
 }
