@@ -8,10 +8,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.example.proyecto_semestral.ui.components.BottomBarItem
+import com.example.proyecto_semestral.ui.components.ContentFilter
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
+import com.example.proyecto_semestral.ui.screens.recipe.RecipeDetailScreen
+import com.example.proyecto_semestral.ui.screens.video.VideoScreen
 
 @Composable
 fun AppNavigation() {
@@ -29,6 +32,11 @@ fun AppNavigation() {
     var currentUserName by rememberSaveable {
         mutableStateOf(routerGuard.getUserName().ifBlank { "Usuario" })
     }
+    var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
+    var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
+    var selectedRecipeId by rememberSaveable { mutableStateOf("") }
+    var selectedVideoId by rememberSaveable { mutableStateOf("") }
+    var videoReturnRoute by rememberSaveable { mutableStateOf(AppRoute.Explore) }
 
     when (currentRoute) {
         AppRoute.Home -> {
@@ -71,6 +79,19 @@ fun AppNavigation() {
                         if (item == BottomBarItem.Home) {
                             currentRoute = AppRoute.Home
                         }
+                    },
+                    selectedFilter = selectedExploreFilter,
+                    searchQuery = exploreSearchQuery,
+                    onFilterSelected = { selectedExploreFilter = it },
+                    onSearchQueryChange = { exploreSearchQuery = it },
+                    onRecipeClick = { recipeId ->
+                        selectedRecipeId = recipeId
+                        currentRoute = AppRoute.Recipe
+                    },
+                    onVideoClick = { videoId ->
+                        selectedVideoId = videoId
+                        videoReturnRoute = AppRoute.Explore
+                        currentRoute = AppRoute.Video
                     }
                 )
             } else {
@@ -118,6 +139,23 @@ fun AppNavigation() {
             },
             onRegisterClick = { currentRoute = AppRoute.Register }
         )
+
+        AppRoute.Recipe -> RecipeDetailScreen(
+            recipeId = selectedRecipeId,
+            onBack = { currentRoute = AppRoute.Explore },
+            onRelatedVideoClick = { videoId ->
+                selectedVideoId = videoId
+                videoReturnRoute = AppRoute.Recipe
+                currentRoute = AppRoute.Video
+            }
+        )
+
+        AppRoute.Video -> VideoScreen(
+            videoId = selectedVideoId,
+            onBack = { currentRoute = videoReturnRoute },
+            onNextLesson = { },
+            onReturnToCourse = { currentRoute = AppRoute.Explore }
+        )
     }
 }
 
@@ -125,5 +163,7 @@ private enum class AppRoute {
     Login,
     Register,
     Home,
-    Explore
+    Explore,
+    Recipe,
+    Video
 }
