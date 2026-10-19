@@ -1,6 +1,7 @@
 package com.example.proyecto_semestral.ui.screens.home
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,9 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +37,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,23 +48,29 @@ import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.ContentCard
+import com.example.proyecto_semestral.ui.components.ConfirmationDialog
 import com.example.proyecto_semestral.ui.components.FeaturedContentCard
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @Composable
 fun HomeScreen(
+    userName: String,
+    onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
+    onSearch: (String) -> Unit = {},
+    onCourseClick: (String) -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedBottomItem by rememberSaveable { mutableStateOf(BottomBarItem.Home) }
+    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    var homeSearchQuery by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppBottomBar(
-                selectedItem = selectedBottomItem,
-                onItemSelected = { selectedBottomItem = it }
+                selectedItem = BottomBarItem.Home,
+                onItemSelected = onBottomBarItemSelected
             )
         }
     ) { innerPadding ->
@@ -70,7 +82,20 @@ fun HomeScreen(
                 .padding(horizontal = 22.dp)
         ) {
             Spacer(modifier = Modifier.height(14.dp))
-            BrandLogo()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BrandLogo(modifier = Modifier.weight(1f))
+                TextButton(onClick = { showLogoutDialog = true }) {
+                    Image(
+                        painter = painterResource(R.drawable.logout),
+                        contentDescription = "Cerrar sesión",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(26.dp))
             Text(
@@ -84,7 +109,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "Hola, Andrea.",
+                text = "Hola, $userName.",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 38.sp,
@@ -100,7 +125,11 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            HomeSearchField()
+            HomeSearchField(
+                value = homeSearchQuery,
+                onValueChange = { homeSearchQuery = it },
+                onSearch = { onSearch(homeSearchQuery) }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
             Row(
@@ -126,7 +155,7 @@ fun HomeScreen(
                 title = "Galletas con chips de chocolate",
                 duration = "35 min",
                 image = painterResource(R.drawable.galletas),
-                onClick = { selectedBottomItem = BottomBarItem.Explore }
+                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -149,7 +178,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    modifier = Modifier.clickable { selectedBottomItem = BottomBarItem.Explore }
+                    modifier = Modifier.clickable { onBottomBarItemSelected(BottomBarItem.Explore) }
                 )
             }
 
@@ -159,7 +188,7 @@ fun HomeScreen(
                 title = "Fundamentos de chocolatería",
                 metadata = "Chocolatería · 30 min",
                 image = painterResource(R.drawable.chocolate),
-                onClick = { selectedBottomItem = BottomBarItem.Explore }
+                onClick = { onCourseClick("curso-chocolateria") }
             )
             Spacer(modifier = Modifier.height(14.dp))
             ContentCard(
@@ -167,15 +196,29 @@ fun HomeScreen(
                 title = "Introducción a la bollería",
                 metadata = "Bollería · 35 min",
                 image = painterResource(R.drawable.bolleria),
-                onClick = { selectedBottomItem = BottomBarItem.Explore }
+                onClick = { onCourseClick("curso-bolleria") }
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+
+    if (showLogoutDialog) {
+        ConfirmationDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+            }
+        )
+    }
 }
 
 @Composable
-private fun HomeSearchField() {
+private fun HomeSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -189,19 +232,37 @@ private fun HomeSearchField() {
                 color = MaterialTheme.colorScheme.outline,
                 shape = RoundedCornerShape(18.dp)
             )
-            .clickable { }
             .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SearchGlyph(
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(24.dp)
+                .clickable(onClick = onSearch)
         )
         Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = "Busca una receta o una técnica",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 18.sp
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+            modifier = Modifier.weight(1f),
+            decorationBox = { innerTextField ->
+                if (value.isBlank()) {
+                    Text(
+                        text = "Busca una receta o una técnica",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+                    )
+                }
+                innerTextField()
+            }
         )
     }
 }
@@ -287,6 +348,6 @@ private fun SearchGlyph(color: Color, modifier: Modifier = Modifier) {
 @Composable
 private fun HomeScreenPreview() {
     ProyectoSemestralTheme {
-        HomeScreen()
+        HomeScreen(userName = "Andrea")
     }
 }

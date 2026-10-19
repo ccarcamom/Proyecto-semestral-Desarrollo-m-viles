@@ -18,7 +18,7 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 fun AppTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
+    label: String? = null,
     modifier: Modifier = Modifier,
     placeholder: String? = null,
     enabled: Boolean = true,
@@ -34,7 +34,7 @@ fun AppTextField(
             .heightIn(min = 56.dp),
         enabled = enabled,
         isError = isError,
-        label = { Text(text = label) },
+        label = label?.let { text -> { Text(text = text) } },
         placeholder = placeholder?.let { text ->
             { Text(text = text) }
         },

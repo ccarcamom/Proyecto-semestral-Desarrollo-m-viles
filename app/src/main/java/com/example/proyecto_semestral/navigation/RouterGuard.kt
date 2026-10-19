@@ -11,11 +11,42 @@ class RouterGuard(context: Context) {
     )
 
     fun canAccessDashboard(): Boolean {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED, false)
+        val isLoggedIn = sharedPreferences.getBoolean(KEY_IS_LOGGED, false)
+        val userName = getUserName()
+
+        if (isLoggedIn && userName.isBlank()) {
+            logout()
+            return false
+        }
+
+        return isLoggedIn && userName.isNotBlank()
     }
 
     fun saveSession(isLoggedIn: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_IS_LOGGED, isLoggedIn).apply()
+    }
+
+    fun saveSession(isLoggedIn: Boolean, userName: String) {
+        sharedPreferences.edit()
+            .putBoolean(KEY_IS_LOGGED, isLoggedIn)
+            .putString(KEY_USER_NAME, userName)
+            .apply()
+    }
+
+    fun saveSession(isLoggedIn: Boolean, userName: String, userEmail: String) {
+        sharedPreferences.edit()
+            .putBoolean(KEY_IS_LOGGED, isLoggedIn)
+            .putString(KEY_USER_NAME, userName)
+            .putString(KEY_USER_EMAIL, userEmail)
+            .apply()
+    }
+
+    fun getUserName(): String {
+        return sharedPreferences.getString(KEY_USER_NAME, null).orEmpty()
+    }
+
+    fun getUserEmail(): String {
+        return sharedPreferences.getString(KEY_USER_EMAIL, null).orEmpty()
     }
 
     fun logout() {
@@ -25,5 +56,7 @@ class RouterGuard(context: Context) {
     private companion object {
         const val PREFS_NAME = "MikrotikPrefs"
         const val KEY_IS_LOGGED = "is_logged_in"
+        const val KEY_USER_NAME = "user_name"
+        const val KEY_USER_EMAIL = "user_email"
     }
 }

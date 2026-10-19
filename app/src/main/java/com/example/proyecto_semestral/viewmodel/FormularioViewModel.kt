@@ -51,6 +51,12 @@ class FormularioViewModel : ViewModel() {
         return errors.email == null && errors.password == null
     }
 
+    fun showLoginError() {
+        uiState = uiState.copy(
+            errors = uiState.errors.copy(password = "Correo o contraseña incorrectos.")
+        )
+    }
+
     fun validateRegister(): Boolean {
         val errors = FormularioErrores(
             name = if (uiState.name.isNotBlank()) null else "Ingresa tu nombre.",
@@ -65,6 +71,12 @@ class FormularioViewModel : ViewModel() {
         uiState = uiState.copy(errors = errors)
         return errors.name == null && errors.email == null &&
             errors.password == null && errors.confirmPassword == null
+    }
+
+    fun showEmailAlreadyRegisteredError() {
+        uiState = uiState.copy(
+            errors = uiState.errors.copy(email = "Este correo ya está registrado.")
+        )
     }
 
     private fun String.isValidEmail(): Boolean {

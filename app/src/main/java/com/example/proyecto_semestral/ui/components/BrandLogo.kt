@@ -23,7 +23,8 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 fun BrandLogo(
     @DrawableRes logoResId: Int = R.drawable.logo,
     modifier: Modifier = Modifier,
-    contentDescription: String = "Logo Master Martini"
+    contentDescription: String = "Logo Master Martini",
+    tagline: String = "APRENDE - CREA - CRECE"
 ) {
     Row(
         modifier = modifier
@@ -44,7 +45,7 @@ fun BrandLogo(
         )
 
         Text(
-            text = "APRENDE - CREA - CRECE",
+            text = tagline,
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleMedium
         )
