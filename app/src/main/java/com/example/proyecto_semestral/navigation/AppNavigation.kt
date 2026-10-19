@@ -12,6 +12,7 @@ import com.example.proyecto_semestral.ui.components.ContentFilter
 import com.example.proyecto_semestral.ui.screens.contact.ContactScreen
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
+import com.example.proyecto_semestral.ui.screens.profile.ProfileScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
 import com.example.proyecto_semestral.ui.screens.recipe.RecipeDetailScreen
@@ -33,6 +34,9 @@ fun AppNavigation() {
     var currentUserName by rememberSaveable {
         mutableStateOf(routerGuard.getUserName().ifBlank { "Usuario" })
     }
+    var currentUserEmail by rememberSaveable {
+        mutableStateOf(routerGuard.getUserEmail())
+    }
     var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
     var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
     var selectedRecipeId by rememberSaveable { mutableStateOf("") }
@@ -48,12 +52,14 @@ fun AppNavigation() {
                         when (item) {
                             BottomBarItem.Explore -> currentRoute = AppRoute.Explore
                             BottomBarItem.Contact -> currentRoute = AppRoute.Contact
+                            BottomBarItem.Profile -> currentRoute = AppRoute.Profile
                             else -> Unit
                         }
                     },
                     onLogout = {
                         routerGuard.logout()
                         currentUserName = "Usuario"
+                        currentUserEmail = ""
                         currentRoute = AppRoute.Login
                     }
                 )
@@ -63,7 +69,8 @@ fun AppNavigation() {
                         val user = UserStore.findUser(email, password)
                         if (user != null) {
                             currentUserName = user.name
-                            routerGuard.saveSession(true, user.name)
+                            currentUserEmail = user.email
+                            routerGuard.saveSession(true, user.name, user.email)
                             currentRoute = AppRoute.Home
                             true
                         } else {
@@ -82,6 +89,7 @@ fun AppNavigation() {
                         when (item) {
                             BottomBarItem.Home -> currentRoute = AppRoute.Home
                             BottomBarItem.Contact -> currentRoute = AppRoute.Contact
+                            BottomBarItem.Profile -> currentRoute = AppRoute.Profile
                             else -> Unit
                         }
                     },
@@ -105,7 +113,8 @@ fun AppNavigation() {
                         val user = UserStore.findUser(email, password)
                         if (user != null) {
                             currentUserName = user.name
-                            routerGuard.saveSession(true, user.name)
+                            currentUserEmail = user.email
+                            routerGuard.saveSession(true, user.name, user.email)
                             currentRoute = AppRoute.Explore
                             true
                         } else {
@@ -122,7 +131,8 @@ fun AppNavigation() {
                 val isRegistered = UserStore.registerUser(name, email, password)
                 if (isRegistered) {
                     currentUserName = name.trim()
-                    routerGuard.saveSession(true, currentUserName)
+                    currentUserEmail = email.trim().lowercase()
+                    routerGuard.saveSession(true, currentUserName, currentUserEmail)
                     currentRoute = AppRoute.Home
                 }
                 isRegistered
@@ -135,7 +145,8 @@ fun AppNavigation() {
                 val user = UserStore.findUser(email, password)
                 if (user != null) {
                     currentUserName = user.name
-                    routerGuard.saveSession(true, user.name)
+                    currentUserEmail = user.email
+                    routerGuard.saveSession(true, user.name, user.email)
                     currentRoute = AppRoute.Home
                     true
                 } else {
@@ -165,11 +176,37 @@ fun AppNavigation() {
         AppRoute.Contact -> {
             if (routerGuard.canAccessDashboard()) {
                 ContactScreen(
-                    initialName = currentUserName,
+                    initialEmail = currentUserEmail,
                     onBottomBarItemSelected = { item ->
                         when (item) {
                             BottomBarItem.Home -> currentRoute = AppRoute.Home
                             BottomBarItem.Explore -> currentRoute = AppRoute.Explore
+                            BottomBarItem.Profile -> currentRoute = AppRoute.Profile
+                            else -> Unit
+                        }
+                    }
+                )
+            } else {
+                currentRoute = AppRoute.Login
+            }
+        }
+
+        AppRoute.Profile -> {
+            if (routerGuard.canAccessDashboard()) {
+                ProfileScreen(
+                    initialName = currentUserName,
+                    initialEmail = currentUserEmail,
+                    onBack = { currentRoute = AppRoute.Home },
+                    onSaveChanges = { name, email, _, _, _, _ ->
+                        currentUserName = name.trim().ifBlank { currentUserName }
+                        currentUserEmail = email.trim()
+                        routerGuard.saveSession(true, currentUserName, currentUserEmail)
+                    },
+                    onBottomBarItemSelected = { item ->
+                        when (item) {
+                            BottomBarItem.Home -> currentRoute = AppRoute.Home
+                            BottomBarItem.Explore -> currentRoute = AppRoute.Explore
+                            BottomBarItem.Contact -> currentRoute = AppRoute.Contact
                             else -> Unit
                         }
                     }
@@ -188,5 +225,6 @@ private enum class AppRoute {
     Explore,
     Recipe,
     Video,
-    Contact
+    Contact,
+    Profile
 }

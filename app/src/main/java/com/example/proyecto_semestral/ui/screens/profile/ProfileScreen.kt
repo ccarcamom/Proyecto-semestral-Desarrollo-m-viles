@@ -1,0 +1,470 @@
+package com.example.proyecto_semestral.ui.screens.profile
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.proyecto_semestral.ui.components.AppBottomBar
+import com.example.proyecto_semestral.ui.components.AppTextField
+import com.example.proyecto_semestral.ui.components.BottomBarItem
+import com.example.proyecto_semestral.ui.components.PrimaryButton
+import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+
+@Composable
+fun ProfileScreen(
+    initialName: String = "",
+    initialEmail: String = "",
+    onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit = {},
+    onSaveChanges: (
+        name: String,
+        email: String,
+        phone: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) -> Unit = { _, _, _, _, _, _ -> }
+) {
+    var name by rememberSaveable(initialName) { mutableStateOf(initialName) }
+    var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
+    var phone by rememberSaveable { mutableStateOf("") }
+    var businessName by rememberSaveable { mutableStateOf("") }
+    var businessType by rememberSaveable { mutableStateOf(businessTypes.first()) }
+    var businessSize by rememberSaveable { mutableStateOf(businessSizes.first()) }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            ProfileTopBar(onBack = onBack)
+        },
+        bottomBar = {
+            ProfileBottomArea(
+                onSaveChanges = {
+                    onSaveChanges(
+                        name,
+                        email,
+                        phone,
+                        businessName,
+                        businessType,
+                        businessSize
+                    )
+                },
+                onBottomBarItemSelected = onBottomBarItemSelected
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 22.dp)
+        ) {
+            Spacer(modifier = Modifier.height(22.dp))
+
+            ProfileSummary(name = name, email = email)
+
+            Spacer(modifier = Modifier.height(26.dp))
+
+            SectionTitle(text = "Datos personales")
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ProfileField(label = "Nombre") {
+                AppTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    placeholder = "Tu nombre"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ProfileField(label = "Correo electrónico") {
+                AppTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = "tu@correo.com"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ProfileField(label = "Teléfono (opcional)") {
+                AppTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    placeholder = "+56"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            SectionTitle(text = "Mi negocio")
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Puedes completar estos datos después.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            ProfileField(label = "Nombre del negocio (opcional)") {
+                AppTextField(
+                    value = businessName,
+                    onValueChange = { businessName = it },
+                    placeholder = "Nombre de tu negocio"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ProfileField(label = "Tipo de negocio") {
+                ProfileDropdown(
+                    value = businessType,
+                    options = businessTypes,
+                    onValueChange = { businessType = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ProfileField(label = "Tamaño del negocio") {
+                ProfileDropdown(
+                    value = businessSize,
+                    options = businessSizes,
+                    onValueChange = { businessSize = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+        }
+    }
+}
+
+@Composable
+private fun ProfileTopBar(onBack: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(76.dp)
+                .padding(horizontal = 22.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Volver",
+                        onClick = onBack
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                BackArrow(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.size(10.dp))
+
+            Text(
+                text = "Mi perfil",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+    }
+}
+
+@Composable
+private fun ProfileSummary(name: String, email: String) {
+    val displayName = name.ifBlank { "Usuario" }
+    val initials = displayName
+        .trim()
+        .split(Regex("\\s+"))
+        .filter { it.isNotBlank() }
+        .take(2)
+        .joinToString("") { it.first().uppercase() }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(86.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = initials,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.size(20.dp))
+
+        Column {
+            Text(
+                text = displayName,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = email.ifBlank { "Sin correo registrado" },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.headlineSmall.copy(
+            fontSize = 26.sp,
+            fontWeight = FontWeight.Bold
+        )
+    )
+}
+
+@Composable
+private fun ProfileField(
+    label: String,
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        content()
+    }
+}
+
+@Composable
+private fun ProfileDropdown(
+    value: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .clickable { expanded = true }
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = value,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+            )
+            DownArrow(
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileBottomArea(
+    onSaveChanges: () -> Unit,
+    onBottomBarItemSelected: (BottomBarItem) -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.background,
+        shadowElevation = 8.dp
+    ) {
+        Column {
+            PrimaryButton(
+                text = "Guardar cambios",
+                onClick = onSaveChanges,
+                modifier = Modifier
+                    .padding(horizontal = 22.dp, vertical = 12.dp)
+                    .height(52.dp)
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            AppBottomBar(
+                selectedItem = BottomBarItem.Profile,
+                onItemSelected = onBottomBarItemSelected
+            )
+        }
+    }
+}
+
+@Composable
+private fun BackArrow(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val stroke = 2.5.dp.toPx()
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.22f, size.height * 0.5f),
+            end = Offset(size.width * 0.82f, size.height * 0.5f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.22f, size.height * 0.5f),
+            end = Offset(size.width * 0.47f, size.height * 0.26f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.22f, size.height * 0.5f),
+            end = Offset(size.width * 0.47f, size.height * 0.74f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+@Composable
+private fun DownArrow(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val stroke = 2.3.dp.toPx()
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.22f, size.height * 0.36f),
+            end = Offset(size.width * 0.5f, size.height * 0.64f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.5f, size.height * 0.64f),
+            end = Offset(size.width * 0.78f, size.height * 0.36f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+private val businessTypes = listOf(
+    "Sin negocio",
+    "Pastelería",
+    "Panadería",
+    "Cafetería",
+    "Restaurante",
+    "Otro"
+)
+
+private val businessSizes = listOf(
+    "Selecciona una opción",
+    "Emprendimiento",
+    "Pequeño",
+    "Mediano",
+    "Grande"
+)
+
+@Preview(showBackground = true, widthDp = 430, heightDp = 900)
+@Composable
+private fun ProfileScreenPreview() {
+    ProyectoSemestralTheme {
+        ProfileScreen(
+            initialName = "Andrea Demo",
+            initialEmail = "andrea@example.com"
+        )
+    }
+}

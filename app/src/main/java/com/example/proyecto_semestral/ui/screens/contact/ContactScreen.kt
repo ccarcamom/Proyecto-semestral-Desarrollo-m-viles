@@ -1,7 +1,6 @@
 package com.example.proyecto_semestral.ui.screens.contact
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,12 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,15 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,34 +42,33 @@ import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.PrimaryButton
+import com.example.proyecto_semestral.ui.components.SimulatedConsultationDialog
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @Composable
 fun ContactScreen(
-    initialName: String = "",
     initialEmail: String = "",
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var name by rememberSaveable { mutableStateOf(initialName) }
-    var email by rememberSaveable { mutableStateOf(initialEmail) }
-    var message by rememberSaveable { mutableStateOf("") }
-    var selectedTopic by rememberSaveable { mutableStateOf(contactTopics.first()) }
+    var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
+    var phone by rememberSaveable { mutableStateOf("") }
+    var businessName by rememberSaveable { mutableStateOf("") }
+    var businessType by rememberSaveable { mutableStateOf(businessTypes.first()) }
+    var businessSize by rememberSaveable { mutableStateOf(businessSizes.first()) }
+    var description by rememberSaveable { mutableStateOf("") }
+    var emailError by rememberSaveable { mutableStateOf<String?>(null) }
+    var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
+    var showConfirmation by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            Column {
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    thickness = 1.dp
-                )
-                AppBottomBar(
-                    selectedItem = BottomBarItem.Contact,
-                    onItemSelected = onBottomBarItemSelected
-                )
-            }
+            AppBottomBar(
+                selectedItem = BottomBarItem.Contact,
+                onItemSelected = onBottomBarItemSelected
+            )
         }
     ) { innerPadding ->
         Column(
@@ -91,24 +81,7 @@ fun ContactScreen(
             Spacer(modifier = Modifier.height(14.dp))
             BrandLogo(tagline = "ESTAMOS PARA AYUDARTE")
 
-            Spacer(modifier = Modifier.height(26.dp))
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                ChatGlyph(
-                    color = MaterialTheme.colorScheme.primary,
-                    bubbleColor = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.size(34.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
             Text(
                 text = "Conversemos.",
                 color = MaterialTheme.colorScheme.primary,
@@ -118,84 +91,123 @@ fun ContactScreen(
                     fontWeight = FontWeight.Bold
                 )
             )
-
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Cuéntanos qué necesitas para dar el próximo paso en tu negocio.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 20.sp,
-                    lineHeight = 28.sp
+                    fontSize = 19.sp,
+                    lineHeight = 27.sp
                 )
             )
 
             Spacer(modifier = Modifier.height(26.dp))
-            ContactField(label = "Nombre") {
-                AppTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    placeholder = "Tu nombre"
-                )
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
             ContactField(label = "Correo electrónico") {
                 AppTextField(
                     value = email,
-                    onValueChange = { email = it },
-                    placeholder = "tu@correo.com"
+                    onValueChange = {
+                        email = it
+                        emailError = null
+                    },
+                    placeholder = "tu@correo.com",
+                    isError = emailError != null,
+                    supportingText = emailError
                 )
             }
 
             Spacer(modifier = Modifier.height(18.dp))
-            ContactField(label = "¿En qué podemos ayudarte?") {
-                TopicSelector(
-                    selectedTopic = selectedTopic,
-                    onTopicSelected = { selectedTopic = it }
-                )
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
-            ContactField(label = "Tu mensaje") {
+            ContactField(label = "Número de teléfono") {
                 AppTextField(
-                    value = message,
-                    onValueChange = { message = it },
+                    value = phone,
+                    onValueChange = { phone = it },
+                    placeholder = "+56"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ContactField(label = "Nombre del negocio") {
+                AppTextField(
+                    value = businessName,
+                    onValueChange = { businessName = it },
+                    placeholder = "Nombre de tu negocio"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ContactField(label = "Tipo de negocio") {
+                ContactDropdown(
+                    value = businessType,
+                    options = businessTypes,
+                    onValueChange = { businessType = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ContactField(label = "Tamaño del negocio") {
+                ContactDropdown(
+                    value = businessSize,
+                    options = businessSizes,
+                    onValueChange = { businessSize = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ContactField(label = "Descripción") {
+                AppTextField(
+                    value = description,
+                    onValueChange = {
+                        description = it
+                        descriptionError = null
+                    },
                     placeholder = "Cuéntanos tu consulta...",
-                    modifier = Modifier.height(170.dp)
+                    modifier = Modifier.height(170.dp),
+                    isError = descriptionError != null,
+                    supportingText = descriptionError
                 )
             }
 
             Spacer(modifier = Modifier.height(26.dp))
-            PrimaryButton(
-                text = "Enviar consulta  →",
-                onClick = {}
-            )
 
-            Spacer(modifier = Modifier.height(14.dp))
-            Text(
-                text = "Envío simulado. No se contactará a la empresa.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+            PrimaryButton(
+                text = "Enviar consulta",
+                onClick = {
+                    emailError = if (email.isValidEmail()) null else "Ingresa un correo válido."
+                    descriptionError = if (description.isBlank()) "Escribe tu consulta." else null
+                    if (emailError == null && descriptionError == null) {
+                        showConfirmation = true
+                    }
+                },
+                modifier = Modifier.height(58.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    if (showConfirmation) {
+        SimulatedConsultationDialog(
+            onDismissRequest = { showConfirmation = false },
+            onConfirm = { showConfirmation = false }
+        )
     }
 }
 
 @Composable
 private fun ContactField(
     label: String,
-    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
             color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelLarge.copy(
+            style = MaterialTheme.typography.titleMedium.copy(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -206,14 +218,14 @@ private fun ContactField(
 }
 
 @Composable
-private fun TopicSelector(
-    selectedTopic: String,
-    onTopicSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+private fun ContactDropdown(
+    value: String,
+    options: List<String>,
+    onValueChange: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -230,13 +242,11 @@ private fun TopicSelector(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = selectedTopic,
+                text = value,
                 color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp),
-                maxLines = 1,
-                modifier = Modifier.weight(1f)
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
             )
-            ChevronDownIcon(
+            DownArrow(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp)
             )
@@ -246,11 +256,11 @@ private fun TopicSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            contactTopics.forEach { topic ->
+            options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(topic) },
+                    text = { Text(option) },
                     onClick = {
-                        onTopicSelected(topic)
+                        onValueChange(option)
                         expanded = false
                     }
                 )
@@ -260,7 +270,7 @@ private fun TopicSelector(
 }
 
 @Composable
-private fun ChevronDownIcon(color: Color, modifier: Modifier = Modifier) {
+private fun DownArrow(color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val stroke = 2.4.dp.toPx()
         drawLine(
@@ -280,69 +290,31 @@ private fun ChevronDownIcon(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun ChatGlyph(
-    color: Color,
-    bubbleColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Canvas(modifier = modifier) {
-        val stroke = 2.dp.toPx()
-        val style = Stroke(
-            width = stroke,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round
-        )
-        val w = size.width
-        val h = size.height
-        val radius = CornerRadius(5.dp.toPx())
-
-        val backBubble = Path().apply {
-            addRoundRect(
-                RoundRect(
-                    Rect(w * 0.04f, h * 0.06f, w * 0.58f, h * 0.46f),
-                    radius
-                )
-            )
-            moveTo(w * 0.16f, h * 0.46f)
-            lineTo(w * 0.12f, h * 0.60f)
-            lineTo(w * 0.34f, h * 0.46f)
-            close()
-        }
-        drawPath(path = backBubble, color = bubbleColor)
-        drawPath(path = backBubble, color = color, style = style)
-
-        val frontBubble = Path().apply {
-            addRoundRect(
-                RoundRect(
-                    Rect(w * 0.38f, h * 0.44f, w * 0.96f, h * 0.84f),
-                    radius
-                )
-            )
-            moveTo(w * 0.72f, h * 0.84f)
-            lineTo(w * 0.80f, h * 0.98f)
-            lineTo(w * 0.54f, h * 0.84f)
-            close()
-        }
-        drawPath(path = frontBubble, color = bubbleColor)
-        drawPath(path = frontBubble, color = color, style = style)
-    }
+private fun String.isValidEmail(): Boolean {
+    return isNotBlank() && contains("@") && substringAfter("@").contains(".")
 }
 
-private val contactTopics = listOf(
-    "Consulta sobre productos",
-    "Soporte de pedidos",
-    "Cursos y capacitaciones",
-    "Otra consulta"
+private val businessTypes = listOf(
+    "Sin negocio",
+    "Pastelería",
+    "Panadería",
+    "Cafetería",
+    "Restaurante",
+    "Otro"
 )
 
-@Preview(showBackground = true)
+private val businessSizes = listOf(
+    "Selecciona una opción",
+    "Emprendimiento",
+    "Pequeño",
+    "Mediano",
+    "Grande"
+)
+
+@Preview(showBackground = true, widthDp = 430, heightDp = 900)
 @Composable
 private fun ContactScreenPreview() {
     ProyectoSemestralTheme {
-        ContactScreen(
-            initialName = "Andrea Demo",
-            initialEmail = "andrea@example.com"
-        )
+        ContactScreen(initialEmail = "andrea@example.com")
     }
 }

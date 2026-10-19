@@ -33,8 +33,20 @@ class RouterGuard(context: Context) {
             .apply()
     }
 
+    fun saveSession(isLoggedIn: Boolean, userName: String, userEmail: String) {
+        sharedPreferences.edit()
+            .putBoolean(KEY_IS_LOGGED, isLoggedIn)
+            .putString(KEY_USER_NAME, userName)
+            .putString(KEY_USER_EMAIL, userEmail)
+            .apply()
+    }
+
     fun getUserName(): String {
         return sharedPreferences.getString(KEY_USER_NAME, null).orEmpty()
+    }
+
+    fun getUserEmail(): String {
+        return sharedPreferences.getString(KEY_USER_EMAIL, null).orEmpty()
     }
 
     fun logout() {
@@ -45,5 +57,6 @@ class RouterGuard(context: Context) {
         const val PREFS_NAME = "MikrotikPrefs"
         const val KEY_IS_LOGGED = "is_logged_in"
         const val KEY_USER_NAME = "user_name"
+        const val KEY_USER_EMAIL = "user_email"
     }
 }
