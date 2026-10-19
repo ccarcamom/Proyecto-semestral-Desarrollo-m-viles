@@ -56,6 +56,7 @@ fun ExploreScreen(
     onSearchQueryChange: (String) -> Unit,
     onRecipeClick: (String) -> Unit,
     onVideoClick: (String) -> Unit,
+    onCourseClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val visibleItems = exploreItems.filter { item ->
@@ -146,7 +147,8 @@ fun ExploreScreen(
                         when (item.type) {
                             ContentFilter.Recipes -> onRecipeClick(item.id)
                             ContentFilter.Videos -> onVideoClick(item.id)
-                            ContentFilter.All, ContentFilter.Courses -> Unit
+                            ContentFilter.Courses -> onCourseClick(item.id)
+                            ContentFilter.All -> Unit
                         }
                     }
                 )

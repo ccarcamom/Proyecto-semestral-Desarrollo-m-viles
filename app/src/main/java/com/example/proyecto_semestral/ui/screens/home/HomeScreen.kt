@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,6 +37,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,10 +56,13 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 fun HomeScreen(
     userName: String,
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
+    onSearch: (String) -> Unit = {},
+    onCourseClick: (String) -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    var homeSearchQuery by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -118,7 +125,11 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            HomeSearchField()
+            HomeSearchField(
+                value = homeSearchQuery,
+                onValueChange = { homeSearchQuery = it },
+                onSearch = { onSearch(homeSearchQuery) }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
             Row(
@@ -177,7 +188,7 @@ fun HomeScreen(
                 title = "Fundamentos de chocolatería",
                 metadata = "Chocolatería · 30 min",
                 image = painterResource(R.drawable.chocolate),
-                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
+                onClick = { onCourseClick("curso-chocolateria") }
             )
             Spacer(modifier = Modifier.height(14.dp))
             ContentCard(
@@ -185,7 +196,7 @@ fun HomeScreen(
                 title = "Introducción a la bollería",
                 metadata = "Bollería · 35 min",
                 image = painterResource(R.drawable.bolleria),
-                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
+                onClick = { onCourseClick("curso-bolleria") }
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -203,7 +214,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeSearchField() {
+private fun HomeSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -217,19 +232,37 @@ private fun HomeSearchField() {
                 color = MaterialTheme.colorScheme.outline,
                 shape = RoundedCornerShape(18.dp)
             )
-            .clickable { }
             .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         SearchGlyph(
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(24.dp)
+                .clickable(onClick = onSearch)
         )
         Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = "Busca una receta o una técnica",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 18.sp
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+            modifier = Modifier.weight(1f),
+            decorationBox = { innerTextField ->
+                if (value.isBlank()) {
+                    Text(
+                        text = "Busca una receta o una técnica",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+                    )
+                }
+                innerTextField()
+            }
         )
     }
 }
