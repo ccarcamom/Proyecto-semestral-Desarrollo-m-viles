@@ -193,7 +193,9 @@ fun ContactScreen(
     if (showConfirmation) {
         SimulatedConsultationDialog(
             onDismissRequest = { showConfirmation = false },
-            onConfirm = { showConfirmation = false }
+            onConfirm = { showConfirmation = false },
+            title = "¡Gracias por contactarte con nosotros!",
+            message = "Pronto recibirás una respuesta."
         )
     }
 }
