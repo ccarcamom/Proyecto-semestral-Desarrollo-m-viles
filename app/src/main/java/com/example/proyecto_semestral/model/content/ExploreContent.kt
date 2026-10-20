@@ -1,4 +1,4 @@
-package com.example.proyecto_semestral.model
+package com.example.proyecto_semestral.model.content
 
 import androidx.annotation.DrawableRes
 import com.example.proyecto_semestral.ui.components.ContentFilter

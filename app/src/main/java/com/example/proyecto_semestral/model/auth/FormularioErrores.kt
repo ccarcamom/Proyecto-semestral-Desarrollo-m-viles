@@ -1,4 +1,4 @@
-package com.example.proyecto_semestral.model
+package com.example.proyecto_semestral.model.auth
 
 data class FormularioErrores(
     val name: String? = null,

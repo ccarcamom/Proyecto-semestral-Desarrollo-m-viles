@@ -27,10 +27,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,11 +43,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
@@ -65,12 +67,12 @@ fun ProfileScreen(
         businessSize: String
     ) -> Unit = { _, _, _, _, _, _ -> }
 ) {
-    var name by rememberSaveable(initialName) { mutableStateOf(initialName) }
-    var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
-    var phone by rememberSaveable { mutableStateOf("") }
-    var businessName by rememberSaveable { mutableStateOf("") }
-    var businessType by rememberSaveable { mutableStateOf(businessTypes.first()) }
-    var businessSize by rememberSaveable { mutableStateOf(businessSizes.first()) }
+    val profileViewModel: ProfileViewModel = viewModel()
+    val uiState = profileViewModel.uiState
+
+    LaunchedEffect(initialName, initialEmail) {
+        profileViewModel.initialize(initialName, initialEmail)
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -81,14 +83,17 @@ fun ProfileScreen(
         bottomBar = {
             ProfileBottomArea(
                 onSaveChanges = {
-                    onSaveChanges(
-                        name,
-                        email,
-                        phone,
-                        businessName,
-                        businessType,
-                        businessSize
-                    )
+                    if (profileViewModel.validateProfile()) {
+                        val profile = profileViewModel.uiState
+                        onSaveChanges(
+                            profile.name.trim(),
+                            profile.email.trim(),
+                            profile.phone.trim(),
+                            profile.businessName.trim(),
+                            profile.businessType,
+                            profile.businessSize
+                        )
+                    }
                 },
                 onBottomBarItemSelected = onBottomBarItemSelected
             )
@@ -103,7 +108,7 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(22.dp))
 
-            ProfileSummary(name = name, email = email)
+            ProfileSummary(name = uiState.name, email = uiState.email)
 
             Spacer(modifier = Modifier.height(26.dp))
 
@@ -113,9 +118,11 @@ fun ProfileScreen(
 
             ProfileField(label = "Nombre") {
                 AppTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    placeholder = "Tu nombre"
+                    value = uiState.name,
+                    onValueChange = profileViewModel::onNameChange,
+                    placeholder = "Tu nombre",
+                    isError = uiState.errors.name != null,
+                    supportingText = uiState.errors.name
                 )
             }
 
@@ -123,9 +130,11 @@ fun ProfileScreen(
 
             ProfileField(label = "Correo electrónico") {
                 AppTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = "tu@correo.com"
+                    value = uiState.email,
+                    onValueChange = profileViewModel::onEmailChange,
+                    placeholder = "tu@correo.com",
+                    isError = uiState.errors.email != null,
+                    supportingText = uiState.errors.email
                 )
             }
 
@@ -133,9 +142,11 @@ fun ProfileScreen(
 
             ProfileField(label = "Teléfono (opcional)") {
                 AppTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    placeholder = "+56"
+                    value = uiState.phone,
+                    onValueChange = profileViewModel::onPhoneChange,
+                    placeholder = "+56",
+                    isError = uiState.errors.phone != null,
+                    supportingText = uiState.errors.phone
                 )
             }
 
@@ -153,8 +164,8 @@ fun ProfileScreen(
 
             ProfileField(label = "Nombre del negocio (opcional)") {
                 AppTextField(
-                    value = businessName,
-                    onValueChange = { businessName = it },
+                    value = uiState.businessName,
+                    onValueChange = profileViewModel::onBusinessNameChange,
                     placeholder = "Nombre de tu negocio"
                 )
             }
@@ -163,9 +174,9 @@ fun ProfileScreen(
 
             ProfileField(label = "Tipo de negocio") {
                 ProfileDropdown(
-                    value = businessType,
+                    value = uiState.businessType,
                     options = businessTypes,
-                    onValueChange = { businessType = it }
+                    onValueChange = profileViewModel::onBusinessTypeChange
                 )
             }
 
@@ -173,9 +184,9 @@ fun ProfileScreen(
 
             ProfileField(label = "Tamaño del negocio") {
                 ProfileDropdown(
-                    value = businessSize,
+                    value = uiState.businessSize,
                     options = businessSizes,
-                    onValueChange = { businessSize = it }
+                    onValueChange = profileViewModel::onBusinessSizeChange
                 )
             }
 

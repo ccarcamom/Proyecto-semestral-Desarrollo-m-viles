@@ -23,8 +23,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyecto_semestral.model.VideoCatalog
-import com.example.proyecto_semestral.model.VideoContent
+import com.example.proyecto_semestral.model.content.VideoCatalog
+import com.example.proyecto_semestral.model.content.VideoContent
 import com.example.proyecto_semestral.ui.components.AppTopBar
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.components.VideoPlayerPlaceholder

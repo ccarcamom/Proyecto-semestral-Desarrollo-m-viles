@@ -30,8 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyecto_semestral.R
-import com.example.proyecto_semestral.model.Recipe
-import com.example.proyecto_semestral.model.RecipeCatalog
+import com.example.proyecto_semestral.model.content.Recipe
+import com.example.proyecto_semestral.model.content.RecipeCatalog
 import com.example.proyecto_semestral.ui.components.AppTopBar
 import com.example.proyecto_semestral.ui.components.ContentCard
 import com.example.proyecto_semestral.ui.components.IngredientRow

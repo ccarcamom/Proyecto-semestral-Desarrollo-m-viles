@@ -4,8 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.proyecto_semestral.model.FormularioErrores
-import com.example.proyecto_semestral.model.FormularioUiState
+import com.example.proyecto_semestral.model.auth.FormularioErrores
+import com.example.proyecto_semestral.model.auth.FormularioUiState
 
 class FormularioViewModel : ViewModel() {
 
