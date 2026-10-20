@@ -5,6 +5,9 @@ data class FormularioUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
+    val businessName: String = "",
+    val businessType: String = "Sin negocio",
+    val businessSize: String = "Selecciona una opción",
     val passwordVisible: Boolean = false,
     val confirmPasswordVisible: Boolean = false,
     val errors: FormularioErrores = FormularioErrores()

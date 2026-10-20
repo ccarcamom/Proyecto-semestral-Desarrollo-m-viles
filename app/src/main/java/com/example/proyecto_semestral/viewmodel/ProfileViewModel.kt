@@ -20,7 +20,8 @@ class ProfileViewModel : ViewModel() {
         phone: String,
         businessName: String,
         businessType: String,
-        businessSize: String
+        businessSize: String,
+        selectedInterests: Set<String>
     ) {
         if (initialized) return
 
@@ -30,7 +31,8 @@ class ProfileViewModel : ViewModel() {
             phone = phone,
             businessName = businessName,
             businessType = businessType,
-            businessSize = businessSize
+            businessSize = businessSize,
+            selectedInterests = selectedInterests
         )
         initialized = true
     }
@@ -56,16 +58,13 @@ class ProfileViewModel : ViewModel() {
         )
     }
 
-    fun onBusinessNameChange(value: String) {
-        uiState = uiState.copy(businessName = value)
-    }
-
-    fun onBusinessTypeChange(value: String) {
-        uiState = uiState.copy(businessType = value)
-    }
-
-    fun onBusinessSizeChange(value: String) {
-        uiState = uiState.copy(businessSize = value)
+    fun onInterestChange(interest: String, selected: Boolean) {
+        val updatedInterests = if (selected) {
+            uiState.selectedInterests + interest
+        } else {
+            uiState.selectedInterests - interest
+        }
+        uiState = uiState.copy(selectedInterests = updatedInterests)
     }
 
     fun validateProfile(): Boolean {

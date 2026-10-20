@@ -57,7 +57,8 @@ class RouterGuard(context: Context) {
         phone: String,
         businessName: String,
         businessType: String,
-        businessSize: String
+        businessSize: String,
+        interests: Set<String>
     ) {
         sharedPreferences.edit()
             .putString(KEY_USER_NAME, name)
@@ -66,6 +67,7 @@ class RouterGuard(context: Context) {
             .putString(KEY_BUSINESS_NAME, businessName)
             .putString(KEY_BUSINESS_TYPE, businessType)
             .putString(KEY_BUSINESS_SIZE, businessSize)
+            .putStringSet(KEY_USER_INTERESTS, interests)
             .apply()
     }
 
@@ -87,6 +89,12 @@ class RouterGuard(context: Context) {
             ?: DEFAULT_BUSINESS_SIZE
     }
 
+    fun getUserInterests(): Set<String> {
+        return sharedPreferences.getStringSet(KEY_USER_INTERESTS, emptySet())
+            ?.toSet()
+            .orEmpty()
+    }
+
     fun logout() {
         sharedPreferences.edit().clear().apply()
     }
@@ -100,5 +108,6 @@ class RouterGuard(context: Context) {
         const val KEY_BUSINESS_NAME = "business_name"
         const val KEY_BUSINESS_TYPE = "business_type"
         const val KEY_BUSINESS_SIZE = "business_size"
+        const val KEY_USER_INTERESTS = "user_interests"
     }
 }

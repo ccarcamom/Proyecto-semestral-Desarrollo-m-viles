@@ -34,6 +34,18 @@ class FormularioViewModel : ViewModel() {
         )
     }
 
+    fun onBusinessNameChange(value: String) {
+        uiState = uiState.copy(businessName = value)
+    }
+
+    fun onBusinessTypeChange(value: String) {
+        uiState = uiState.copy(businessType = value)
+    }
+
+    fun onBusinessSizeChange(value: String) {
+        uiState = uiState.copy(businessSize = value)
+    }
+
     fun onPasswordVisibilityChange(visible: Boolean) {
         uiState = uiState.copy(passwordVisible = visible)
     }

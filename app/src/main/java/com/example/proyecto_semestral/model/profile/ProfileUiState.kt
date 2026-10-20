@@ -7,6 +7,7 @@ data class ProfileUiState(
     val businessName: String = "",
     val businessType: String = DEFAULT_BUSINESS_TYPE,
     val businessSize: String = DEFAULT_BUSINESS_SIZE,
+    val selectedInterests: Set<String> = emptySet(),
     val errors: ProfileErrors = ProfileErrors()
 )
 

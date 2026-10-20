@@ -2,7 +2,6 @@ package com.example.proyecto_semestral.ui.screens.profile
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,10 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -28,10 +24,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +41,7 @@ import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
+import com.example.proyecto_semestral.ui.components.InterestSelection
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 import com.example.proyecto_semestral.viewmodel.ProfileViewModel
@@ -61,6 +54,7 @@ fun ProfileScreen(
     initialBusinessName: String = "",
     initialBusinessType: String = DEFAULT_BUSINESS_TYPE,
     initialBusinessSize: String = DEFAULT_BUSINESS_SIZE,
+    initialInterests: Set<String> = emptySet(),
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
@@ -70,8 +64,9 @@ fun ProfileScreen(
         phone: String,
         businessName: String,
         businessType: String,
-        businessSize: String
-    ) -> Unit = { _, _, _, _, _, _ -> }
+        businessSize: String,
+        interests: Set<String>
+    ) -> Unit = { _, _, _, _, _, _, _ -> }
 ) {
     val profileViewModel: ProfileViewModel = viewModel()
     val uiState = profileViewModel.uiState
@@ -82,7 +77,8 @@ fun ProfileScreen(
         initialPhone,
         initialBusinessName,
         initialBusinessType,
-        initialBusinessSize
+        initialBusinessSize,
+        initialInterests
     ) {
         profileViewModel.initialize(
             name = initialName,
@@ -90,7 +86,8 @@ fun ProfileScreen(
             phone = initialPhone,
             businessName = initialBusinessName,
             businessType = initialBusinessType,
-            businessSize = initialBusinessSize
+            businessSize = initialBusinessSize,
+            selectedInterests = initialInterests
         )
     }
 
@@ -111,7 +108,8 @@ fun ProfileScreen(
                             profile.phone.trim(),
                             profile.businessName.trim(),
                             profile.businessType,
-                            profile.businessSize
+                            profile.businessSize,
+                            profile.selectedInterests
                         )
                     }
                 },
@@ -175,40 +173,28 @@ fun ProfileScreen(
             SectionTitle(text = "Mi negocio")
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Puedes completar estos datos después.",
+                text = "Información registrada sobre tu negocio.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ProfileField(label = "Nombre del negocio (opcional)") {
-                AppTextField(
-                    value = uiState.businessName,
-                    onValueChange = profileViewModel::onBusinessNameChange,
-                    placeholder = "Nombre de tu negocio"
-                )
-            }
+            BusinessInfoRow(
+                label = "Nombre del negocio",
+                value = uiState.businessName.ifBlank { "Sin información" }
+            )
+            BusinessInfoRow(label = "Tipo de negocio", value = uiState.businessType)
+            BusinessInfoRow(label = "Tamaño del negocio", value = uiState.businessSize)
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            ProfileField(label = "Tipo de negocio") {
-                ProfileDropdown(
-                    value = uiState.businessType,
-                    options = businessTypes,
-                    onValueChange = profileViewModel::onBusinessTypeChange
-                )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            ProfileField(label = "Tamaño del negocio") {
-                ProfileDropdown(
-                    value = uiState.businessSize,
-                    options = businessSizes,
-                    onValueChange = profileViewModel::onBusinessSizeChange
-                )
-            }
+            InterestSelection(
+                interests = availableInterests,
+                selectedInterests = uiState.selectedInterests,
+                onInterestChange = profileViewModel::onInterestChange,
+                title = "Mis intereses"
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
         }
@@ -346,55 +332,29 @@ private fun ProfileField(
 }
 
 @Composable
-private fun ProfileDropdown(
-    value: String,
-    options: List<String>,
-    onValueChange: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .clickable { expanded = true }
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
-            )
-            DownArrow(
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
+private fun BusinessInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
+        )
     }
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 }
 
 @Composable
@@ -451,42 +411,11 @@ private fun BackArrow(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun DownArrow(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val stroke = 2.3.dp.toPx()
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.22f, size.height * 0.36f),
-            end = Offset(size.width * 0.5f, size.height * 0.64f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.5f, size.height * 0.64f),
-            end = Offset(size.width * 0.78f, size.height * 0.36f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-    }
-}
-
-private val businessTypes = listOf(
-    "Sin negocio",
+private val availableInterests = listOf(
+    "Chocolatería",
+    "Bollería",
     "Pastelería",
-    "Panadería",
-    "Cafetería",
-    "Restaurante",
-    "Otro"
-)
-
-private val businessSizes = listOf(
-    "Selecciona una opción",
-    "Emprendimiento",
-    "Pequeño",
-    "Mediano",
-    "Grande"
+    "Panadería"
 )
 
 @Preview(showBackground = true, widthDp = 430, heightDp = 900)

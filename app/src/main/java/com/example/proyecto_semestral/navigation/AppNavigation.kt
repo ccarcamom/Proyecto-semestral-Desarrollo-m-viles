@@ -52,6 +52,9 @@ fun AppNavigation() {
     var currentBusinessSize by rememberSaveable {
         mutableStateOf(routerGuard.getBusinessSize())
     }
+    var currentInterests by remember {
+        mutableStateOf(routerGuard.getUserInterests())
+    }
     var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
     var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
     var selectedRecipeId by rememberSaveable { mutableStateOf("") }
@@ -89,6 +92,7 @@ fun AppNavigation() {
                         currentBusinessName = ""
                         currentBusinessType = DEFAULT_BUSINESS_TYPE
                         currentBusinessSize = DEFAULT_BUSINESS_SIZE
+                        currentInterests = emptySet()
                         currentRoute = AppRoute.Login
                     }
                 )
@@ -160,12 +164,25 @@ fun AppNavigation() {
         }
 
         AppRoute.Register -> RegisterScreen(
-            onRegisterSuccess = { name, email, password ->
+            onRegisterSuccess = { name, email, password, businessName, businessType, businessSize ->
                 val isRegistered = UserStore.registerUser(name, email, password)
                 if (isRegistered) {
                     currentUserName = name.trim()
                     currentUserEmail = email.trim().lowercase()
+                    currentBusinessName = businessName.trim()
+                    currentBusinessType = businessType
+                    currentBusinessSize = businessSize
+                    currentInterests = emptySet()
                     routerGuard.saveSession(true, currentUserName, currentUserEmail)
+                    routerGuard.saveProfile(
+                        name = currentUserName,
+                        email = currentUserEmail,
+                        phone = currentUserPhone,
+                        businessName = currentBusinessName,
+                        businessType = currentBusinessType,
+                        businessSize = currentBusinessSize,
+                        interests = currentInterests
+                    )
                     currentRoute = AppRoute.Home
                 }
                 isRegistered
@@ -243,21 +260,24 @@ fun AppNavigation() {
                     initialBusinessName = currentBusinessName,
                     initialBusinessType = currentBusinessType,
                     initialBusinessSize = currentBusinessSize,
+                    initialInterests = currentInterests,
                     onBack = { currentRoute = AppRoute.Home },
-                    onSaveChanges = { name, email, phone, businessName, businessType, businessSize ->
+                    onSaveChanges = { name, email, phone, businessName, businessType, businessSize, interests ->
                         currentUserName = name.trim().ifBlank { currentUserName }
                         currentUserEmail = email.trim()
                         currentUserPhone = phone.trim()
                         currentBusinessName = businessName.trim()
                         currentBusinessType = businessType
                         currentBusinessSize = businessSize
+                        currentInterests = interests
                         routerGuard.saveProfile(
                             name = currentUserName,
                             email = currentUserEmail,
                             phone = currentUserPhone,
                             businessName = currentBusinessName,
                             businessType = currentBusinessType,
-                            businessSize = currentBusinessSize
+                            businessSize = currentBusinessSize,
+                            interests = currentInterests
                         )
                     },
                     onBottomBarItemSelected = { item ->

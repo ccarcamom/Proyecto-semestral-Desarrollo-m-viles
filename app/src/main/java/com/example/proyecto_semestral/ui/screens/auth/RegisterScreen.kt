@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_semestral.ui.components.AppDropdownField
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.PasswordTextField
@@ -29,7 +30,14 @@ import com.example.proyecto_semestral.viewmodel.FormularioViewModel
 
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: (name: String, email: String, password: String) -> Boolean,
+    onRegisterSuccess: (
+        name: String,
+        email: String,
+        password: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) -> Boolean,
     onLoginClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -110,6 +118,65 @@ fun RegisterScreen(
                 onPasswordVisibilityChange = formularioViewModel::onConfirmPasswordVisibilityChange
             )
 
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Text(
+                text = "Mi negocio",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Completa los datos que describen tu negocio.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            AppTextField(
+                value = uiState.businessName,
+                onValueChange = formularioViewModel::onBusinessNameChange,
+                label = "Nombre del negocio (opcional)",
+                placeholder = "Nombre de tu negocio"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Tipo de negocio",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AppDropdownField(
+                value = uiState.businessType,
+                options = businessTypes,
+                onValueChange = formularioViewModel::onBusinessTypeChange
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Tamaño del negocio",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AppDropdownField(
+                value = uiState.businessSize,
+                options = businessSizes,
+                onValueChange = formularioViewModel::onBusinessSizeChange
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
             PrimaryButton(
                 text = "Crear cuenta",
@@ -118,7 +185,10 @@ fun RegisterScreen(
                         val isRegistered = onRegisterSuccess(
                             uiState.name,
                             uiState.email,
-                            uiState.password
+                            uiState.password,
+                            uiState.businessName,
+                            uiState.businessType,
+                            uiState.businessSize
                         )
                         if (!isRegistered) {
                             formularioViewModel.showEmailAlreadyRegisteredError()
@@ -142,12 +212,29 @@ fun RegisterScreen(
     }
 }
 
+private val businessTypes = listOf(
+    "Sin negocio",
+    "Pastelería",
+    "Panadería",
+    "Cafetería",
+    "Restaurante",
+    "Otro"
+)
+
+private val businessSizes = listOf(
+    "Selecciona una opción",
+    "Emprendimiento",
+    "Pequeño",
+    "Mediano",
+    "Grande"
+)
+
 @Preview(showBackground = true)
 @Composable
 private fun RegisterScreenPreview() {
     ProyectoSemestralTheme {
         RegisterScreen(
-            onRegisterSuccess = { _, _, _ -> true },
+            onRegisterSuccess = { _, _, _, _, _, _ -> true },
             onLoginClick = {}
         )
     }
