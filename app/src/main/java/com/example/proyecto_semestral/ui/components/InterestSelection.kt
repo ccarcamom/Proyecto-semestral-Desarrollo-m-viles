@@ -1,5 +1,9 @@
 package com.example.proyecto_semestral.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -79,25 +84,43 @@ fun InterestSelectionItem(
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(24.dp)
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.surfaceVariant
+        } else {
+            MaterialTheme.colorScheme.background
+        },
+        animationSpec = tween(durationMillis = 280),
+        label = "interestContainerColor"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            Color.Transparent
+        } else {
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+        },
+        animationSpec = tween(durationMillis = 280),
+        label = "interestBorderColor"
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (selected) 0.dp else 1.5.dp,
+        animationSpec = tween(durationMillis = 280),
+        label = "interestBorderWidth"
+    )
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(96.dp)
-                .then(
-                    if (selected) {
-                        Modifier.background(
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            shape = shape
-                        )
-                    } else {
-                        Modifier.border(
-                            width = 1.5.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
-                            shape = shape
-                        )
-                    }
+                .background(
+                    color = containerColor,
+                    shape = shape
+                )
+                .border(
+                    width = borderWidth,
+                    color = borderColor,
+                    shape = shape
                 )
                 .clip(shape)
                 .toggleable(
@@ -142,33 +165,67 @@ private fun InterestCheckbox(
     val outlineColor = MaterialTheme.colorScheme.outline
     val checkColor = MaterialTheme.colorScheme.onPrimary
     val shape = RoundedCornerShape(8.dp)
+    val checkboxSize by animateDpAsState(
+        targetValue = if (checked) 46.dp else 44.dp,
+        animationSpec = tween(durationMillis = 220),
+        label = "interestCheckboxSize"
+    )
+    val backgroundColor by animateColorAsState(
+        targetValue = if (checked) primaryColor else Color.Transparent,
+        animationSpec = tween(durationMillis = 220),
+        label = "interestCheckboxBackground"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) Color.Transparent else outlineColor,
+        animationSpec = tween(durationMillis = 220),
+        label = "interestCheckboxBorder"
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (checked) 0.dp else 2.dp,
+        animationSpec = tween(durationMillis = 220),
+        label = "interestCheckboxBorderWidth"
+    )
+    val checkProgress by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = tween(durationMillis = 260),
+        label = "interestCheckProgress"
+    )
 
     Canvas(
         modifier = modifier
-            .size(44.dp)
-            .then(
-                if (checked) {
-                    Modifier.background(primaryColor, shape)
-                } else {
-                    Modifier.border(2.dp, outlineColor, shape)
-                }
-            )
+            .size(checkboxSize)
+            .background(backgroundColor, shape)
+            .border(borderWidth, borderColor, shape)
     ) {
-        if (checked) {
+        if (checkProgress > 0f) {
+            val firstLineProgress = (checkProgress * 2f).coerceIn(0f, 1f)
+            val secondLineProgress = ((checkProgress - 0.5f) * 2f).coerceIn(0f, 1f)
+            val firstStart = Offset(size.width * 0.24f, size.height * 0.52f)
+            val firstEnd = Offset(size.width * 0.43f, size.height * 0.70f)
+            val secondEnd = Offset(size.width * 0.77f, size.height * 0.31f)
+
             drawLine(
                 color = checkColor,
-                start = Offset(size.width * 0.24f, size.height * 0.52f),
-                end = Offset(size.width * 0.43f, size.height * 0.70f),
+                start = firstStart,
+                end = Offset(
+                    x = firstStart.x + (firstEnd.x - firstStart.x) * firstLineProgress,
+                    y = firstStart.y + (firstEnd.y - firstStart.y) * firstLineProgress
+                ),
                 strokeWidth = 3.5.dp.toPx(),
                 cap = StrokeCap.Round
             )
-            drawLine(
-                color = checkColor,
-                start = Offset(size.width * 0.43f, size.height * 0.70f),
-                end = Offset(size.width * 0.77f, size.height * 0.31f),
-                strokeWidth = 3.5.dp.toPx(),
-                cap = StrokeCap.Round
-            )
+            if (secondLineProgress > 0f) {
+                drawLine(
+                    color = checkColor,
+                    start = firstEnd,
+                    end = Offset(
+                        x = firstEnd.x + (secondEnd.x - firstEnd.x) * secondLineProgress,
+                        y = firstEnd.y + (secondEnd.y - firstEnd.y) * secondLineProgress
+                    ),
+                    strokeWidth = 3.5.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            }
         }
     }
 }

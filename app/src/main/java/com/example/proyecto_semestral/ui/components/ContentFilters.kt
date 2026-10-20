@@ -1,5 +1,7 @@
 package com.example.proyecto_semestral.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -77,21 +79,33 @@ private fun FilterChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (selected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.background
-    }
-    val contentColor = if (selected) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onBackground
-    }
-    val borderColor = if (selected) {
-        Color.Transparent
-    } else {
-        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-    }
+    val backgroundColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.background
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "filterBackgroundColor"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "filterContentColor"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            Color.Transparent
+        } else {
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        },
+        animationSpec = tween(durationMillis = 250),
+        label = "filterBorderColor"
+    )
 
     Text(
         text = text,
