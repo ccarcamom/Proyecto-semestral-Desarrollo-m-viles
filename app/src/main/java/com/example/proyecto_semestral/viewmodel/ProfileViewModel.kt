@@ -12,8 +12,6 @@ class ProfileViewModel : ViewModel() {
     var uiState by mutableStateOf(ProfileUiState())
         private set
 
-    private var initialized = false
-
     fun initialize(
         name: String,
         email: String,
@@ -23,8 +21,6 @@ class ProfileViewModel : ViewModel() {
         businessSize: String,
         selectedInterests: Set<String>
     ) {
-        if (initialized) return
-
         uiState = uiState.copy(
             name = name,
             email = email,
@@ -34,7 +30,6 @@ class ProfileViewModel : ViewModel() {
             businessSize = businessSize,
             selectedInterests = selectedInterests
         )
-        initialized = true
     }
 
     fun onNameChange(value: String) {
