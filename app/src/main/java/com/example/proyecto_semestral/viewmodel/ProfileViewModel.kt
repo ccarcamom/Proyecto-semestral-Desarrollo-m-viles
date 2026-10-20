@@ -14,10 +14,24 @@ class ProfileViewModel : ViewModel() {
 
     private var initialized = false
 
-    fun initialize(name: String, email: String) {
+    fun initialize(
+        name: String,
+        email: String,
+        phone: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) {
         if (initialized) return
 
-        uiState = uiState.copy(name = name, email = email)
+        uiState = uiState.copy(
+            name = name,
+            email = email,
+            phone = phone,
+            businessName = businessName,
+            businessType = businessType,
+            businessSize = businessSize
+        )
         initialized = true
     }
 

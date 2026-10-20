@@ -44,6 +44,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_SIZE
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
@@ -55,6 +57,10 @@ import com.example.proyecto_semestral.viewmodel.ProfileViewModel
 fun ProfileScreen(
     initialName: String = "",
     initialEmail: String = "",
+    initialPhone: String = "",
+    initialBusinessName: String = "",
+    initialBusinessType: String = DEFAULT_BUSINESS_TYPE,
+    initialBusinessSize: String = DEFAULT_BUSINESS_SIZE,
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
@@ -70,8 +76,22 @@ fun ProfileScreen(
     val profileViewModel: ProfileViewModel = viewModel()
     val uiState = profileViewModel.uiState
 
-    LaunchedEffect(initialName, initialEmail) {
-        profileViewModel.initialize(initialName, initialEmail)
+    LaunchedEffect(
+        initialName,
+        initialEmail,
+        initialPhone,
+        initialBusinessName,
+        initialBusinessType,
+        initialBusinessSize
+    ) {
+        profileViewModel.initialize(
+            name = initialName,
+            email = initialEmail,
+            phone = initialPhone,
+            businessName = initialBusinessName,
+            businessType = initialBusinessType,
+            businessSize = initialBusinessSize
+        )
     }
 
     Scaffold(

@@ -2,6 +2,8 @@ package com.example.proyecto_semestral.navigation
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_SIZE
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
 
 class RouterGuard(context: Context) {
 
@@ -49,6 +51,42 @@ class RouterGuard(context: Context) {
         return sharedPreferences.getString(KEY_USER_EMAIL, null).orEmpty()
     }
 
+    fun saveProfile(
+        name: String,
+        email: String,
+        phone: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) {
+        sharedPreferences.edit()
+            .putString(KEY_USER_NAME, name)
+            .putString(KEY_USER_EMAIL, email)
+            .putString(KEY_USER_PHONE, phone)
+            .putString(KEY_BUSINESS_NAME, businessName)
+            .putString(KEY_BUSINESS_TYPE, businessType)
+            .putString(KEY_BUSINESS_SIZE, businessSize)
+            .apply()
+    }
+
+    fun getUserPhone(): String {
+        return sharedPreferences.getString(KEY_USER_PHONE, null).orEmpty()
+    }
+
+    fun getBusinessName(): String {
+        return sharedPreferences.getString(KEY_BUSINESS_NAME, null).orEmpty()
+    }
+
+    fun getBusinessType(): String {
+        return sharedPreferences.getString(KEY_BUSINESS_TYPE, DEFAULT_BUSINESS_TYPE)
+            ?: DEFAULT_BUSINESS_TYPE
+    }
+
+    fun getBusinessSize(): String {
+        return sharedPreferences.getString(KEY_BUSINESS_SIZE, DEFAULT_BUSINESS_SIZE)
+            ?: DEFAULT_BUSINESS_SIZE
+    }
+
     fun logout() {
         sharedPreferences.edit().clear().apply()
     }
@@ -58,5 +96,9 @@ class RouterGuard(context: Context) {
         const val KEY_IS_LOGGED = "is_logged_in"
         const val KEY_USER_NAME = "user_name"
         const val KEY_USER_EMAIL = "user_email"
+        const val KEY_USER_PHONE = "user_phone"
+        const val KEY_BUSINESS_NAME = "business_name"
+        const val KEY_BUSINESS_TYPE = "business_type"
+        const val KEY_BUSINESS_SIZE = "business_size"
     }
 }
