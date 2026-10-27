@@ -15,6 +15,7 @@ class ProfileViewModel : ViewModel() {
     fun initialize(
         name: String,
         email: String,
+        profileImageUri: String,
         phone: String,
         businessName: String,
         businessType: String,
@@ -24,12 +25,17 @@ class ProfileViewModel : ViewModel() {
         uiState = uiState.copy(
             name = name,
             email = email,
+            profileImageUri = profileImageUri,
             phone = phone,
             businessName = businessName,
             businessType = businessType,
             businessSize = businessSize,
             selectedInterests = selectedInterests
         )
+    }
+
+    fun onProfileImageChange(uri: String) {
+        uiState = uiState.copy(profileImageUri = uri)
     }
 
     fun onNameChange(value: String) {

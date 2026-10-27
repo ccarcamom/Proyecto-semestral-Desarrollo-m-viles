@@ -3,6 +3,7 @@ package com.example.proyecto_semestral.model.profile
 data class ProfileUiState(
     val name: String = "",
     val email: String = "",
+    val profileImageUri: String = "",
     val phone: String = "",
     val businessName: String = "",
     val businessType: String = DEFAULT_BUSINESS_TYPE,

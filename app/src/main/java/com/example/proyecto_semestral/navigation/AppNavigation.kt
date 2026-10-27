@@ -40,6 +40,9 @@ fun AppNavigation() {
     var currentUserEmail by rememberSaveable {
         mutableStateOf(routerGuard.getUserEmail())
     }
+    var currentProfileImageUri by rememberSaveable {
+        mutableStateOf(routerGuard.getProfileImageUri())
+    }
     var currentUserPhone by rememberSaveable {
         mutableStateOf(routerGuard.getUserPhone())
     }
@@ -88,6 +91,7 @@ fun AppNavigation() {
                         routerGuard.logout()
                         currentUserName = "Usuario"
                         currentUserEmail = ""
+                        currentProfileImageUri = ""
                         currentUserPhone = ""
                         currentBusinessName = ""
                         currentBusinessType = DEFAULT_BUSINESS_TYPE
@@ -177,6 +181,7 @@ fun AppNavigation() {
                     routerGuard.saveProfile(
                         name = currentUserName,
                         email = currentUserEmail,
+                        profileImageUri = currentProfileImageUri,
                         phone = currentUserPhone,
                         businessName = currentBusinessName,
                         businessType = currentBusinessType,
@@ -256,15 +261,17 @@ fun AppNavigation() {
                 ProfileScreen(
                     initialName = currentUserName,
                     initialEmail = currentUserEmail,
+                    initialProfileImageUri = currentProfileImageUri,
                     initialPhone = currentUserPhone,
                     initialBusinessName = currentBusinessName,
                     initialBusinessType = currentBusinessType,
                     initialBusinessSize = currentBusinessSize,
                     initialInterests = currentInterests,
                     onBack = { currentRoute = AppRoute.Home },
-                    onSaveChanges = { name, email, phone, businessName, businessType, businessSize, interests ->
+                    onSaveChanges = { name, email, profileImageUri, phone, businessName, businessType, businessSize, interests ->
                         currentUserName = name.trim().ifBlank { currentUserName }
                         currentUserEmail = email.trim()
+                        currentProfileImageUri = profileImageUri
                         currentUserPhone = phone.trim()
                         currentBusinessName = businessName.trim()
                         currentBusinessType = businessType
@@ -273,6 +280,7 @@ fun AppNavigation() {
                         routerGuard.saveProfile(
                             name = currentUserName,
                             email = currentUserEmail,
+                            profileImageUri = currentProfileImageUri,
                             phone = currentUserPhone,
                             businessName = currentBusinessName,
                             businessType = currentBusinessType,

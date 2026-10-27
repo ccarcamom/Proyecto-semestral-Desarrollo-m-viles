@@ -54,6 +54,7 @@ class RouterGuard(context: Context) {
     fun saveProfile(
         name: String,
         email: String,
+        profileImageUri: String,
         phone: String,
         businessName: String,
         businessType: String,
@@ -63,6 +64,7 @@ class RouterGuard(context: Context) {
         sharedPreferences.edit()
             .putString(KEY_USER_NAME, name)
             .putString(KEY_USER_EMAIL, email)
+            .putString(KEY_PROFILE_IMAGE_URI, profileImageUri)
             .putString(KEY_USER_PHONE, phone)
             .putString(KEY_BUSINESS_NAME, businessName)
             .putString(KEY_BUSINESS_TYPE, businessType)
@@ -73,6 +75,10 @@ class RouterGuard(context: Context) {
 
     fun getUserPhone(): String {
         return sharedPreferences.getString(KEY_USER_PHONE, null).orEmpty()
+    }
+
+    fun getProfileImageUri(): String {
+        return sharedPreferences.getString(KEY_PROFILE_IMAGE_URI, null).orEmpty()
     }
 
     fun getBusinessName(): String {
@@ -104,6 +110,7 @@ class RouterGuard(context: Context) {
         const val KEY_IS_LOGGED = "is_logged_in"
         const val KEY_USER_NAME = "user_name"
         const val KEY_USER_EMAIL = "user_email"
+        const val KEY_PROFILE_IMAGE_URI = "profile_image_uri"
         const val KEY_USER_PHONE = "user_phone"
         const val KEY_BUSINESS_NAME = "business_name"
         const val KEY_BUSINESS_TYPE = "business_type"

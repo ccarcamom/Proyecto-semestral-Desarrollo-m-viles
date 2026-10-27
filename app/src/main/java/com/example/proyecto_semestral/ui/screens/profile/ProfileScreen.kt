@@ -1,6 +1,18 @@
 package com.example.proyecto_semestral.ui.screens.profile
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,18 +36,25 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
 import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_SIZE
 import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
 import com.example.proyecto_semestral.ui.components.AppBottomBar
@@ -45,11 +64,14 @@ import com.example.proyecto_semestral.ui.components.InterestSelection
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 import com.example.proyecto_semestral.viewmodel.ProfileViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ProfileScreen(
     initialName: String = "",
     initialEmail: String = "",
+    initialProfileImageUri: String = "",
     initialPhone: String = "",
     initialBusinessName: String = "",
     initialBusinessType: String = DEFAULT_BUSINESS_TYPE,
@@ -61,19 +83,63 @@ fun ProfileScreen(
     onSaveChanges: (
         name: String,
         email: String,
+        profileImageUri: String,
         phone: String,
         businessName: String,
         businessType: String,
         businessSize: String,
         interests: Set<String>
-    ) -> Unit = { _, _, _, _, _, _, _ -> }
+    ) -> Unit = { _, _, _, _, _, _, _, _ -> }
 ) {
     val profileViewModel: ProfileViewModel = viewModel()
     val uiState = profileViewModel.uiState
+    val context = LocalContext.current
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) {
+                // El selector igualmente mantiene acceso durante esta sesión.
+            }
+            profileViewModel.onProfileImageChange(uri.toString())
+        }
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            galleryLauncher.launch(arrayOf("image/*"))
+        } else {
+            Toast.makeText(
+                context,
+                "Se necesita permiso para acceder a tus imágenes.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    val openGallery = {
+        val permissions = galleryPermissions()
+        val hasPermission = permissions.any { permission ->
+            ContextCompat.checkSelfPermission(context, permission) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+
+        if (hasPermission) {
+            galleryLauncher.launch(arrayOf("image/*"))
+        } else {
+            permissionLauncher.launch(permissions)
+        }
+    }
 
     LaunchedEffect(
         initialName,
         initialEmail,
+        initialProfileImageUri,
         initialPhone,
         initialBusinessName,
         initialBusinessType,
@@ -83,6 +149,7 @@ fun ProfileScreen(
         profileViewModel.initialize(
             name = initialName,
             email = initialEmail,
+            profileImageUri = initialProfileImageUri,
             phone = initialPhone,
             businessName = initialBusinessName,
             businessType = initialBusinessType,
@@ -105,6 +172,7 @@ fun ProfileScreen(
                         onSaveChanges(
                             profile.name.trim(),
                             profile.email.trim(),
+                            profile.profileImageUri,
                             profile.phone.trim(),
                             profile.businessName.trim(),
                             profile.businessType,
@@ -126,7 +194,12 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(22.dp))
 
-            ProfileSummary(name = uiState.name, email = uiState.email)
+            ProfileSummary(
+                name = uiState.name,
+                email = uiState.email,
+                profileImageUri = uiState.profileImageUri,
+                onChoosePhoto = openGallery
+            )
 
             Spacer(modifier = Modifier.height(26.dp))
 
@@ -250,7 +323,12 @@ private fun ProfileTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun ProfileSummary(name: String, email: String) {
+private fun ProfileSummary(
+    name: String,
+    email: String,
+    profileImageUri: String,
+    onChoosePhoto: () -> Unit
+) {
     val displayName = name.ifBlank { "Usuario" }
     val initials = displayName
         .trim()
@@ -263,21 +341,17 @@ private fun ProfileSummary(name: String, email: String) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
+        ProfilePicture(
+            imageUri = profileImageUri,
+            initials = initials,
             modifier = Modifier
                 .size(86.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = initials,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                .clickable(
+                role = Role.Button,
+                onClickLabel = "Elegir foto de perfil",
+                onClick = onChoosePhoto
             )
-        }
+        )
 
         Spacer(modifier = Modifier.size(20.dp))
 
@@ -298,6 +372,82 @@ private fun ProfileSummary(name: String, email: String) {
             )
         }
     }
+}
+
+@Composable
+private fun ProfilePicture(
+    imageUri: String,
+    initials: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val image by produceState<ImageBitmap?>(initialValue = null, imageUri) {
+        value = if (imageUri.isBlank()) {
+            null
+        } else {
+            loadProfileImage(context, Uri.parse(imageUri))
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (image != null) {
+            Image(
+                bitmap = image!!,
+                contentDescription = "Foto de perfil",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Text(
+                text = initials,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+    }
+}
+
+private suspend fun loadProfileImage(context: Context, uri: Uri): ImageBitmap? =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                    val largestSide = maxOf(info.size.width, info.size.height)
+                    if (largestSide > 512) {
+                        val scale = 512f / largestSide
+                        decoder.setTargetSize(
+                            (info.size.width * scale).toInt(),
+                            (info.size.height * scale).toInt()
+                        )
+                    }
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }.asImageBitmap()
+            } else {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                }
+            }
+        }.getOrNull()
+    }
+
+private fun galleryPermissions(): Array<String> = when {
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+    )
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(
+        Manifest.permission.READ_MEDIA_IMAGES
+    )
+    else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 }
 
 @Composable
