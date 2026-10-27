@@ -1,5 +1,6 @@
 package com.example.proyecto_semestral.ui.screens.recipe
 
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,6 +77,8 @@ private fun RecipeContent(
     onRelatedVideoClick: (videoId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -121,6 +125,36 @@ private fun RecipeContent(
 
             Spacer(modifier = Modifier.height(24.dp))
             RecipeMetadata(recipe)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    val ingredients = recipe.ingredients.joinToString("\n") { ingredient ->
+                        "• ${ingredient.name}: ${ingredient.amount}"
+                    }
+                    val shareText = buildString {
+                        appendLine(recipe.title)
+                        appendLine(recipe.description)
+                        appendLine()
+                        appendLine("Duración: ${recipe.duration}")
+                        appendLine("Rendimiento: ${recipe.yield}")
+                        appendLine()
+                        appendLine("Ingredientes:")
+                        append(ingredients)
+                    }
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, recipe.title)
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(
+                        Intent.createChooser(shareIntent, "Compartir receta")
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Compartir receta")
+            }
 
             Spacer(modifier = Modifier.height(28.dp))
             SectionTitle(text = "Ingredientes")

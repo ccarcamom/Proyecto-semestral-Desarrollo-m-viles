@@ -1,5 +1,17 @@
 package com.example.proyecto_semestral.ui.screens.contact
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Build
+import android.os.CancellationSignal
+import android.os.Looper
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,10 +46,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
@@ -44,6 +59,7 @@ import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.components.SimulatedConsultationDialog
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import java.util.Locale
 
 @Composable
 fun ContactScreen(
@@ -51,15 +67,63 @@ fun ContactScreen(
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
     var phone by rememberSaveable { mutableStateOf("") }
     var businessName by rememberSaveable { mutableStateOf("") }
     var businessType by rememberSaveable { mutableStateOf(businessTypes.first()) }
     var businessSize by rememberSaveable { mutableStateOf(businessSizes.first()) }
     var description by rememberSaveable { mutableStateOf("") }
+    var location by rememberSaveable { mutableStateOf("") }
+    var isLocating by rememberSaveable { mutableStateOf(false) }
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
     var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
     var showConfirmation by rememberSaveable { mutableStateOf(false) }
+
+    val fetchLocation: () -> Unit = {
+        isLocating = true
+        getCurrentLocation(context) { currentLocation ->
+            isLocating = false
+            if (currentLocation != null) {
+                location = String.format(
+                    Locale.US,
+                    "%.6f, %.6f",
+                    currentLocation.latitude,
+                    currentLocation.longitude
+                )
+            } else {
+                Toast.makeText(
+                    context,
+                    "No fue posible obtener tu ubicación. Activa la ubicación e inténtalo nuevamente.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            fetchLocation()
+        } else {
+            Toast.makeText(
+                context,
+                "Se necesita permiso de ubicación para completar este campo.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    val requestLocation: () -> Unit = {
+        val hasLocationPermission = locationPermissions.any { permission ->
+            ContextCompat.checkSelfPermission(context, permission) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+        if (hasLocationPermission) {
+            fetchLocation()
+        } else {
+            locationPermissionLauncher.launch(locationPermissions)
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -154,6 +218,24 @@ fun ContactScreen(
                     options = businessSizes,
                     onValueChange = { businessSize = it }
                 )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ContactField(label = "Ubicación") {
+                AppTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    placeholder = "Latitud, longitud"
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = requestLocation,
+                    enabled = !isLocating,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = if (isLocating) "Obteniendo ubicación..." else "Usar mi ubicación actual")
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -294,6 +376,49 @@ private fun DownArrow(color: Color, modifier: Modifier = Modifier) {
 
 private fun String.isValidEmail(): Boolean {
     return isNotBlank() && contains("@") && substringAfter("@").contains(".")
+}
+
+private val locationPermissions = arrayOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
+
+@Suppress("DEPRECATION")
+private fun getCurrentLocation(
+    context: Context,
+    onResult: (Location?) -> Unit
+) {
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    val provider = when {
+        locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ->
+            LocationManager.NETWORK_PROVIDER
+        locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ->
+            LocationManager.GPS_PROVIDER
+        else -> null
+    }
+
+    if (provider == null) {
+        onResult(null)
+        return
+    }
+
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            locationManager.getCurrentLocation(
+                provider,
+                CancellationSignal(),
+                context.mainExecutor,
+                onResult
+            )
+        } else {
+            val listener = LocationListener { location -> onResult(location) }
+            locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+        }
+    } catch (_: SecurityException) {
+        onResult(null)
+    } catch (_: IllegalArgumentException) {
+        onResult(null)
+    }
 }
 
 private val businessTypes = listOf(
