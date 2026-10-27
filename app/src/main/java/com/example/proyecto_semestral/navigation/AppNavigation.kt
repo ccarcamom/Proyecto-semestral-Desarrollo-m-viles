@@ -1,5 +1,12 @@
 package com.example.proyecto_semestral.navigation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +72,25 @@ fun AppNavigation() {
     var selectedCourseId by rememberSaveable { mutableStateOf("") }
     var videoReturnRoute by rememberSaveable { mutableStateOf(AppRoute.Explore) }
 
-    when (currentRoute) {
+    AnimatedContent(
+        targetState = currentRoute,
+        transitionSpec = {
+            val movingForward = targetState.ordinal >= initialState.ordinal
+            val enterDirection = if (movingForward) 1 else -1
+            val exitDirection = -enterDirection
+
+            (slideInHorizontally(
+                animationSpec = tween(durationMillis = 320),
+                initialOffsetX = { fullWidth -> enterDirection * fullWidth / 5 }
+            ) + fadeIn(animationSpec = tween(durationMillis = 240))) togetherWith
+                (slideOutHorizontally(
+                    animationSpec = tween(durationMillis = 320),
+                    targetOffsetX = { fullWidth -> exitDirection * fullWidth / 5 }
+                ) + fadeOut(animationSpec = tween(durationMillis = 220)))
+        },
+        label = "Transición entre pantallas"
+    ) { route ->
+    when (route) {
         AppRoute.Home -> {
             if (routerGuard.canAccessDashboard()) {
                 HomeScreen(
@@ -301,6 +326,7 @@ fun AppNavigation() {
                 currentRoute = AppRoute.Login
             }
         }
+    }
     }
 }
 
