@@ -1,8 +1,19 @@
 package com.example.proyecto_semestral.ui.screens.profile
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,60 +28,135 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_SIZE
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
+import com.example.proyecto_semestral.ui.components.InterestSelection
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.viewmodel.ProfileViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ProfileScreen(
     initialName: String = "",
     initialEmail: String = "",
+    initialProfileImageUri: String = "",
+    initialPhone: String = "",
+    initialBusinessName: String = "",
+    initialBusinessType: String = DEFAULT_BUSINESS_TYPE,
+    initialBusinessSize: String = DEFAULT_BUSINESS_SIZE,
+    initialInterests: Set<String> = emptySet(),
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onSaveChanges: (
         name: String,
         email: String,
+        profileImageUri: String,
         phone: String,
         businessName: String,
         businessType: String,
-        businessSize: String
-    ) -> Unit = { _, _, _, _, _, _ -> }
+        businessSize: String,
+        interests: Set<String>
+    ) -> Unit = { _, _, _, _, _, _, _, _ -> }
 ) {
-    var name by rememberSaveable(initialName) { mutableStateOf(initialName) }
-    var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
-    var phone by rememberSaveable { mutableStateOf("") }
-    var businessName by rememberSaveable { mutableStateOf("") }
-    var businessType by rememberSaveable { mutableStateOf(businessTypes.first()) }
-    var businessSize by rememberSaveable { mutableStateOf(businessSizes.first()) }
+    val profileViewModel: ProfileViewModel = viewModel()
+    val uiState = profileViewModel.uiState
+    val context = LocalContext.current
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: SecurityException) {
+                // El selector igualmente mantiene acceso durante esta sesión.
+            }
+            profileViewModel.onProfileImageChange(uri.toString())
+        }
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            galleryLauncher.launch(arrayOf("image/*"))
+        } else {
+            Toast.makeText(
+                context,
+                "Se necesita permiso para acceder a tus imágenes.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    val openGallery = {
+        val permissions = galleryPermissions()
+        val hasPermission = permissions.any { permission ->
+            ContextCompat.checkSelfPermission(context, permission) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+
+        if (hasPermission) {
+            galleryLauncher.launch(arrayOf("image/*"))
+        } else {
+            permissionLauncher.launch(permissions)
+        }
+    }
+
+    LaunchedEffect(
+        initialName,
+        initialEmail,
+        initialProfileImageUri,
+        initialPhone,
+        initialBusinessName,
+        initialBusinessType,
+        initialBusinessSize,
+        initialInterests
+    ) {
+        profileViewModel.initialize(
+            name = initialName,
+            email = initialEmail,
+            profileImageUri = initialProfileImageUri,
+            phone = initialPhone,
+            businessName = initialBusinessName,
+            businessType = initialBusinessType,
+            businessSize = initialBusinessSize,
+            selectedInterests = initialInterests
+        )
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -81,14 +167,19 @@ fun ProfileScreen(
         bottomBar = {
             ProfileBottomArea(
                 onSaveChanges = {
-                    onSaveChanges(
-                        name,
-                        email,
-                        phone,
-                        businessName,
-                        businessType,
-                        businessSize
-                    )
+                    if (profileViewModel.validateProfile()) {
+                        val profile = profileViewModel.uiState
+                        onSaveChanges(
+                            profile.name.trim(),
+                            profile.email.trim(),
+                            profile.profileImageUri,
+                            profile.phone.trim(),
+                            profile.businessName.trim(),
+                            profile.businessType,
+                            profile.businessSize,
+                            profile.selectedInterests
+                        )
+                    }
                 },
                 onBottomBarItemSelected = onBottomBarItemSelected
             )
@@ -103,7 +194,12 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(22.dp))
 
-            ProfileSummary(name = name, email = email)
+            ProfileSummary(
+                name = uiState.name,
+                email = uiState.email,
+                profileImageUri = uiState.profileImageUri,
+                onChoosePhoto = openGallery
+            )
 
             Spacer(modifier = Modifier.height(26.dp))
 
@@ -113,9 +209,11 @@ fun ProfileScreen(
 
             ProfileField(label = "Nombre") {
                 AppTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    placeholder = "Tu nombre"
+                    value = uiState.name,
+                    onValueChange = profileViewModel::onNameChange,
+                    placeholder = "Tu nombre",
+                    isError = uiState.errors.name != null,
+                    supportingText = uiState.errors.name
                 )
             }
 
@@ -123,9 +221,11 @@ fun ProfileScreen(
 
             ProfileField(label = "Correo electrónico") {
                 AppTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = "tu@correo.com"
+                    value = uiState.email,
+                    onValueChange = profileViewModel::onEmailChange,
+                    placeholder = "tu@correo.com",
+                    isError = uiState.errors.email != null,
+                    supportingText = uiState.errors.email
                 )
             }
 
@@ -133,9 +233,11 @@ fun ProfileScreen(
 
             ProfileField(label = "Teléfono (opcional)") {
                 AppTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    placeholder = "+56"
+                    value = uiState.phone,
+                    onValueChange = profileViewModel::onPhoneChange,
+                    placeholder = "+56",
+                    isError = uiState.errors.phone != null,
+                    supportingText = uiState.errors.phone
                 )
             }
 
@@ -144,40 +246,28 @@ fun ProfileScreen(
             SectionTitle(text = "Mi negocio")
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Puedes completar estos datos después.",
+                text = "Información registrada sobre tu negocio.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ProfileField(label = "Nombre del negocio (opcional)") {
-                AppTextField(
-                    value = businessName,
-                    onValueChange = { businessName = it },
-                    placeholder = "Nombre de tu negocio"
-                )
-            }
+            BusinessInfoRow(
+                label = "Nombre del negocio",
+                value = uiState.businessName.ifBlank { "Sin información" }
+            )
+            BusinessInfoRow(label = "Tipo de negocio", value = uiState.businessType)
+            BusinessInfoRow(label = "Tamaño del negocio", value = uiState.businessSize)
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            ProfileField(label = "Tipo de negocio") {
-                ProfileDropdown(
-                    value = businessType,
-                    options = businessTypes,
-                    onValueChange = { businessType = it }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            ProfileField(label = "Tamaño del negocio") {
-                ProfileDropdown(
-                    value = businessSize,
-                    options = businessSizes,
-                    onValueChange = { businessSize = it }
-                )
-            }
+            InterestSelection(
+                interests = availableInterests,
+                selectedInterests = uiState.selectedInterests,
+                onInterestChange = profileViewModel::onInterestChange,
+                title = "Mis intereses"
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
         }
@@ -233,7 +323,12 @@ private fun ProfileTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun ProfileSummary(name: String, email: String) {
+private fun ProfileSummary(
+    name: String,
+    email: String,
+    profileImageUri: String,
+    onChoosePhoto: () -> Unit
+) {
     val displayName = name.ifBlank { "Usuario" }
     val initials = displayName
         .trim()
@@ -246,21 +341,17 @@ private fun ProfileSummary(name: String, email: String) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
+        ProfilePicture(
+            imageUri = profileImageUri,
+            initials = initials,
             modifier = Modifier
                 .size(86.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = initials,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                .clickable(
+                role = Role.Button,
+                onClickLabel = "Elegir foto de perfil",
+                onClick = onChoosePhoto
             )
-        }
+        )
 
         Spacer(modifier = Modifier.size(20.dp))
 
@@ -281,6 +372,82 @@ private fun ProfileSummary(name: String, email: String) {
             )
         }
     }
+}
+
+@Composable
+private fun ProfilePicture(
+    imageUri: String,
+    initials: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val image by produceState<ImageBitmap?>(initialValue = null, imageUri) {
+        value = if (imageUri.isBlank()) {
+            null
+        } else {
+            loadProfileImage(context, Uri.parse(imageUri))
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (image != null) {
+            Image(
+                bitmap = image!!,
+                contentDescription = "Foto de perfil",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Text(
+                text = initials,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+    }
+}
+
+private suspend fun loadProfileImage(context: Context, uri: Uri): ImageBitmap? =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                    val largestSide = maxOf(info.size.width, info.size.height)
+                    if (largestSide > 512) {
+                        val scale = 512f / largestSide
+                        decoder.setTargetSize(
+                            (info.size.width * scale).toInt(),
+                            (info.size.height * scale).toInt()
+                        )
+                    }
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }.asImageBitmap()
+            } else {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                }
+            }
+        }.getOrNull()
+    }
+
+private fun galleryPermissions(): Array<String> = when {
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
+        Manifest.permission.READ_MEDIA_IMAGES,
+        Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+    )
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(
+        Manifest.permission.READ_MEDIA_IMAGES
+    )
+    else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 }
 
 @Composable
@@ -315,55 +482,29 @@ private fun ProfileField(
 }
 
 @Composable
-private fun ProfileDropdown(
-    value: String,
-    options: List<String>,
-    onValueChange: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
-                    shape = RoundedCornerShape(10.dp)
-                )
-                .clickable { expanded = true }
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
-            )
-            DownArrow(
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
+private fun BusinessInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.weight(1f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
+        )
     }
+    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
 }
 
 @Composable
@@ -420,42 +561,11 @@ private fun BackArrow(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun DownArrow(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val stroke = 2.3.dp.toPx()
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.22f, size.height * 0.36f),
-            end = Offset(size.width * 0.5f, size.height * 0.64f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.5f, size.height * 0.64f),
-            end = Offset(size.width * 0.78f, size.height * 0.36f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-    }
-}
-
-private val businessTypes = listOf(
-    "Sin negocio",
+private val availableInterests = listOf(
+    "Chocolatería",
+    "Bollería",
     "Pastelería",
-    "Panadería",
-    "Cafetería",
-    "Restaurante",
-    "Otro"
-)
-
-private val businessSizes = listOf(
-    "Selecciona una opción",
-    "Emprendimiento",
-    "Pequeño",
-    "Mediano",
-    "Grande"
+    "Panadería"
 )
 
 @Preview(showBackground = true, widthDp = 430, heightDp = 900)

@@ -4,8 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.proyecto_semestral.model.FormularioErrores
-import com.example.proyecto_semestral.model.FormularioUiState
+import com.example.proyecto_semestral.model.auth.FormularioErrores
+import com.example.proyecto_semestral.model.auth.FormularioUiState
 
 class FormularioViewModel : ViewModel() {
 
@@ -32,6 +32,18 @@ class FormularioViewModel : ViewModel() {
             confirmPassword = value,
             errors = uiState.errors.copy(confirmPassword = null)
         )
+    }
+
+    fun onBusinessNameChange(value: String) {
+        uiState = uiState.copy(businessName = value)
+    }
+
+    fun onBusinessTypeChange(value: String) {
+        uiState = uiState.copy(businessType = value)
+    }
+
+    fun onBusinessSizeChange(value: String) {
+        uiState = uiState.copy(businessSize = value)
     }
 
     fun onPasswordVisibilityChange(visible: Boolean) {

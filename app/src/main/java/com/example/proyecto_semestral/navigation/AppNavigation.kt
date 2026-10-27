@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_SIZE
+import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.ContentFilter
 import com.example.proyecto_semestral.ui.screens.contact.ContactScreen
@@ -37,6 +39,24 @@ fun AppNavigation() {
     }
     var currentUserEmail by rememberSaveable {
         mutableStateOf(routerGuard.getUserEmail())
+    }
+    var currentProfileImageUri by rememberSaveable {
+        mutableStateOf(routerGuard.getProfileImageUri())
+    }
+    var currentUserPhone by rememberSaveable {
+        mutableStateOf(routerGuard.getUserPhone())
+    }
+    var currentBusinessName by rememberSaveable {
+        mutableStateOf(routerGuard.getBusinessName())
+    }
+    var currentBusinessType by rememberSaveable {
+        mutableStateOf(routerGuard.getBusinessType())
+    }
+    var currentBusinessSize by rememberSaveable {
+        mutableStateOf(routerGuard.getBusinessSize())
+    }
+    var currentInterests by remember {
+        mutableStateOf(routerGuard.getUserInterests())
     }
     var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
     var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
@@ -71,6 +91,12 @@ fun AppNavigation() {
                         routerGuard.logout()
                         currentUserName = "Usuario"
                         currentUserEmail = ""
+                        currentProfileImageUri = ""
+                        currentUserPhone = ""
+                        currentBusinessName = ""
+                        currentBusinessType = DEFAULT_BUSINESS_TYPE
+                        currentBusinessSize = DEFAULT_BUSINESS_SIZE
+                        currentInterests = emptySet()
                         currentRoute = AppRoute.Login
                     }
                 )
@@ -142,12 +168,26 @@ fun AppNavigation() {
         }
 
         AppRoute.Register -> RegisterScreen(
-            onRegisterSuccess = { name, email, password ->
+            onRegisterSuccess = { name, email, password, businessName, businessType, businessSize ->
                 val isRegistered = UserStore.registerUser(name, email, password)
                 if (isRegistered) {
                     currentUserName = name.trim()
                     currentUserEmail = email.trim().lowercase()
+                    currentBusinessName = businessName.trim()
+                    currentBusinessType = businessType
+                    currentBusinessSize = businessSize
+                    currentInterests = emptySet()
                     routerGuard.saveSession(true, currentUserName, currentUserEmail)
+                    routerGuard.saveProfile(
+                        name = currentUserName,
+                        email = currentUserEmail,
+                        profileImageUri = currentProfileImageUri,
+                        phone = currentUserPhone,
+                        businessName = currentBusinessName,
+                        businessType = currentBusinessType,
+                        businessSize = currentBusinessSize,
+                        interests = currentInterests
+                    )
                     currentRoute = AppRoute.Home
                 }
                 isRegistered
@@ -221,11 +261,32 @@ fun AppNavigation() {
                 ProfileScreen(
                     initialName = currentUserName,
                     initialEmail = currentUserEmail,
+                    initialProfileImageUri = currentProfileImageUri,
+                    initialPhone = currentUserPhone,
+                    initialBusinessName = currentBusinessName,
+                    initialBusinessType = currentBusinessType,
+                    initialBusinessSize = currentBusinessSize,
+                    initialInterests = currentInterests,
                     onBack = { currentRoute = AppRoute.Home },
-                    onSaveChanges = { name, email, _, _, _, _ ->
+                    onSaveChanges = { name, email, profileImageUri, phone, businessName, businessType, businessSize, interests ->
                         currentUserName = name.trim().ifBlank { currentUserName }
                         currentUserEmail = email.trim()
-                        routerGuard.saveSession(true, currentUserName, currentUserEmail)
+                        currentProfileImageUri = profileImageUri
+                        currentUserPhone = phone.trim()
+                        currentBusinessName = businessName.trim()
+                        currentBusinessType = businessType
+                        currentBusinessSize = businessSize
+                        currentInterests = interests
+                        routerGuard.saveProfile(
+                            name = currentUserName,
+                            email = currentUserEmail,
+                            profileImageUri = currentProfileImageUri,
+                            phone = currentUserPhone,
+                            businessName = currentBusinessName,
+                            businessType = currentBusinessType,
+                            businessSize = currentBusinessSize,
+                            interests = currentInterests
+                        )
                     },
                     onBottomBarItemSelected = { item ->
                         when (item) {

@@ -1,4 +1,4 @@
-package com.example.proyecto_semestral.model
+package com.example.proyecto_semestral.model.content
 
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.ui.components.ContentFilter
