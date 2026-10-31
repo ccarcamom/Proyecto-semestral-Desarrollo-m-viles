@@ -25,10 +25,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,26 +42,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_semestral.model.admin.AppRecipe
 import com.example.proyecto_semestral.ui.components.admin.AdminNavigationToggle
 import com.example.proyecto_semestral.ui.components.admin.AdminSection
 import com.example.proyecto_semestral.ui.components.admin.RecipeForm
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
-
-data class AdminRecipe(
-    val id: String,
-    val title: String,
-    val videoLink: String,
-    val description: String
-)
+import com.example.proyecto_semestral.viewmodel.admin.ManageRecipesViewModel
 
 @Composable
 fun ManageRecipesScreen(
     modifier: Modifier = Modifier,
-    initialRecipes: List<AdminRecipe> = sampleAdminRecipes,
     onNavigateToUsers: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    manageRecipesViewModel: ManageRecipesViewModel = viewModel()
 ) {
-    val recipes = remember(initialRecipes) { mutableStateListOf<AdminRecipe>().apply { addAll(initialRecipes) } }
+    val recipes by manageRecipesViewModel.recipes.collectAsState()
     var videoLink by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -82,16 +77,17 @@ fun ManageRecipesScreen(
         descriptionError = if (description.isBlank()) "Ingresa una descripción." else null
         if (linkError != null || descriptionError != null) return
 
-        val title = description.trim().substringBefore('.').take(48).ifBlank { "Nueva receta" }
         val id = editingId
         if (id == null) {
-            recipes.add(AdminRecipe(System.currentTimeMillis().toString(), title, videoLink.trim(), description.trim()))
+            manageRecipesViewModel.createRecipe(
+                videoUrl = videoLink,
+                description = description
+            )
         } else {
-            val index = recipes.indexOfFirst { it.id == id }
-            if (index >= 0) recipes[index] = recipes[index].copy(
-                title = title,
-                videoLink = videoLink.trim(),
-                description = description.trim()
+            manageRecipesViewModel.updateRecipe(
+                id = id,
+                videoUrl = videoLink,
+                description = description
             )
         }
         clearForm()
@@ -185,7 +181,7 @@ fun ManageRecipesScreen(
                     recipe = recipe,
                     onEdit = {
                         editingId = recipe.id
-                        videoLink = recipe.videoLink
+                        videoLink = recipe.videoUrl
                         description = recipe.description
                         linkError = null
                         descriptionError = null
@@ -200,7 +196,7 @@ fun ManageRecipesScreen(
 }
 
 @Composable
-private fun PublishedRecipeCard(recipe: AdminRecipe, onEdit: () -> Unit) {
+private fun PublishedRecipeCard(recipe: AppRecipe, onEdit: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -232,7 +228,7 @@ private fun PublishedRecipeCard(recipe: AdminRecipe, onEdit: () -> Unit) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = recipe.videoLink.substringAfter("://").substringBefore('/'),
+                    text = recipe.videoUrl.substringAfter("://").substringBefore('/'),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -279,21 +275,6 @@ private fun EditRecipeIcon(color: Color, modifier: Modifier = Modifier) {
         drawPath(path, color, style = Stroke(stroke, cap = StrokeCap.Round))
     }
 }
-
-private val sampleAdminRecipes = listOf(
-    AdminRecipe(
-        "1",
-        "Galletas con chips de chocolate",
-        "https://youtube.com/watch?v=galletas",
-        "Aprende a preparar galletas con chips de chocolate, paso a paso."
-    ),
-    AdminRecipe(
-        "2",
-        "Brownie de chocolate",
-        "https://youtube.com/watch?v=brownie",
-        "Prepara un brownie de chocolate húmedo y fácil."
-    )
-)
 
 @Preview(showBackground = true, widthDp = 430, heightDp = 1000)
 @Composable
