@@ -143,6 +143,16 @@ fun AppNavigation() {
                         selectedCourseId = courseId
                         currentRoute = AppRoute.Course
                     },
+                    onRecipesClick = {
+                        exploreSearchQuery = ""
+                        selectedExploreFilter = ContentFilter.Recipes
+                        currentRoute = AppRoute.Explore
+                    },
+                    onCoursesClick = {
+                        exploreSearchQuery = ""
+                        selectedExploreFilter = ContentFilter.Courses
+                        currentRoute = AppRoute.Explore
+                    },
                     onLogout = ::logout
                 )
             } else {

@@ -58,6 +58,8 @@ fun HomeScreen(
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     onSearch: (String) -> Unit = {},
     onCourseClick: (String) -> Unit = {},
+    onRecipesClick: () -> Unit = {},
+    onCoursesClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -136,8 +138,18 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                HomeShortcut("Recetas", ShortcutIcon.Book, Modifier.weight(1f))
-                HomeShortcut("Cursos", ShortcutIcon.Course, Modifier.weight(1f))
+                HomeShortcut(
+                    label = "Recetas",
+                    icon = ShortcutIcon.Book,
+                    onClick = onRecipesClick,
+                    modifier = Modifier.weight(1f)
+                )
+                HomeShortcut(
+                    label = "Cursos",
+                    icon = ShortcutIcon.Course,
+                    onClick = onCoursesClick,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -270,6 +282,7 @@ private fun HomeSearchField(
 private fun HomeShortcut(
     label: String,
     icon: ShortcutIcon,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -279,7 +292,7 @@ private fun HomeShortcut(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(22.dp)
             )
-            .clickable { }
+            .clickable(onClick = onClick)
             .padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
