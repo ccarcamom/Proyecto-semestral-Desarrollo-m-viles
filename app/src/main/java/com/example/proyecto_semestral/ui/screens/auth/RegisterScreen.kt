@@ -100,7 +100,7 @@ fun RegisterScreen(
                 value = uiState.email,
                 onValueChange = formularioViewModel::onEmailChange,
                 label = "Correo electronico",
-                placeholder = "demo@mastermartini.cl",
+                placeholder = "tucorreo@gmail.com",
                 isError = uiState.errors.email != null,
                 supportingText = uiState.errors.email
             )
