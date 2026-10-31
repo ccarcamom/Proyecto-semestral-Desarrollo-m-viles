@@ -32,7 +32,6 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 enum class ContentFilter {
     All,
     Recipes,
-    Videos,
     Courses
 }
 
@@ -58,11 +57,6 @@ fun ContentFilters(
             text = "Recetas",
             selected = selectedFilter == ContentFilter.Recipes,
             onClick = { onFilterSelected(ContentFilter.Recipes) }
-        )
-        FilterChip(
-            text = "Videos",
-            selected = selectedFilter == ContentFilter.Videos,
-            onClick = { onFilterSelected(ContentFilter.Videos) }
         )
         FilterChip(
             text = "Cursos",

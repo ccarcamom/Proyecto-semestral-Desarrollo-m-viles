@@ -58,7 +58,6 @@ fun ExploreScreen(
     onFilterSelected: (ContentFilter) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onRecipeClick: (String) -> Unit,
-    onVideoClick: (String) -> Unit,
     onCourseClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     exploreViewModel: ExploreViewModel = viewModel()
@@ -69,7 +68,6 @@ fun ExploreScreen(
         val matchesFilter = when (selectedFilter) {
             ContentFilter.All -> true
             ContentFilter.Recipes -> item.type == ContentFilter.Recipes
-            ContentFilter.Videos -> item.type == ContentFilter.Videos
             ContentFilter.Courses -> item.type == ContentFilter.Courses
         }
         val matchesQuery = searchQuery.isBlank() ||
@@ -152,7 +150,6 @@ fun ExploreScreen(
                     onClick = {
                         when (item.type) {
                             ContentFilter.Recipes -> onRecipeClick(item.id)
-                            ContentFilter.Videos -> onVideoClick(item.id)
                             ContentFilter.Courses -> onCourseClick(item.id)
                             ContentFilter.All -> Unit
                         }
@@ -262,9 +259,6 @@ private fun ChevronDownIcon(color: Color, modifier: Modifier = Modifier) {
 }
 
 private val exploreItems = listOf(
-    ExploreContent("VIDEO TÉCNICO", "Introducción al templado de chocolate", "Chocolatería · 8 min", ContentFilter.Videos, R.drawable.chocolate, "video-templado-chocolate"),
-    ExploreContent("VIDEO TÉCNICO", "Técnica básica de laminado", "Masas de hoja · 10 min", ContentFilter.Videos, R.drawable.bolleria, "video-laminado"),
-    ExploreContent("VIDEO TÉCNICO", "Decoración de pastelería de vitrina", "Pastelería de vitrina · 7 min", ContentFilter.Videos, R.drawable.galletas, "video-decoracion-vitrina"),
     ExploreContent("CURSO", "Fundamentos de chocolatería", "Chocolatería · 30 min", ContentFilter.Courses, R.drawable.chocolate, "curso-chocolateria"),
     ExploreContent("CURSO", "Introducción a la bollería", "Bollería · 35 min", ContentFilter.Courses, R.drawable.bolleria, "curso-bolleria")
 )
@@ -287,7 +281,7 @@ private fun ExploreScreenPreview() {
             onFilterSelected = { selectedFilter = it },
             onSearchQueryChange = { searchQuery = it },
             onRecipeClick = {},
-            onVideoClick = {}
+            onCourseClick = {}
         )
     }
 }

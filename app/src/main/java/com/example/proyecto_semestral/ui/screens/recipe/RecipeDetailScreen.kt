@@ -1,7 +1,6 @@
 package com.example.proyecto_semestral.ui.screens.recipe
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -37,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.model.admin.AppRecipe
 import com.example.proyecto_semestral.ui.components.AppTopBar
-import com.example.proyecto_semestral.ui.components.ContentCard
+import com.example.proyecto_semestral.ui.components.EmbeddedVideoPlayer
 import com.example.proyecto_semestral.ui.components.IngredientRow
 import com.example.proyecto_semestral.ui.components.PreparationStep
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
@@ -47,7 +49,6 @@ import com.example.proyecto_semestral.viewmodel.RecipeDetailViewModel
 fun RecipeDetailScreen(
     recipeId: String,
     onBack: () -> Unit,
-    onRelatedVideoClick: (videoId: String) -> Unit,
     modifier: Modifier = Modifier,
     recipeDetailViewModel: RecipeDetailViewModel = viewModel()
 ) {
@@ -69,7 +70,6 @@ fun RecipeDetailScreen(
         } else {
             RecipeContent(
                 recipe = recipe,
-                onRelatedVideoClick = onRelatedVideoClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -79,10 +79,10 @@ fun RecipeDetailScreen(
 @Composable
 private fun RecipeContent(
     recipe: AppRecipe,
-    onRelatedVideoClick: (videoId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var showVideo by rememberSaveable(recipe.id) { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -135,15 +135,15 @@ private fun RecipeContent(
 
             Spacer(modifier = Modifier.height(8.dp))
             if (recipe.videoUrl.isNotBlank()) {
+                if (showVideo) {
+                    EmbeddedVideoPlayer(videoUrl = recipe.videoUrl)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Button(
-                    onClick = {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(recipe.videoUrl))
-                        )
-                    },
+                    onClick = { showVideo = !showVideo },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "Ver video de la receta")
+                    Text(text = if (showVideo) "Ocultar video" else "Iniciar video")
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             }
@@ -213,18 +213,6 @@ private fun RecipeContent(
                 SuppliesCard()
             }
 
-            recipe.relatedVideo?.let { relatedVideo ->
-                Spacer(modifier = Modifier.height(32.dp))
-                SectionTitle(text = "Una técnica para acompañar")
-                Spacer(modifier = Modifier.height(16.dp))
-                ContentCard(
-                    eyebrow = relatedVideo.eyebrow,
-                    title = relatedVideo.title,
-                    metadata = relatedVideo.metadata,
-                    image = painterResource(relatedVideo.imageRes),
-                    onClick = { onRelatedVideoClick(relatedVideo.id) }
-                )
-            }
         }
     }
 }
@@ -335,8 +323,7 @@ private fun RecipeDetailScreenPreview() {
     ProyectoSemestralTheme {
         RecipeDetailScreen(
             recipeId = "galletas-chips-chocolate",
-            onBack = {},
-            onRelatedVideoClick = {}
+            onBack = {}
         )
     }
 }

@@ -3,9 +3,7 @@ package com.example.proyecto_semestral.repository.admin
 
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.admin.AppRecipe
-import com.example.proyecto_semestral.model.content.ExploreContent
 import com.example.proyecto_semestral.model.content.Ingredient
-import com.example.proyecto_semestral.ui.components.ContentFilter
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,7 +60,7 @@ private val initialRecipes = listOf(
         id = "galletas-chips-chocolate",
         title = "Galletas con chips de chocolate",
         description = "Crujientes por fuera, suaves por dentro. Una receta versátil para sumar a tu vitrina.",
-        videoUrl = "https://youtube.com/watch?v=galletas",
+        videoUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE",
         category = "Galletas",
         duration = "35 min",
         yield = "12 unidades",
@@ -79,21 +77,13 @@ private val initialRecipes = listOf(
             "Incorpora la harina y los chips de chocolate hasta obtener una masa uniforme.",
             "Forma 12 porciones sobre una bandeja con papel para hornear.",
             "Hornea a 180 °C durante 12 a 15 minutos."
-        ),
-        relatedVideo = ExploreContent(
-            eyebrow = "VIDEO TÉCNICO",
-            title = "Introducción al templado de chocolate",
-            metadata = "Chocolatería · 8 min",
-            type = ContentFilter.Videos,
-            imageRes = R.drawable.chocolate,
-            id = "video-templado-chocolate"
         )
     ),
     AppRecipe(
         id = "empanadas-queso-horno",
         title = "Empanadas de queso al horno",
         description = "Una preparación dorada y crujiente, con un relleno de queso fundido.",
-        videoUrl = "https://youtube.com/watch?v=empanadas",
+        videoUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE",
         category = "Empanadas",
         duration = "50 min",
         yield = "10 unidades",
@@ -116,7 +106,7 @@ private val initialRecipes = listOf(
         id = "postre-chocolate-vaso",
         title = "Postre de chocolate en vaso",
         description = "Capas suaves y cremosas de chocolate para una presentación individual.",
-        videoUrl = "https://youtube.com/watch?v=postre-chocolate",
+        videoUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE",
         category = "Chocolatería",
         duration = "25 min + frío",
         yield = "6 unidades",

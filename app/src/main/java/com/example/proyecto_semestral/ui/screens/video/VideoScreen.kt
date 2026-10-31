@@ -46,7 +46,7 @@ fun VideoScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         AppTopBar(
-            title = "Video técnico",
+            title = "Lección en video",
             onBackClick = onBack
         )
 
@@ -176,7 +176,7 @@ private fun DemoNotice() {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Los controles simulan la reproducción. El video técnico se incorporará cuando esté disponible el material autorizado.",
+                text = "Los controles simulan la reproducción de esta lección. El material se incorporará cuando esté disponible.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 29.sp)
             )
@@ -219,7 +219,7 @@ private fun MissingVideoState(
 private fun VideoScreenPreview() {
     ProyectoSemestralTheme {
         VideoScreen(
-            videoId = "video-templado-chocolate",
+            videoId = "leccion-templado-1",
             onBack = {},
             onNextLesson = {},
             onReturnToCourse = {}

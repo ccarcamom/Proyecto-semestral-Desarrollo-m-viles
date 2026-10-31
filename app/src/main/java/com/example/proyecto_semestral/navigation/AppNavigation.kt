@@ -172,11 +172,6 @@ fun AppNavigation() {
                         selectedRecipeId = recipeId
                         currentRoute = AppRoute.Recipe
                     },
-                    onVideoClick = { videoId ->
-                        selectedVideoId = videoId
-                        videoReturnRoute = AppRoute.Explore
-                        currentRoute = AppRoute.Video
-                    },
                     onCourseClick = { courseId ->
                         selectedCourseId = courseId
                         currentRoute = AppRoute.Course
@@ -238,12 +233,7 @@ fun AppNavigation() {
 
         AppRoute.Recipe -> RecipeDetailScreen(
             recipeId = selectedRecipeId,
-            onBack = { currentRoute = AppRoute.Explore },
-            onRelatedVideoClick = { videoId ->
-                selectedVideoId = videoId
-                videoReturnRoute = AppRoute.Recipe
-                currentRoute = AppRoute.Video
-            }
+            onBack = { currentRoute = AppRoute.Explore }
         )
 
         AppRoute.Video -> VideoScreen(

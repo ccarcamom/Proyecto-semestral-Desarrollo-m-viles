@@ -5,15 +5,6 @@ import com.example.proyecto_semestral.R
 object VideoCatalog {
     private val videos = listOf(
         VideoContent(
-            id = "video-templado-chocolate",
-            category = "Chocolatería",
-            title = "Introducción al templado de chocolate",
-            duration = "8:00",
-            durationSeconds = 480,
-            description = "Conoce las etapas del templado y aprende a reconocer un acabado brillante y uniforme.",
-            imageRes = R.drawable.chocolate
-        ),
-        VideoContent(
             id = "leccion-templado-1",
             category = "Chocolatería",
             title = "Conoce el chocolate",

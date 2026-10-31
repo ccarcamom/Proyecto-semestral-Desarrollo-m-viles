@@ -137,7 +137,6 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 HomeShortcut("Recetas", ShortcutIcon.Book, Modifier.weight(1f))
-                HomeShortcut("Videos", ShortcutIcon.Play, Modifier.weight(1f))
                 HomeShortcut("Cursos", ShortcutIcon.Course, Modifier.weight(1f))
             }
 
@@ -299,7 +298,7 @@ private fun HomeShortcut(
     }
 }
 
-private enum class ShortcutIcon { Book, Play, Course }
+private enum class ShortcutIcon { Book, Course }
 
 @Composable
 private fun ShortcutGlyph(icon: ShortcutIcon, color: Color, modifier: Modifier = Modifier) {
@@ -309,16 +308,6 @@ private fun ShortcutGlyph(icon: ShortcutIcon, color: Color, modifier: Modifier =
             ShortcutIcon.Book -> {
                 drawRoundRect(color, Offset(size.width * .12f, size.height * .18f), androidx.compose.ui.geometry.Size(size.width * .76f, size.height * .68f), style = Stroke(stroke))
                 drawLine(color, Offset(size.width * .5f, size.height * .2f), Offset(size.width * .5f, size.height * .84f), stroke)
-            }
-            ShortcutIcon.Play -> {
-                drawCircle(color, size.minDimension * .38f, style = Stroke(stroke))
-                val path = androidx.compose.ui.graphics.Path().apply {
-                    moveTo(size.width * .44f, size.height * .3f)
-                    lineTo(size.width * .68f, size.height * .5f)
-                    lineTo(size.width * .44f, size.height * .7f)
-                    close()
-                }
-                drawPath(path, color)
             }
             ShortcutIcon.Course -> {
                 val path = androidx.compose.ui.graphics.Path().apply {
