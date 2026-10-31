@@ -21,7 +21,12 @@ object InMemoryRecipeRepository {
         title: String,
         description: String,
         videoUrl: String,
-        category: String = "Receta"
+        category: String = "Receta",
+        ingredients: List<Ingredient> = emptyList(),
+        steps: List<String> = emptyList(),
+        suppliesTitle: String = "",
+        suppliesDescription: String = "",
+        imageUri: String? = null
     ): AppRecipe {
         val recipe = AppRecipe(
             id = UUID.randomUUID().toString(),
@@ -29,7 +34,12 @@ object InMemoryRecipeRepository {
             description = description.trim(),
             videoUrl = videoUrl.trim(),
             category = category,
-            imageRes = R.drawable.galletas
+            imageRes = R.drawable.galletas,
+            ingredients = ingredients,
+            steps = steps,
+            suppliesTitle = suppliesTitle,
+            suppliesDescription = suppliesDescription,
+            imageUri = imageUri
         )
         _recipes.update { current -> current + recipe }
         return recipe
@@ -58,6 +68,8 @@ object InMemoryRecipeRepository {
 private val initialRecipes = listOf(
     AppRecipe(
         id = "galletas-chips-chocolate",
+        suppliesTitle = "Chocolate para repostería",
+        suppliesDescription = "Chips de chocolate para incorporar a la masa de las galletas.",
         title = "Galletas con chips de chocolate",
         description = "Crujientes por fuera, suaves por dentro. Una receta versátil para sumar a tu vitrina.",
         videoUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE",
@@ -81,6 +93,8 @@ private val initialRecipes = listOf(
     ),
     AppRecipe(
         id = "empanadas-queso-horno",
+        suppliesTitle = "Insumos para empanadas",
+        suppliesDescription = "Harina, mantequilla y queso mantecoso para la masa y el relleno.",
         title = "Empanadas de queso al horno",
         description = "Una preparación dorada y crujiente, con un relleno de queso fundido.",
         videoUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE",
@@ -104,6 +118,8 @@ private val initialRecipes = listOf(
     ),
     AppRecipe(
         id = "postre-chocolate-vaso",
+        suppliesTitle = "Chocolate para repostería",
+        suppliesDescription = "Chocolate semiamargo y crema para preparar el mousse.",
         title = "Postre de chocolate en vaso",
         description = "Capas suaves y cremosas de chocolate para una presentación individual.",
         videoUrl = "https://www.youtube.com/watch?v=M7lc1UVf-VE",

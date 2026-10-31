@@ -1,6 +1,10 @@
 package com.example.proyecto_semestral.ui.screens.admin
 
 import androidx.compose.foundation.Canvas
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.OutlinedTextField
+import com.example.proyecto_semestral.model.content.Ingredient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -70,8 +74,23 @@ fun ManageRecipesScreen(
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var linkError by rememberSaveable { mutableStateOf<String?>(null) }
     var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
+    var ingredientsText by rememberSaveable { mutableStateOf("") }
+    var stepsText by rememberSaveable { mutableStateOf("") }
+    var suppliesTitle by rememberSaveable { mutableStateOf("") }
+    var suppliesDescription by rememberSaveable { mutableStateOf("") }
+    var imageUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var detailsError by rememberSaveable { mutableStateOf<String?>(null) }
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) imageUri = uri.toString()
+    }
 
     fun clearForm() {
+        ingredientsText = ""
+        stepsText = ""
+        suppliesTitle = ""
+        suppliesDescription = ""
+        imageUri = null
+        detailsError = null
         showForm = false
         recipeTitle = ""
         titleError = null
@@ -83,20 +102,38 @@ fun ManageRecipesScreen(
     }
 
     fun submitRecipe() {
+        val ingredientLines = ingredientsText.lines().filter { it.isNotBlank() }
+        val steps = stepsText.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        detailsError = when {
+            ingredientLines.isEmpty() || ingredientLines.any {
+                !it.contains("|") || it.substringBefore('|').isBlank() || it.substringAfter('|').isBlank()
+            } -> "Agrega ingredientes con el formato: Harina | 180 g (uno por línea)."
+            steps.isEmpty() -> "Agrega al menos un paso."
+            suppliesTitle.isBlank() || suppliesDescription.isBlank() -> "Completa el nombre y la descripción de los insumos."
+            imageUri == null && editingId == null -> "Selecciona una imagen para la receta."
+            else -> null
+        }
+        val ingredients = ingredientLines.map {
+            Ingredient(it.substringBefore('|').trim(), it.substringAfter('|').trim())
+        }
         titleError = if (recipeTitle.isBlank()) "Ingresa el título de la receta." else null
         linkError = if (videoLink.startsWith("http://") || videoLink.startsWith("https://")) null else "Ingresa un enlace válido."
         descriptionError = if (description.isBlank()) "Ingresa una descripción." else null
-        if (linkError != null || descriptionError != null || titleError != null) return
+        if (linkError != null || descriptionError != null || titleError != null || detailsError != null) return
 
         val id = editingId
         if (id == null) {
             manageRecipesViewModel.createRecipe(
+                ingredients = ingredients, steps = steps, suppliesTitle = suppliesTitle,
+                suppliesDescription = suppliesDescription, imageUri = imageUri,
                 title = recipeTitle,
                 videoUrl = videoLink,
                 description = description
             )
         } else {
             manageRecipesViewModel.updateRecipe(
+                ingredients = ingredients, steps = steps, suppliesTitle = suppliesTitle,
+                suppliesDescription = suppliesDescription, imageUri = imageUri,
                 title = recipeTitle,
                 id = id,
                 videoUrl = videoLink,
@@ -178,6 +215,12 @@ fun ManageRecipesScreen(
                 PublishedRecipeCard(
                     recipe = recipe,
                     onEdit = {
+                        ingredientsText = recipe.ingredients.joinToString("\n") { "${it.name} | ${it.amount}" }
+                        stepsText = recipe.steps.joinToString("\n")
+                        suppliesTitle = recipe.suppliesTitle
+                        suppliesDescription = recipe.suppliesDescription
+                        imageUri = recipe.imageUri
+                        detailsError = null
                         recipeTitle = recipe.title
                         titleError = null
                         showForm = true
@@ -211,6 +254,45 @@ fun ManageRecipesScreen(
                 descriptionError = descriptionError,
                 onCancel = ::clearForm,
                 showLogo = false,
+                additionalFields = {
+                    Spacer(Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = ingredientsText, onValueChange = { ingredientsText = it },
+                        label = { Text("Ingredientes y cantidades") },
+                        placeholder = { Text("Harina | 180 g\nHuevo | 1 unidad") },
+                        supportingText = { Text("Un ingrediente por línea: nombre | cantidad") },
+                        minLines = 3, modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = stepsText, onValueChange = { stepsText = it },
+                        label = { Text("Paso a paso") },
+                        supportingText = { Text("Escribe un paso por línea; se numeran automáticamente.") },
+                        minLines = 3, modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = suppliesTitle, onValueChange = { suppliesTitle = it },
+                        label = { Text("Nombre de los insumos") }, modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = suppliesDescription, onValueChange = { suppliesDescription = it },
+                        label = { Text("Descripción de insumos") }, minLines = 2,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    val existingImage = recipes.firstOrNull { it.id == editingId }?.imageRes
+                    if (imageUri != null || existingImage != null) {
+                        coil.compose.AsyncImage(
+                            model = imageUri ?: existingImage,
+                            contentDescription = "Imagen de la receta",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth().height(150.dp)
+                        )
+                    }
+                    OutlinedButton(onClick = { imagePicker.launch("image/*") }) {
+                        Text(if (imageUri != null || existingImage != null) "Cambiar imagen" else "Seleccionar imagen")
+                    }
+                    detailsError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                },
                 modifier = Modifier.verticalScroll(rememberScrollState())
             )
         }

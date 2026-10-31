@@ -15,5 +15,8 @@ data class AppRecipe(
     @DrawableRes val imageRes: Int,
     val ingredients: List<Ingredient> = emptyList(),
     val steps: List<String> = emptyList(),
+    val suppliesTitle: String = "",
+    val suppliesDescription: String = "",
+    val imageUri: String? = null,
     val isPublished: Boolean = true
 )

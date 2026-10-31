@@ -90,7 +90,10 @@ private fun RecipeContent(
             .padding(bottom = 32.dp)
     ) {
         Image(
-            painter = painterResource(recipe.imageRes),
+            painter = coil.compose.rememberAsyncImagePainter(
+                model = recipe.imageUri ?: recipe.imageRes,
+                error = painterResource(recipe.imageRes)
+            ),
             contentDescription = recipe.title,
             modifier = Modifier
                 .fillMaxWidth()
@@ -208,9 +211,9 @@ private fun RecipeContent(
                 }
             }
 
-            if (recipe.ingredients.isNotEmpty()) {
+            if (recipe.suppliesTitle.isNotBlank() || recipe.suppliesDescription.isNotBlank()) {
                 Spacer(modifier = Modifier.height(28.dp))
-                SuppliesCard()
+                SuppliesCard(recipe.suppliesTitle, recipe.suppliesDescription)
             }
 
         }
@@ -256,7 +259,7 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
-private fun SuppliesCard() {
+private fun SuppliesCard(title: String, description: String) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(20.dp),
@@ -273,13 +276,13 @@ private fun SuppliesCard() {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Chocolate para repostería",
+                text = title,
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Espacio para presentar insumos Master Martini. Referencia ilustrativa, sin producto comercial asignado.",
+                text = description,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, lineHeight = 27.sp)
             )

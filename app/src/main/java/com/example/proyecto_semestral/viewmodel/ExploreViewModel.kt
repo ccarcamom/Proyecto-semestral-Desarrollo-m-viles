@@ -25,7 +25,8 @@ class ExploreViewModel : ViewModel() {
                         .ifBlank { "Video receta" },
                     type = ContentFilter.Recipes,
                     imageRes = recipe.imageRes,
-                    id = recipe.id
+                    id = recipe.id,
+                    imageUri = recipe.imageUri
                 )
             }
     }

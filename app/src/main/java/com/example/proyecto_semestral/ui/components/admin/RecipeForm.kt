@@ -49,7 +49,8 @@ fun RecipeForm(
     titleError: String? = null,
     onCancel: (() -> Unit)? = null,
     submitEnabled: Boolean = true,
-    showLogo: Boolean = true
+    showLogo: Boolean = true,
+    additionalFields: @Composable () -> Unit = {}
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -141,6 +142,7 @@ fun RecipeForm(
                 )
             }
 
+            additionalFields()
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = onSubmit,
