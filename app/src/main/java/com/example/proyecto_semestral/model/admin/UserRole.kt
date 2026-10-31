@@ -1,4 +1,4 @@
-// Determina el rol de un usuario a partir del dominio de su correo.
+// Determina el rol usando exclusivamente la lista autorizada de administradores.
 package com.example.proyecto_semestral.model.admin
 
 enum class UserRole {
@@ -8,8 +8,7 @@ enum class UserRole {
 
 fun roleForEmail(email: String): UserRole {
     val normalizedEmail = email.trim().lowercase()
-    val parts = normalizedEmail.split('@')
-    return if (parts.size == 2 && parts[0].isNotBlank() && parts[1] == ADMIN_DOMAIN) {
+    return if (normalizedEmail in ADMIN_EMAILS) {
         UserRole.ADMIN
     } else {
         UserRole.USER
@@ -18,4 +17,19 @@ fun roleForEmail(email: String): UserRole {
 
 fun String.isAdminEmail(): Boolean = roleForEmail(this) == UserRole.ADMIN
 
+fun String.hasReservedAdminDomain(): Boolean {
+    val normalizedEmail = trim().lowercase()
+    val parts = normalizedEmail.split('@')
+    return parts.size == 2 && parts[0].isNotBlank() && parts[1] == ADMIN_DOMAIN
+}
+
+val authorizedAdminEmails: Set<String>
+    get() = ADMIN_EMAILS
+
 private const val ADMIN_DOMAIN = "admin.cl"
+
+private val ADMIN_EMAILS = setOf(
+    "matias@admin.cl",
+    "pedro@admin.cl",
+    "cristobal@admin.cl"
+)

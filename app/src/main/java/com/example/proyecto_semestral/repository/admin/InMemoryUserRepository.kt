@@ -2,6 +2,7 @@
 package com.example.proyecto_semestral.repository.admin
 
 import com.example.proyecto_semestral.model.admin.AppUser
+import com.example.proyecto_semestral.model.admin.hasReservedAdminDomain
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.update
 
 object InMemoryUserRepository {
 
-    private val _users = MutableStateFlow<List<AppUser>>(emptyList())
+    private val _users = MutableStateFlow(predefinedAdmins)
     val users: StateFlow<List<AppUser>> = _users.asStateFlow()
 
     @Synchronized
@@ -23,7 +24,10 @@ object InMemoryUserRepository {
         businessSize: String = ""
     ): AppUser? {
         val normalizedEmail = email.normalizeEmail()
-        if (_users.value.any { it.email == normalizedEmail }) return null
+        if (
+            normalizedEmail.hasReservedAdminDomain() ||
+            _users.value.any { it.email == normalizedEmail }
+        ) return null
 
         val user = AppUser(
             id = UUID.randomUUID().toString(),
@@ -55,6 +59,11 @@ object InMemoryUserRepository {
     @Synchronized
     fun updateProfile(id: String, name: String, email: String): Boolean {
         val normalizedEmail = email.normalizeEmail()
+        val currentUser = findById(id) ?: return false
+        if (
+            normalizedEmail.hasReservedAdminDomain() &&
+            normalizedEmail != currentUser.email
+        ) return false
         if (_users.value.any { it.id != id && it.email == normalizedEmail }) return false
 
         var updated = false
@@ -91,3 +100,26 @@ sealed interface LoginResult {
     data object InvalidCredentials : LoginResult
     data object Blocked : LoginResult
 }
+
+private const val ADMIN_PASSWORD = "123123"
+
+private val predefinedAdmins = listOf(
+    AppUser(
+        id = "admin-matias",
+        name = "Matías",
+        email = "matias@admin.cl",
+        password = ADMIN_PASSWORD
+    ),
+    AppUser(
+        id = "admin-pedro",
+        name = "Pedro",
+        email = "pedro@admin.cl",
+        password = ADMIN_PASSWORD
+    ),
+    AppUser(
+        id = "admin-cristobal",
+        name = "Cristóbal",
+        email = "cristobal@admin.cl",
+        password = ADMIN_PASSWORD
+    )
+)

@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.proyecto_semestral.model.admin.hasReservedAdminDomain
 import com.example.proyecto_semestral.model.auth.FormularioErrores
 import com.example.proyecto_semestral.model.auth.FormularioUiState
 
@@ -72,7 +73,11 @@ class FormularioViewModel : ViewModel() {
     fun validateRegister(): Boolean {
         val errors = FormularioErrores(
             name = if (uiState.name.isNotBlank()) null else "Ingresa tu nombre.",
-            email = if (uiState.email.isValidEmail()) null else "Ingresa un correo válido.",
+            email = when {
+                !uiState.email.isValidEmail() -> "Ingresa un correo válido."
+                uiState.email.hasReservedAdminDomain() -> "El dominio admin.cl está reservado."
+                else -> null
+            },
             password = if (uiState.password.isNotBlank()) null else "Ingresa una contraseña.",
             confirmPassword = when {
                 uiState.confirmPassword.isBlank() -> "Confirma tu contraseña."
