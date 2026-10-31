@@ -176,13 +176,6 @@ private fun CourseContent(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Text(
-            text = "Contenido de demostración. Reproducción simulada.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-
         Spacer(modifier = Modifier.height(28.dp))
     }
 }

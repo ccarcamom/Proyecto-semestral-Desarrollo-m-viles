@@ -6,11 +6,11 @@ object VideoCatalog {
     private val videos = listOf(
         VideoContent(
             id = "leccion-templado-1",
-            videoUrl = DEMO_VIDEO_URL,
+            videoUrl = "https://www.youtube.com/watch?v=K58-sTjitmU",
             category = "Chocolatería",
             title = "Conoce el chocolate",
-            duration = "8:00",
-            durationSeconds = 480,
+            duration = "1:39",
+            durationSeconds = 99,
             description = "Conoce las etapas del templado y aprende a reconocer un acabado brillante y uniforme.",
             imageRes = R.drawable.chocolate,
             courseName = "Fundamentos de chocolatería",
@@ -19,11 +19,11 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-templado-2",
-            videoUrl = DEMO_VIDEO_URL,
+            videoUrl = "https://www.youtube.com/watch?v=0w0gw2JV1Lg",
             category = "Chocolatería",
             title = "Técnica de templado",
-            duration = "12:00",
-            durationSeconds = 720,
+            duration = "4:00",
+            durationSeconds = 240,
             description = "Aprende a controlar las temperaturas y movimientos necesarios para templar correctamente.",
             imageRes = R.drawable.chocolate,
             courseName = "Fundamentos de chocolatería",
@@ -32,11 +32,11 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-templado-3",
-            videoUrl = DEMO_VIDEO_URL,
+            videoUrl = "https://www.youtube.com/watch?v=Rj0-J-4t5E0",
             category = "Chocolatería",
             title = "Acabado y conservación",
-            duration = "10:00",
-            durationSeconds = 600,
+            duration = "0:54",
+            durationSeconds = 54,
             description = "Aplica la técnica, revisa el acabado final y conserva correctamente tus preparaciones.",
             imageRes = R.drawable.chocolate,
             courseName = "Fundamentos de chocolatería",
@@ -45,11 +45,11 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-bolleria-1",
-            videoUrl = DEMO_VIDEO_URL,
+            videoUrl = "https://www.youtube.com/watch?v=_s2F-6HAzw4",
             category = "Bollería",
             title = "Bases de la bollería",
-            duration = "10:00",
-            durationSeconds = 600,
+            duration = "2:32",
+            durationSeconds = 152,
             description = "Conoce los ingredientes y procesos fundamentales de una masa de bollería.",
             imageRes = R.drawable.bolleria,
             courseName = "Introducción a la bollería",
@@ -58,11 +58,11 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-bolleria-2",
-            videoUrl = DEMO_VIDEO_URL,
+            videoUrl = "https://www.youtube.com/watch?v=E9HUrKEvocY",
             category = "Bollería",
             title = "Técnica de laminado",
-            duration = "12:00",
-            durationSeconds = 720,
+            duration = "1:34",
+            durationSeconds = 94,
             description = "Aprende a formar capas uniformes mediante una técnica básica de laminado.",
             imageRes = R.drawable.bolleria,
             courseName = "Introducción a la bollería",
@@ -71,11 +71,11 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-bolleria-3",
-            videoUrl = DEMO_VIDEO_URL,
+            videoUrl = "https://www.youtube.com/watch?v=QFTbZTv3wjo",
             category = "Bollería",
             title = "Fermentación y horneado",
-            duration = "13:00",
-            durationSeconds = 780,
+            duration = "5:57",
+            durationSeconds = 357,
             description = "Controla el reposo, la fermentación y el horneado para conseguir un acabado uniforme.",
             imageRes = R.drawable.bolleria,
             courseName = "Introducción a la bollería",
@@ -94,6 +94,3 @@ object VideoCatalog {
         }
     }
 }
-
-// Video de demostración de YouTube; reemplazar por el material de cada lección.
-private const val DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=M7lc1UVf-VE"

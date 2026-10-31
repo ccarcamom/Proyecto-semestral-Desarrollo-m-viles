@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -121,9 +119,6 @@ private fun VideoContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
-        DemoNotice()
-
         if (video.isLesson) {
             Spacer(modifier = Modifier.height(28.dp))
             if (video.isLastLesson) {
@@ -157,29 +152,6 @@ private fun VideoContent(
                 lineHeight = 32.sp
             )
         )
-    }
-}
-
-@Composable
-private fun DemoNotice() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(22.dp)
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Text(
-                text = "Video de demostración",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Este video permite probar la reproducción integrada. El contenido específico de la lección aún no está asignado.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 29.sp)
-            )
-        }
     }
 }
 
