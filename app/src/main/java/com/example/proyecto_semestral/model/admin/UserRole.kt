@@ -1,3 +1,4 @@
+// Determina el rol de un usuario a partir del dominio de su correo.
 package com.example.proyecto_semestral.model.admin
 
 enum class UserRole {

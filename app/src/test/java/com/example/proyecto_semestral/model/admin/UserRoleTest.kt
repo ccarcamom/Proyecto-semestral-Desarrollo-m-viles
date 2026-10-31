@@ -1,3 +1,4 @@
+// Comprueba que solamente el dominio admin.cl reciba permisos administrativos.
 package com.example.proyecto_semestral.model.admin
 
 import org.junit.Assert.assertEquals

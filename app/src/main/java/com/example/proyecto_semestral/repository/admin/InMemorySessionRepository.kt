@@ -1,4 +1,5 @@
-package com.example.proyecto_semestral.data.repository
+// Conserva en memoria la sesión del usuario mientras la aplicación está activa.
+package com.example.proyecto_semestral.repository.admin
 
 import com.example.proyecto_semestral.model.admin.AppUser
 import kotlinx.coroutines.flow.MutableStateFlow

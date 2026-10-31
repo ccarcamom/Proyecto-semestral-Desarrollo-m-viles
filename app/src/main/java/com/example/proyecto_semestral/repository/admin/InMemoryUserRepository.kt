@@ -1,4 +1,5 @@
-package com.example.proyecto_semestral.data.repository
+// Gestiona en memoria el registro, acceso y mantenimiento de los usuarios.
+package com.example.proyecto_semestral.repository.admin
 
 import com.example.proyecto_semestral.model.admin.AppUser
 import java.util.UUID

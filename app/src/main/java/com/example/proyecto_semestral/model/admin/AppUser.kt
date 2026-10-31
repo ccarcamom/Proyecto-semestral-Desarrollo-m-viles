@@ -1,3 +1,4 @@
+// Define los datos compartidos de un usuario de la aplicación.
 package com.example.proyecto_semestral.model.admin
 
 data class AppUser(

@@ -1,4 +1,5 @@
-package com.example.proyecto_semestral.data.repository
+// Mantiene en memoria las recetas iniciales y las creadas por el administrador.
+package com.example.proyecto_semestral.repository.admin
 
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.admin.AppRecipe

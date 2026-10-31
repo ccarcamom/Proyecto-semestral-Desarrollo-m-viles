@@ -1,3 +1,4 @@
+// Define los datos de una receta administrable y visible en la aplicación.
 package com.example.proyecto_semestral.model.admin
 
 import androidx.annotation.DrawableRes
