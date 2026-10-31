@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material3.Button
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -58,6 +62,9 @@ fun ManageRecipesScreen(
     manageRecipesViewModel: ManageRecipesViewModel = viewModel()
 ) {
     val recipes by manageRecipesViewModel.recipes.collectAsState()
+    var showForm by rememberSaveable { mutableStateOf(false) }
+    var recipeTitle by rememberSaveable { mutableStateOf("") }
+    var titleError by rememberSaveable { mutableStateOf<String?>(null) }
     var videoLink by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -65,6 +72,9 @@ fun ManageRecipesScreen(
     var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun clearForm() {
+        showForm = false
+        recipeTitle = ""
+        titleError = null
         videoLink = ""
         description = ""
         editingId = null
@@ -73,18 +83,21 @@ fun ManageRecipesScreen(
     }
 
     fun submitRecipe() {
+        titleError = if (recipeTitle.isBlank()) "Ingresa el título de la receta." else null
         linkError = if (videoLink.startsWith("http://") || videoLink.startsWith("https://")) null else "Ingresa un enlace válido."
         descriptionError = if (description.isBlank()) "Ingresa una descripción." else null
-        if (linkError != null || descriptionError != null) return
+        if (linkError != null || descriptionError != null || titleError != null) return
 
         val id = editingId
         if (id == null) {
             manageRecipesViewModel.createRecipe(
+                title = recipeTitle,
                 videoUrl = videoLink,
                 description = description
             )
         } else {
             manageRecipesViewModel.updateRecipe(
+                title = recipeTitle,
                 id = id,
                 videoUrl = videoLink,
                 description = description
@@ -142,25 +155,10 @@ fun ManageRecipesScreen(
                 )
             }
             item {
-                RecipeForm(
-                    videoLink = videoLink,
-                    onVideoLinkChange = {
-                        videoLink = it
-                        linkError = null
-                    },
-                    description = description,
-                    onDescriptionChange = {
-                        description = it.take(500)
-                        descriptionError = null
-                    },
-                    onSubmit = ::submitRecipe,
-                    title = if (editingId == null) "Nueva receta" else "Editar receta",
-                    submitLabel = if (editingId == null) "Crear receta" else "Guardar cambios",
-                    videoLinkError = linkError,
-                    descriptionError = descriptionError,
-                    onCancel = if (editingId != null) ::clearForm else null,
-                    showLogo = false
-                )
+                Button(
+                    onClick = { clearForm(); showForm = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Crear receta") }
             }
             item {
                 Column(modifier = Modifier.padding(top = 10.dp)) {
@@ -180,6 +178,9 @@ fun ManageRecipesScreen(
                 PublishedRecipeCard(
                     recipe = recipe,
                     onEdit = {
+                        recipeTitle = recipe.title
+                        titleError = null
+                        showForm = true
                         editingId = recipe.id
                         videoLink = recipe.videoUrl
                         description = recipe.description
@@ -189,8 +190,29 @@ fun ManageRecipesScreen(
                 )
             }
             item {
-                AdminInfoBanner("Al editar podrás cambiar el link y la descripción.")
+                AdminInfoBanner("Al editar podrás cambiar el título, el link y la descripción.")
             }
+        }
+    }
+    if (showForm) {
+        Dialog(onDismissRequest = ::clearForm) {
+            RecipeForm(
+                recipeTitle = recipeTitle,
+                onRecipeTitleChange = { recipeTitle = it; titleError = null },
+                videoLink = videoLink,
+                onVideoLinkChange = { videoLink = it; linkError = null },
+                description = description,
+                onDescriptionChange = { description = it.take(500); descriptionError = null },
+                onSubmit = ::submitRecipe,
+                title = if (editingId == null) "Nueva receta" else "Editar receta",
+                submitLabel = if (editingId == null) "Crear receta" else "Guardar cambios",
+                titleError = titleError,
+                videoLinkError = linkError,
+                descriptionError = descriptionError,
+                onCancel = ::clearForm,
+                showLogo = false,
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            )
         }
     }
 }

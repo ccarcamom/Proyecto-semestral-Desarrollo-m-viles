@@ -33,6 +33,8 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 /** Formulario reutilizable para crear y editar recetas basadas en video. */
 @Composable
 fun RecipeForm(
+    recipeTitle: String,
+    onRecipeTitleChange: (String) -> Unit,
     videoLink: String,
     onVideoLinkChange: (String) -> Unit,
     description: String,
@@ -43,7 +45,8 @@ fun RecipeForm(
     submitLabel: String = "Crear receta",
     videoLinkError: String? = null,
     descriptionError: String? = null,
-    supportingMessage: String? = "Ambos campos son obligatorios.",
+    supportingMessage: String? = "Todos los campos son obligatorios.",
+    titleError: String? = null,
     onCancel: (() -> Unit)? = null,
     submitEnabled: Boolean = true,
     showLogo: Boolean = true
@@ -75,6 +78,17 @@ fun RecipeForm(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
+            OutlinedTextField(
+                value = recipeTitle,
+                onValueChange = onRecipeTitleChange,
+                label = { Text("Título de la receta") },
+                singleLine = true,
+                isError = titleError != null,
+                supportingText = titleError?.let { message -> { Text(message) } },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             VideoLinkTextField(
                 value = videoLink,
                 onValueChange = onVideoLinkChange,
@@ -169,6 +183,8 @@ private fun NewRecipeFormPreview() {
         var link by rememberSaveable { mutableStateOf("") }
         var description by rememberSaveable { mutableStateOf("") }
         RecipeForm(
+            recipeTitle = "",
+            onRecipeTitleChange = {},
             videoLink = link,
             onVideoLinkChange = { link = it },
             description = description,
@@ -184,6 +200,8 @@ private fun NewRecipeFormPreview() {
 private fun EditRecipeFormPreview() {
     ProyectoSemestralTheme {
         RecipeForm(
+            recipeTitle = "Galletas con chips de chocolate",
+            onRecipeTitleChange = {},
             videoLink = "https://youtu.be/ejemplo",
             onVideoLinkChange = {},
             description = "Aprende a preparar galletas con chips de chocolate, paso a paso.",

@@ -10,34 +10,23 @@ class ManageRecipesViewModel : ViewModel() {
 
     val recipes: StateFlow<List<AppRecipe>> = InMemoryRecipeRepository.recipes
 
-    fun createRecipe(videoUrl: String, description: String): AppRecipe {
+    fun createRecipe(title: String, videoUrl: String, description: String): AppRecipe {
         return InMemoryRecipeRepository.create(
-            title = titleFrom(description),
+            title = title.trim(),
             description = description,
             videoUrl = videoUrl
         )
     }
 
-    fun updateRecipe(id: String, videoUrl: String, description: String): Boolean {
+    fun updateRecipe(id: String, title: String, videoUrl: String, description: String): Boolean {
         val currentRecipe = InMemoryRecipeRepository.findById(id) ?: return false
         return InMemoryRecipeRepository.update(
             currentRecipe.copy(
-                title = titleFrom(description),
+                title = title.trim(),
                 description = description.trim(),
                 videoUrl = videoUrl.trim()
             )
         )
     }
 
-    private fun titleFrom(description: String): String {
-        return description
-            .trim()
-            .substringBefore('.')
-            .take(MAX_TITLE_LENGTH)
-            .ifBlank { "Nueva receta" }
-    }
-
-    private companion object {
-        const val MAX_TITLE_LENGTH = 48
-    }
 }
