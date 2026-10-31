@@ -3,7 +3,9 @@ package com.example.proyecto_semestral.repository.admin
 
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.admin.AppRecipe
+import com.example.proyecto_semestral.model.content.ExploreContent
 import com.example.proyecto_semestral.model.content.Ingredient
+import com.example.proyecto_semestral.ui.components.ContentFilter
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -77,6 +79,14 @@ private val initialRecipes = listOf(
             "Incorpora la harina y los chips de chocolate hasta obtener una masa uniforme.",
             "Forma 12 porciones sobre una bandeja con papel para hornear.",
             "Hornea a 180 °C durante 12 a 15 minutos."
+        ),
+        relatedVideo = ExploreContent(
+            eyebrow = "VIDEO TÉCNICO",
+            title = "Introducción al templado de chocolate",
+            metadata = "Chocolatería · 8 min",
+            type = ContentFilter.Videos,
+            imageRes = R.drawable.chocolate,
+            id = "video-templado-chocolate"
         )
     ),
     AppRecipe(
@@ -87,7 +97,20 @@ private val initialRecipes = listOf(
         category = "Empanadas",
         duration = "50 min",
         yield = "10 unidades",
-        imageRes = R.drawable.bolleria
+        imageRes = R.drawable.bolleria,
+        ingredients = listOf(
+            Ingredient("Harina", "300 g"),
+            Ingredient("Mantequilla", "60 g"),
+            Ingredient("Agua tibia", "120 ml"),
+            Ingredient("Queso mantecoso", "250 g"),
+            Ingredient("Huevo", "1 unidad")
+        ),
+        steps = listOf(
+            "Mezcla la harina con la mantequilla y el agua tibia hasta formar una masa suave.",
+            "Amasa durante unos minutos, cubre y deja reposar por 20 minutos.",
+            "Estira la masa, corta discos y rellena cada uno con queso.",
+            "Cierra las empanadas, pincela con huevo y hornea a 190 °C hasta dorar."
+        )
     ),
     AppRecipe(
         id = "postre-chocolate-vaso",
@@ -97,6 +120,19 @@ private val initialRecipes = listOf(
         category = "Chocolatería",
         duration = "25 min + frío",
         yield = "6 unidades",
-        imageRes = R.drawable.chocolate
+        imageRes = R.drawable.chocolate,
+        ingredients = listOf(
+            Ingredient("Chocolate semiamargo", "180 g"),
+            Ingredient("Crema para batir", "300 ml"),
+            Ingredient("Azúcar", "40 g"),
+            Ingredient("Galletas molidas", "120 g"),
+            Ingredient("Frutos rojos", "100 g")
+        ),
+        steps = listOf(
+            "Derrite el chocolate a baño María y deja que baje ligeramente su temperatura.",
+            "Bate la crema con el azúcar hasta obtener una textura aireada.",
+            "Integra el chocolate con la crema usando movimientos envolventes.",
+            "Arma capas de galleta y mousse en vasos. Refrigera antes de servir."
+        )
     )
 )

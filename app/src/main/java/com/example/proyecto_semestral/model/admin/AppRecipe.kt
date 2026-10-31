@@ -2,6 +2,7 @@
 package com.example.proyecto_semestral.model.admin
 
 import androidx.annotation.DrawableRes
+import com.example.proyecto_semestral.model.content.ExploreContent
 import com.example.proyecto_semestral.model.content.Ingredient
 
 data class AppRecipe(
@@ -15,5 +16,6 @@ data class AppRecipe(
     @DrawableRes val imageRes: Int,
     val ingredients: List<Ingredient> = emptyList(),
     val steps: List<String> = emptyList(),
+    val relatedVideo: ExploreContent? = null,
     val isPublished: Boolean = true
 )

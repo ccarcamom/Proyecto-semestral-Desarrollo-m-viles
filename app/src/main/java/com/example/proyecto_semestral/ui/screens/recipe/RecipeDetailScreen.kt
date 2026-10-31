@@ -1,6 +1,7 @@
 package com.example.proyecto_semestral.ui.screens.recipe
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -31,23 +34,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyecto_semestral.R
-import com.example.proyecto_semestral.model.content.Recipe
-import com.example.proyecto_semestral.model.content.RecipeCatalog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_semestral.model.admin.AppRecipe
 import com.example.proyecto_semestral.ui.components.AppTopBar
 import com.example.proyecto_semestral.ui.components.ContentCard
 import com.example.proyecto_semestral.ui.components.IngredientRow
 import com.example.proyecto_semestral.ui.components.PreparationStep
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.viewmodel.RecipeDetailViewModel
 
 @Composable
 fun RecipeDetailScreen(
     recipeId: String,
     onBack: () -> Unit,
     onRelatedVideoClick: (videoId: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    recipeDetailViewModel: RecipeDetailViewModel = viewModel()
 ) {
-    val recipe = RecipeCatalog.findById(recipeId)
+    val recipes by recipeDetailViewModel.recipes.collectAsState()
+    val recipe = recipes.firstOrNull { it.id == recipeId }
 
     Column(
         modifier = modifier
@@ -73,7 +78,7 @@ fun RecipeDetailScreen(
 
 @Composable
 private fun RecipeContent(
-    recipe: Recipe,
+    recipe: AppRecipe,
     onRelatedVideoClick: (videoId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -123,10 +128,25 @@ private fun RecipeContent(
                 )
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
-            RecipeMetadata(recipe)
+            if (recipe.duration.isNotBlank() || recipe.yield.isNotBlank()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                RecipeMetadata(recipe)
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
+            if (recipe.videoUrl.isNotBlank()) {
+                Button(
+                    onClick = {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(recipe.videoUrl))
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Ver video de la receta")
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
             Button(
                 onClick = {
                     val ingredients = recipe.ingredients.joinToString("\n") { ingredient ->
@@ -135,12 +155,17 @@ private fun RecipeContent(
                     val shareText = buildString {
                         appendLine(recipe.title)
                         appendLine(recipe.description)
+                        if (recipe.videoUrl.isNotBlank()) {
+                            appendLine(recipe.videoUrl)
+                        }
                         appendLine()
-                        appendLine("Duración: ${recipe.duration}")
-                        appendLine("Rendimiento: ${recipe.yield}")
-                        appendLine()
-                        appendLine("Ingredientes:")
-                        append(ingredients)
+                        if (recipe.duration.isNotBlank()) appendLine("Duración: ${recipe.duration}")
+                        if (recipe.yield.isNotBlank()) appendLine("Rendimiento: ${recipe.yield}")
+                        if (ingredients.isNotBlank()) {
+                            appendLine()
+                            appendLine("Ingredientes:")
+                            append(ingredients)
+                        }
                     }
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
@@ -156,31 +181,37 @@ private fun RecipeContent(
                 Text(text = "Compartir receta")
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
-            SectionTitle(text = "Ingredientes")
-            Spacer(modifier = Modifier.height(10.dp))
-            recipe.ingredients.forEach { ingredient ->
-                IngredientRow(
-                    name = ingredient.name,
-                    amount = ingredient.amount
-                )
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-            SectionTitle(text = "Paso a paso")
-            Spacer(modifier = Modifier.height(20.dp))
-            recipe.steps.forEachIndexed { index, step ->
-                PreparationStep(
-                    stepNumber = index + 1,
-                    description = step
-                )
-                if (index != recipe.steps.lastIndex) {
-                    Spacer(modifier = Modifier.height(22.dp))
+            if (recipe.ingredients.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(28.dp))
+                SectionTitle(text = "Ingredientes")
+                Spacer(modifier = Modifier.height(10.dp))
+                recipe.ingredients.forEach { ingredient ->
+                    IngredientRow(
+                        name = ingredient.name,
+                        amount = ingredient.amount
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
-            SuppliesCard()
+            if (recipe.steps.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(28.dp))
+                SectionTitle(text = "Paso a paso")
+                Spacer(modifier = Modifier.height(20.dp))
+                recipe.steps.forEachIndexed { index, step ->
+                    PreparationStep(
+                        stepNumber = index + 1,
+                        description = step
+                    )
+                    if (index != recipe.steps.lastIndex) {
+                        Spacer(modifier = Modifier.height(22.dp))
+                    }
+                }
+            }
+
+            if (recipe.ingredients.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(28.dp))
+                SuppliesCard()
+            }
 
             recipe.relatedVideo?.let { relatedVideo ->
                 Spacer(modifier = Modifier.height(32.dp))
@@ -199,7 +230,7 @@ private fun RecipeContent(
 }
 
 @Composable
-private fun RecipeMetadata(recipe: Recipe) {
+private fun RecipeMetadata(recipe: AppRecipe) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,16 +238,20 @@ private fun RecipeMetadata(recipe: Recipe) {
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "◷  ${recipe.duration}",
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp)
-        )
-        Text(
-            text = "♨  ${recipe.yield}",
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp)
-        )
+        if (recipe.duration.isNotBlank()) {
+            Text(
+                text = "◷  ${recipe.duration}",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp)
+            )
+        }
+        if (recipe.yield.isNotBlank()) {
+            Text(
+                text = "♨  ${recipe.yield}",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp)
+            )
+        }
     }
 }
 

@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.content.ExploreContent
 import com.example.proyecto_semestral.ui.components.AppBottomBar
@@ -46,6 +48,7 @@ import com.example.proyecto_semestral.ui.components.ContentFilter
 import com.example.proyecto_semestral.ui.components.ContentFilters
 import com.example.proyecto_semestral.ui.components.ExploreContentRow
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.viewmodel.ExploreViewModel
 
 @Composable
 fun ExploreScreen(
@@ -57,9 +60,12 @@ fun ExploreScreen(
     onRecipeClick: (String) -> Unit,
     onVideoClick: (String) -> Unit,
     onCourseClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    exploreViewModel: ExploreViewModel = viewModel()
 ) {
-    val visibleItems = exploreItems.filter { item ->
+    val recipes by exploreViewModel.recipes.collectAsState()
+    val allItems = exploreViewModel.recipeItems(recipes) + exploreItems
+    val visibleItems = allItems.filter { item ->
         val matchesFilter = when (selectedFilter) {
             ContentFilter.All -> true
             ContentFilter.Recipes -> item.type == ContentFilter.Recipes
@@ -256,9 +262,6 @@ private fun ChevronDownIcon(color: Color, modifier: Modifier = Modifier) {
 }
 
 private val exploreItems = listOf(
-    ExploreContent("RECETA", "Galletas con chips de chocolate", "Galletas · 35 min", ContentFilter.Recipes, R.drawable.galletas, "galletas-chips-chocolate"),
-    ExploreContent("RECETA", "Empanadas de queso al horno", "Empanadas · 50 min", ContentFilter.Recipes, R.drawable.bolleria, "empanadas-queso-horno"),
-    ExploreContent("RECETA", "Postre de chocolate en vaso", "Chocolatería · 25 min + frío", ContentFilter.Recipes, R.drawable.chocolate, "postre-chocolate-vaso"),
     ExploreContent("VIDEO TÉCNICO", "Introducción al templado de chocolate", "Chocolatería · 8 min", ContentFilter.Videos, R.drawable.chocolate, "video-templado-chocolate"),
     ExploreContent("VIDEO TÉCNICO", "Técnica básica de laminado", "Masas de hoja · 10 min", ContentFilter.Videos, R.drawable.bolleria, "video-laminado"),
     ExploreContent("VIDEO TÉCNICO", "Decoración de pastelería de vitrina", "Pastelería de vitrina · 7 min", ContentFilter.Videos, R.drawable.galletas, "video-decoracion-vitrina"),
