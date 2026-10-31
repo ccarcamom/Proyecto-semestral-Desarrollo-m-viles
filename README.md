@@ -1,106 +1,116 @@
 <div align="center">
-  <img src="app/src/main/res/drawable/logo.png" alt="Logo de Master Martini" width="280" />
+  <img src="app/src/main/res/drawable/logo_v3.png" alt="Logo de Master Martini" width="220" />
 
   # Master Martini
 
-  **Aplicación móvil educativa de recetas, técnicas y cursos de pastelería.**
+  **Aplicación móvil educativa de recetas y cursos de pastelería.**
 </div>
 
 ## Descripción
 
-Master Martini es una aplicación Android desarrollada como proyecto semestral. Su objetivo es ofrecer a emprendedores y profesionales gastronómicos un espacio donde puedan descubrir recetas, consultar técnicas y acceder a cursos relacionados con chocolatería, bollería y pastelería.
+Master Martini es una aplicación Android desarrollada como proyecto semestral. Está orientada a emprendedores y profesionales gastronómicos que buscan descubrir recetas, aprender técnicas de chocolatería y bollería, y consultar contenido útil para sus negocios.
 
-La aplicación utiliza contenido local y flujos simulados con fines demostrativos y académicos.
+El proyecto funciona sin backend ni base de datos. Los usuarios, las sesiones, los perfiles y las recetas administradas se conservan únicamente en memoria mientras el proceso de la aplicación permanece activo.
 
 ## Funcionalidades
 
+### Usuarios
+
 - Registro e inicio de sesión.
-- Persistencia local de la sesión del usuario.
-- Pantalla de inicio con contenido recomendado.
-- Búsqueda de recetas, videos y cursos.
-- Filtros por tipo de contenido.
-- Detalle de recetas con ingredientes y preparación.
+- Validación de credenciales y bloqueo de usuarios.
+- Perfil editable con nombre, correo, teléfono, negocio, imagen e intereses.
+- Selección de intereses en chocolatería, bollería, pastelería y panadería.
+- Selección de fotografía de perfil desde la galería.
+
+### Contenido
+
+- Inicio con contenido recomendado y accesos directos a recetas y cursos.
+- Exploración con búsqueda y filtros por recetas o cursos.
+- Detalle de recetas con descripción, video, ingredientes, preparación e insumos.
 - Opción para compartir recetas mediante el menú nativo de Android.
-- Detalle de cursos y listado de lecciones.
-- Reproductor de video simulado.
-- Formulario de contacto con validaciones y opción para agregar la ubicación actual.
-- Perfil con datos personales, información del negocio e intereses.
-- Selección de una foto de perfil desde la galería del dispositivo.
-- Navegación inferior entre las secciones principales.
-- Transiciones animadas al navegar entre pantallas.
+- Cursos de chocolatería y bollería con lecciones consecutivas.
+- Reproducción de videos reales de YouTube integrada en recetas y cursos.
+
+### Administración
+
+- Panel administrativo independiente.
+- Búsqueda, edición, bloqueo, desbloqueo y eliminación de usuarios.
+- Creación, edición y eliminación de recetas.
+- Formulario de recetas con título, enlace de YouTube, descripción, ingredientes, pasos, insumos e imagen.
+- Publicación inmediata de las recetas administradas en Explorar y en su pantalla de detalle.
+
+### Contacto
+
+- Formulario con información del usuario y su negocio.
+- Validación de correo y descripción.
+- Confirmación simulada del envío de la consulta.
+
+## Acceso administrativo
+
+Las siguientes cuentas están disponibles para probar el panel administrativo:
+
+| Correo | Contraseña |
+| --- | --- |
+| `matias@admin.cl` | `123123` |
+| `pedro@admin.cl` | `123123` |
+| `cristobal@admin.cl` | `123123` |
+
+Solo estas direcciones tienen rol administrativo. El dominio `@admin.cl` está reservado y no puede utilizarse durante el registro normal.
 
 ## Funciones nativas y permisos
 
-La aplicación utiliza funciones propias de Android para interactuar con la galería, la ubicación y el menú para compartir contenido. Los permisos se solicitan únicamente cuando el usuario intenta utilizar la función que los necesita.
+### Selección de imágenes
 
-### Foto de perfil
-
-Desde la pantalla **Mi perfil** se puede tocar directamente el avatar para seleccionar una imagen de la galería. Android solicita el permiso correspondiente según la versión del dispositivo y permite escoger la fotografía mediante su selector nativo.
-
-La aplicación conserva el acceso a la imagen seleccionada y guarda su referencia localmente al presionar **Guardar cambios**. Si el permiso se rechaza, la galería no se abre y se muestra un mensaje informativo.
-
-### Ubicación en el formulario de contacto
-
-El formulario de contacto incluye el botón **Usar mi ubicación actual**. Al presionarlo, la aplicación solicita acceso a la ubicación precisa o aproximada y, si el usuario lo autoriza, completa el campo con las coordenadas obtenidas.
-
-La ubicación no se consulta en segundo plano. Solo se obtiene cuando el usuario presiona el botón. Si el permiso se rechaza o los servicios de ubicación están desactivados, la aplicación informa que no pudo obtenerla y permite completar el campo manualmente.
+La aplicación utiliza el selector de archivos de Android para elegir la foto de perfil y las imágenes de las recetas. Las referencias de las imágenes se mantienen durante la ejecución de la aplicación.
 
 ### Compartir recetas
 
-En el detalle de una receta, el botón **Compartir receta** abre el menú nativo de Android. El contenido compartido incluye el título, la descripción, la duración, el rendimiento y los ingredientes.
-
-Esta función no necesita un permiso adicional: Android entrega el contenido únicamente a la aplicación que el usuario selecciona en el menú para compartir.
+El botón **Compartir receta** abre el menú nativo de Android mediante `Intent.ACTION_SEND`. El texto compartido incluye el título, la descripción, el video, la duración, el rendimiento y los ingredientes disponibles.
 
 ### Permisos declarados
 
 | Permiso | Uso |
 | --- | --- |
-| `READ_MEDIA_IMAGES` | Acceso a imágenes en Android 13 o superior. |
-| `READ_MEDIA_VISUAL_USER_SELECTED` | Acceso limitado a las imágenes elegidas por el usuario en versiones recientes de Android. |
-| `READ_EXTERNAL_STORAGE` | Compatibilidad con la galería hasta Android 12L. |
-| `ACCESS_COARSE_LOCATION` | Obtención de una ubicación aproximada. |
+| `READ_MEDIA_IMAGES` | Lectura de imágenes en Android 13 o superior. |
+| `READ_MEDIA_VISUAL_USER_SELECTED` | Acceso limitado a imágenes seleccionadas en versiones recientes de Android. |
+| `READ_EXTERNAL_STORAGE` | Compatibilidad con la selección de imágenes hasta Android 12L. |
+| `INTERNET` | Reproducción de YouTube y carga de contenido remoto. |
 
-La aplicación continúa funcionando si estos permisos no se conceden; solamente quedan deshabilitadas las funciones asociadas.
-
-## Animaciones
-
-La interfaz utiliza animaciones breves para ofrecer una navegación más fluida sin retrasar la interacción. Se incluyen:
-
-- Transiciones de desplazamiento y fundido entre pantallas.
-- Cambios animados en la barra de navegación inferior.
-- Transiciones de color en los filtros de contenido.
-- Animaciones al seleccionar intereses y casillas de verificación.
+La aplicación no solicita acceso a la ubicación, cámara, micrófono, contactos ni sensores del dispositivo.
 
 ## Tecnologías utilizadas
 
 - **Kotlin**
 - **Jetpack Compose**
 - **Material 3**
+- **ViewModel** y estados reactivos con `StateFlow`
 - **Android SDK 36**
 - **Gradle con Kotlin DSL**
-- **ViewModel** para el estado de los formularios
-- **SharedPreferences** para la sesión local
+- **android-youtube-player 13.0.0** para videos de YouTube
+- **Coil Compose 2.7.0** para carga de imágenes
 
 ## Estructura principal
 
 ```text
 app/src/main/java/com/example/proyecto_semestral/
-├── model/          # Modelos y catálogos de contenido
-├── navigation/     # Navegación, sesión y usuarios
+├── model/              # Usuarios, recetas y catálogos de contenido
+├── navigation/         # Rutas y flujo principal de la aplicación
+├── repository/admin/   # Usuarios, sesión y recetas en memoria
 ├── ui/
-│   ├── components/ # Componentes reutilizables
-│   ├── screens/    # Pantallas de la aplicación
-│   └── theme/      # Colores, tipografías y formas
-├── viewmodel/      # Estado y validación de formularios
-└── MainActivity.kt # Punto de entrada de la aplicación
+│   ├── components/     # Componentes reutilizables y reproductor
+│   ├── screens/        # Pantallas públicas y administrativas
+│   └── theme/          # Colores, tipografías y formas
+├── viewmodel/          # Estado y lógica de presentación
+└── MainActivity.kt     # Punto de entrada
 ```
 
 ## Requisitos
 
-- Android Studio
-- JDK 21
-- Android SDK 36
-- Dispositivo o emulador con Android 7.0 (API 24) o superior
+- Android Studio.
+- JDK 11 o superior.
+- Android SDK 36.
+- Dispositivo o emulador con Android 7.0 (API 24) o superior.
+- Conexión a Internet para reproducir videos de YouTube.
 
 ## Ejecución
 
@@ -115,7 +125,7 @@ app/src/main/java/com/example/proyecto_semestral/
 4. Selecciona un emulador o dispositivo físico.
 5. Ejecuta el módulo `app`.
 
-También puedes comprobar la compilación desde una terminal de Windows:
+Para comprobar la compilación desde Windows:
 
 ```powershell
 .\gradlew.bat :app:assembleDebug
@@ -123,11 +133,11 @@ También puedes comprobar la compilación desde una terminal de Windows:
 
 ## Consideraciones
 
-- Las cuentas y los contenidos se utilizan como demostración local.
-- El reproductor no consume videos externos; simula la experiencia de reproducción.
-- El formulario de contacto valida los datos y puede obtener la ubicación, pero no envía la consulta a un servicio empresarial real.
-- La información del perfil, incluida la referencia a la fotografía seleccionada, se almacena localmente en el dispositivo.
-- Durante las pruebas en un dispositivo o emulador, es necesario aceptar los permisos de imágenes y ubicación para comprobar esas funciones.
+- No existe integración con un backend, Room ni otro sistema de persistencia.
+- Los usuarios registrados, cambios de perfil y recetas creadas se pierden cuando Android finaliza el proceso de la aplicación.
+- El formulario de contacto no envía información a un servicio empresarial real.
+- Los videos pertenecen a sus respectivos autores en YouTube y requieren conexión a Internet.
+- En algunos emuladores puede ser necesario utilizar renderizado gráfico por software si el controlador OpenGL provoca cierres.
 
 ## Proyecto académico
 
