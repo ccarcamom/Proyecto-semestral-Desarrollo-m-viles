@@ -9,6 +9,9 @@ data class AppUser(
     val businessName: String = "",
     val businessType: String = "",
     val businessSize: String = "",
+    val profileImageUri: String = "",
+    val phone: String = "",
+    val interests: Set<String> = emptySet(),
     val isBlocked: Boolean = false
 ) {
     val role: UserRole

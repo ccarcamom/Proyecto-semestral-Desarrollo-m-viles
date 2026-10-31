@@ -179,6 +179,11 @@ fun ProfileScreen(
                             profile.businessSize,
                             profile.selectedInterests
                         )
+                        Toast.makeText(
+                            context,
+                            "Cambios guardados correctamente.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 onBottomBarItemSelected = onBottomBarItemSelected

@@ -45,7 +45,18 @@ class ManageUsersViewModel : ViewModel() {
     }
 
     fun updateUser(id: String, name: String, email: String): Boolean {
-        return InMemoryUserRepository.updateProfile(id, name, email)
+        val user = InMemoryUserRepository.findById(id) ?: return false
+        return InMemoryUserRepository.updateProfile(
+            id = id,
+            name = name,
+            email = email,
+            profileImageUri = user.profileImageUri,
+            phone = user.phone,
+            businessName = user.businessName,
+            businessType = user.businessType,
+            businessSize = user.businessSize,
+            interests = user.interests
+        )
     }
 
     fun blockUser(id: String) {

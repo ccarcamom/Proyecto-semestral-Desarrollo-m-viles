@@ -57,7 +57,17 @@ object InMemoryUserRepository {
     fun findById(id: String): AppUser? = _users.value.firstOrNull { it.id == id }
 
     @Synchronized
-    fun updateProfile(id: String, name: String, email: String): Boolean {
+    fun updateProfile(
+        id: String,
+        name: String,
+        email: String,
+        profileImageUri: String,
+        phone: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String,
+        interests: Set<String>
+    ): Boolean {
         val normalizedEmail = email.normalizeEmail()
         val currentUser = findById(id) ?: return false
         if (
@@ -71,7 +81,16 @@ object InMemoryUserRepository {
             current.map { user ->
                 if (user.id == id) {
                     updated = true
-                    user.copy(name = name.trim(), email = normalizedEmail)
+                    user.copy(
+                        name = name.trim(),
+                        email = normalizedEmail,
+                        profileImageUri = profileImageUri,
+                        phone = phone.trim(),
+                        businessName = businessName.trim(),
+                        businessType = businessType,
+                        businessSize = businessSize,
+                        interests = interests.toSet()
+                    )
                 } else {
                     user
                 }

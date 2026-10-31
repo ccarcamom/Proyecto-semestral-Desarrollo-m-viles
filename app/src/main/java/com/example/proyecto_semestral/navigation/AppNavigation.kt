@@ -74,9 +74,12 @@ fun AppNavigation() {
         InMemorySessionRepository.start(user)
         currentUserName = user.name
         currentUserEmail = user.email
+        currentProfileImageUri = user.profileImageUri
+        currentUserPhone = user.phone
         currentBusinessName = user.businessName
         currentBusinessType = user.businessType.ifBlank { DEFAULT_BUSINESS_TYPE }
         currentBusinessSize = user.businessSize.ifBlank { DEFAULT_BUSINESS_SIZE }
+        currentInterests = user.interests
         currentRoute = if (user.role == UserRole.ADMIN) AppRoute.AdminUsers else AppRoute.Home
     }
 
@@ -297,20 +300,28 @@ fun AppNavigation() {
                     initialInterests = currentInterests,
                     onBack = { currentRoute = AppRoute.Home },
                     onSaveChanges = { name, email, profileImageUri, phone, businessName, businessType, businessSize, interests ->
-                        currentUserName = name.trim().ifBlank { currentUserName }
-                        currentUserEmail = email.trim()
-                        currentProfileImageUri = profileImageUri
-                        currentUserPhone = phone.trim()
-                        currentBusinessName = businessName.trim()
-                        currentBusinessType = businessType
-                        currentBusinessSize = businessSize
-                        currentInterests = interests
                         InMemorySessionRepository.currentUser?.let { user ->
-                            InMemoryUserRepository.updateProfile(
+                            val saved = InMemoryUserRepository.updateProfile(
                                 id = user.id,
-                                name = currentUserName,
-                                email = currentUserEmail
+                                name = name,
+                                email = email,
+                                profileImageUri = profileImageUri,
+                                phone = phone,
+                                businessName = businessName,
+                                businessType = businessType,
+                                businessSize = businessSize,
+                                interests = interests
                             )
+                            if (saved) {
+                                currentUserName = name.trim().ifBlank { currentUserName }
+                                currentUserEmail = email.trim().lowercase()
+                                currentProfileImageUri = profileImageUri
+                                currentUserPhone = phone.trim()
+                                currentBusinessName = businessName.trim()
+                                currentBusinessType = businessType
+                                currentBusinessSize = businessSize
+                                currentInterests = interests.toSet()
+                            }
                         }
                     },
                     onBottomBarItemSelected = { item ->
