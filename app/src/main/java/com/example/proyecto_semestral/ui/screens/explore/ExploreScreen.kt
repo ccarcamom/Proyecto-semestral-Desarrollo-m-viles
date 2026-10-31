@@ -127,15 +127,6 @@ fun ExploreScreen(
                 onFilterSelected = onFilterSelected
             )
 
-            Spacer(modifier = Modifier.height(22.dp))
-            Text(
-                text = "Especialidad",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            SpecialtySelector()
-
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "${visibleItems.size} contenidos",
@@ -213,48 +204,11 @@ private fun ExploreSearchField(
 }
 
 @Composable
-private fun SpecialtySelector() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(62.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(horizontal = 18.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = "Todas las especialidades",
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp)
-        )
-        ChevronDownIcon(
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp)
-        )
-    }
-}
-
-@Composable
 private fun SearchIcon(color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val stroke = 2.dp.toPx()
         drawCircle(color, size.minDimension * 0.32f, Offset(size.width * 0.42f, size.height * 0.42f), style = Stroke(stroke))
         drawLine(color, Offset(size.width * 0.64f, size.height * 0.64f), Offset(size.width * 0.9f, size.height * 0.9f), stroke, cap = StrokeCap.Round)
-    }
-}
-
-@Composable
-private fun ChevronDownIcon(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val stroke = 2.4.dp.toPx()
-        drawLine(color, Offset(size.width * 0.22f, size.height * 0.36f), Offset(size.width * 0.5f, size.height * 0.64f), stroke, cap = StrokeCap.Round)
-        drawLine(color, Offset(size.width * 0.5f, size.height * 0.64f), Offset(size.width * 0.78f, size.height * 0.36f), stroke, cap = StrokeCap.Round)
     }
 }
 
