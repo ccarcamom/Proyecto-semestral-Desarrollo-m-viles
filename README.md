@@ -59,7 +59,6 @@ Esta función no necesita un permiso adicional: Android entrega el contenido ún
 | `READ_MEDIA_VISUAL_USER_SELECTED` | Acceso limitado a las imágenes elegidas por el usuario en versiones recientes de Android. |
 | `READ_EXTERNAL_STORAGE` | Compatibilidad con la galería hasta Android 12L. |
 | `ACCESS_COARSE_LOCATION` | Obtención de una ubicación aproximada. |
-| `ACCESS_FINE_LOCATION` | Obtención de una ubicación precisa cuando el usuario la autoriza. |
 
 La aplicación continúa funcionando si estos permisos no se conceden; solamente quedan deshabilitadas las funciones asociadas.
 
