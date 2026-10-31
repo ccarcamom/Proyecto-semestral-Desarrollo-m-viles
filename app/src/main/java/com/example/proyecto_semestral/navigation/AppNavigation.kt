@@ -13,11 +13,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
+import com.example.proyecto_semestral.model.admin.AppUser
+import com.example.proyecto_semestral.model.admin.UserRole
 import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_SIZE
 import com.example.proyecto_semestral.model.profile.DEFAULT_BUSINESS_TYPE
+import com.example.proyecto_semestral.repository.admin.InMemorySessionRepository
+import com.example.proyecto_semestral.repository.admin.InMemoryUserRepository
+import com.example.proyecto_semestral.repository.admin.LoginResult
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.ContentFilter
+import com.example.proyecto_semestral.ui.screens.admin.ManageRecipesScreen
+import com.example.proyecto_semestral.ui.screens.admin.ManageUsersScreen
 import com.example.proyecto_semestral.ui.screens.contact.ContactScreen
 import com.example.proyecto_semestral.ui.screens.course.CourseDetailScreen
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
@@ -30,40 +36,32 @@ import com.example.proyecto_semestral.ui.screens.video.VideoScreen
 
 @Composable
 fun AppNavigation() {
-    val context = LocalContext.current
-    val routerGuard = remember { RouterGuard(context.applicationContext) }
     var currentRoute by rememberSaveable {
-        mutableStateOf(
-            if (routerGuard.canAccessDashboard()) {
-                AppRoute.Home
-            } else {
-                AppRoute.Login
-            }
-        )
+        mutableStateOf(AppRoute.Login)
     }
     var currentUserName by rememberSaveable {
-        mutableStateOf(routerGuard.getUserName().ifBlank { "Usuario" })
+        mutableStateOf("Usuario")
     }
     var currentUserEmail by rememberSaveable {
-        mutableStateOf(routerGuard.getUserEmail())
+        mutableStateOf("")
     }
     var currentProfileImageUri by rememberSaveable {
-        mutableStateOf(routerGuard.getProfileImageUri())
+        mutableStateOf("")
     }
     var currentUserPhone by rememberSaveable {
-        mutableStateOf(routerGuard.getUserPhone())
+        mutableStateOf("")
     }
     var currentBusinessName by rememberSaveable {
-        mutableStateOf(routerGuard.getBusinessName())
+        mutableStateOf("")
     }
     var currentBusinessType by rememberSaveable {
-        mutableStateOf(routerGuard.getBusinessType())
+        mutableStateOf(DEFAULT_BUSINESS_TYPE)
     }
     var currentBusinessSize by rememberSaveable {
-        mutableStateOf(routerGuard.getBusinessSize())
+        mutableStateOf(DEFAULT_BUSINESS_SIZE)
     }
     var currentInterests by remember {
-        mutableStateOf(routerGuard.getUserInterests())
+        mutableStateOf(emptySet<String>())
     }
     var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
     var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
@@ -71,6 +69,39 @@ fun AppNavigation() {
     var selectedVideoId by rememberSaveable { mutableStateOf("") }
     var selectedCourseId by rememberSaveable { mutableStateOf("") }
     var videoReturnRoute by rememberSaveable { mutableStateOf(AppRoute.Explore) }
+
+    fun openSession(user: AppUser) {
+        InMemorySessionRepository.start(user)
+        currentUserName = user.name
+        currentUserEmail = user.email
+        currentBusinessName = user.businessName
+        currentBusinessType = user.businessType.ifBlank { DEFAULT_BUSINESS_TYPE }
+        currentBusinessSize = user.businessSize.ifBlank { DEFAULT_BUSINESS_SIZE }
+        currentRoute = if (user.role == UserRole.ADMIN) AppRoute.AdminUsers else AppRoute.Home
+    }
+
+    fun login(email: String, password: String): Boolean {
+        return when (val result = InMemoryUserRepository.authenticate(email, password)) {
+            is LoginResult.Success -> {
+                openSession(result.user)
+                true
+            }
+            LoginResult.Blocked, LoginResult.InvalidCredentials -> false
+        }
+    }
+
+    fun logout() {
+        InMemorySessionRepository.clear()
+        currentUserName = "Usuario"
+        currentUserEmail = ""
+        currentProfileImageUri = ""
+        currentUserPhone = ""
+        currentBusinessName = ""
+        currentBusinessType = DEFAULT_BUSINESS_TYPE
+        currentBusinessSize = DEFAULT_BUSINESS_SIZE
+        currentInterests = emptySet()
+        currentRoute = AppRoute.Login
+    }
 
     AnimatedContent(
         targetState = currentRoute,
@@ -92,7 +123,7 @@ fun AppNavigation() {
     ) { route ->
     when (route) {
         AppRoute.Home -> {
-            if (routerGuard.canAccessDashboard()) {
+            if (InMemorySessionRepository.currentUser != null) {
                 HomeScreen(
                     userName = currentUserName,
                     onBottomBarItemSelected = { item ->
@@ -112,40 +143,18 @@ fun AppNavigation() {
                         selectedCourseId = courseId
                         currentRoute = AppRoute.Course
                     },
-                    onLogout = {
-                        routerGuard.logout()
-                        currentUserName = "Usuario"
-                        currentUserEmail = ""
-                        currentProfileImageUri = ""
-                        currentUserPhone = ""
-                        currentBusinessName = ""
-                        currentBusinessType = DEFAULT_BUSINESS_TYPE
-                        currentBusinessSize = DEFAULT_BUSINESS_SIZE
-                        currentInterests = emptySet()
-                        currentRoute = AppRoute.Login
-                    }
+                    onLogout = ::logout
                 )
             } else {
                 LoginScreen(
-                    onLoginSuccess = { email, password ->
-                        val user = UserStore.findUser(email, password)
-                        if (user != null) {
-                            currentUserName = user.name
-                            currentUserEmail = user.email
-                            routerGuard.saveSession(true, user.name, user.email)
-                            currentRoute = AppRoute.Home
-                            true
-                        } else {
-                            false
-                        }
-                    },
+                    onLoginSuccess = ::login,
                     onRegisterClick = { currentRoute = AppRoute.Register }
                 )
             }
         }
 
         AppRoute.Explore -> {
-            if (routerGuard.canAccessDashboard()) {
+            if (InMemorySessionRepository.currentUser != null) {
                 ExploreScreen(
                     onBottomBarItemSelected = { item ->
                         when (item) {
@@ -175,18 +184,7 @@ fun AppNavigation() {
                 )
             } else {
                 LoginScreen(
-                    onLoginSuccess = { email, password ->
-                        val user = UserStore.findUser(email, password)
-                        if (user != null) {
-                            currentUserName = user.name
-                            currentUserEmail = user.email
-                            routerGuard.saveSession(true, user.name, user.email)
-                            currentRoute = AppRoute.Explore
-                            true
-                        } else {
-                            false
-                        }
-                    },
+                    onLoginSuccess = ::login,
                     onRegisterClick = { currentRoute = AppRoute.Register }
                 )
             }
@@ -194,47 +192,49 @@ fun AppNavigation() {
 
         AppRoute.Register -> RegisterScreen(
             onRegisterSuccess = { name, email, password, businessName, businessType, businessSize ->
-                val isRegistered = UserStore.registerUser(name, email, password)
-                if (isRegistered) {
-                    currentUserName = name.trim()
-                    currentUserEmail = email.trim().lowercase()
-                    currentBusinessName = businessName.trim()
-                    currentBusinessType = businessType
-                    currentBusinessSize = businessSize
+                val user = InMemoryUserRepository.register(
+                    name = name,
+                    email = email,
+                    password = password,
+                    businessName = businessName,
+                    businessType = businessType,
+                    businessSize = businessSize
+                )
+                if (user != null) {
                     currentInterests = emptySet()
-                    routerGuard.saveSession(true, currentUserName, currentUserEmail)
-                    routerGuard.saveProfile(
-                        name = currentUserName,
-                        email = currentUserEmail,
-                        profileImageUri = currentProfileImageUri,
-                        phone = currentUserPhone,
-                        businessName = currentBusinessName,
-                        businessType = currentBusinessType,
-                        businessSize = currentBusinessSize,
-                        interests = currentInterests
-                    )
-                    currentRoute = AppRoute.Home
+                    openSession(user)
                 }
-                isRegistered
+                user != null
             },
             onLoginClick = { currentRoute = AppRoute.Login }
         )
 
         AppRoute.Login -> LoginScreen(
-            onLoginSuccess = { email, password ->
-                val user = UserStore.findUser(email, password)
-                if (user != null) {
-                    currentUserName = user.name
-                    currentUserEmail = user.email
-                    routerGuard.saveSession(true, user.name, user.email)
-                    currentRoute = AppRoute.Home
-                    true
-                } else {
-                    false
-                }
-            },
+            onLoginSuccess = ::login,
             onRegisterClick = { currentRoute = AppRoute.Register }
         )
+
+        AppRoute.AdminUsers -> {
+            if (InMemorySessionRepository.currentUser?.role == UserRole.ADMIN) {
+                ManageUsersScreen(
+                    onNavigateToRecipes = { currentRoute = AppRoute.AdminRecipes },
+                    onLogout = ::logout
+                )
+            } else {
+                currentRoute = AppRoute.Login
+            }
+        }
+
+        AppRoute.AdminRecipes -> {
+            if (InMemorySessionRepository.currentUser?.role == UserRole.ADMIN) {
+                ManageRecipesScreen(
+                    onNavigateToUsers = { currentRoute = AppRoute.AdminUsers },
+                    onLogout = ::logout
+                )
+            } else {
+                currentRoute = AppRoute.Login
+            }
+        }
 
         AppRoute.Recipe -> RecipeDetailScreen(
             recipeId = selectedRecipeId,
@@ -264,7 +264,7 @@ fun AppNavigation() {
         )
 
         AppRoute.Contact -> {
-            if (routerGuard.canAccessDashboard()) {
+            if (InMemorySessionRepository.currentUser != null) {
                 ContactScreen(
                     initialEmail = currentUserEmail,
                     onBottomBarItemSelected = { item ->
@@ -282,7 +282,7 @@ fun AppNavigation() {
         }
 
         AppRoute.Profile -> {
-            if (routerGuard.canAccessDashboard()) {
+            if (InMemorySessionRepository.currentUser != null) {
                 ProfileScreen(
                     initialName = currentUserName,
                     initialEmail = currentUserEmail,
@@ -302,16 +302,13 @@ fun AppNavigation() {
                         currentBusinessType = businessType
                         currentBusinessSize = businessSize
                         currentInterests = interests
-                        routerGuard.saveProfile(
-                            name = currentUserName,
-                            email = currentUserEmail,
-                            profileImageUri = currentProfileImageUri,
-                            phone = currentUserPhone,
-                            businessName = currentBusinessName,
-                            businessType = currentBusinessType,
-                            businessSize = currentBusinessSize,
-                            interests = currentInterests
-                        )
+                        InMemorySessionRepository.currentUser?.let { user ->
+                            InMemoryUserRepository.updateProfile(
+                                id = user.id,
+                                name = currentUserName,
+                                email = currentUserEmail
+                            )
+                        }
                     },
                     onBottomBarItemSelected = { item ->
                         when (item) {
@@ -333,6 +330,8 @@ fun AppNavigation() {
 private enum class AppRoute {
     Login,
     Register,
+    AdminUsers,
+    AdminRecipes,
     Home,
     Explore,
     Recipe,
