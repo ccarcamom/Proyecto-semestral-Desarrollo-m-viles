@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,7 +28,7 @@ import com.example.proyecto_semestral.model.content.VideoCatalog
 import com.example.proyecto_semestral.model.content.VideoContent
 import com.example.proyecto_semestral.ui.components.AppTopBar
 import com.example.proyecto_semestral.ui.components.PrimaryButton
-import com.example.proyecto_semestral.ui.components.VideoPlayerPlaceholder
+import com.example.proyecto_semestral.ui.components.EmbeddedVideoPlayer
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @Composable
@@ -78,11 +79,9 @@ private fun VideoContent(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        VideoPlayerPlaceholder(
-            videoId = video.id,
-            imageRes = video.imageRes,
-            duration = video.duration
-        )
+        key(video.id) {
+            EmbeddedVideoPlayer(videoUrl = video.videoUrl)
+        }
 
         Spacer(modifier = Modifier.height(42.dp))
         Text(
@@ -170,13 +169,13 @@ private fun DemoNotice() {
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
-                text = "Vista previa del reproductor",
+                text = "Video de demostración",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Los controles simulan la reproducción de esta lección. El material se incorporará cuando esté disponible.",
+                text = "Este video permite probar la reproducción integrada. El contenido específico de la lección aún no está asignado.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp, lineHeight = 29.sp)
             )

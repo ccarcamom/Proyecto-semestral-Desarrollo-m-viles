@@ -6,6 +6,7 @@ object VideoCatalog {
     private val videos = listOf(
         VideoContent(
             id = "leccion-templado-1",
+            videoUrl = DEMO_VIDEO_URL,
             category = "Chocolatería",
             title = "Conoce el chocolate",
             duration = "8:00",
@@ -18,6 +19,7 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-templado-2",
+            videoUrl = DEMO_VIDEO_URL,
             category = "Chocolatería",
             title = "Técnica de templado",
             duration = "12:00",
@@ -30,6 +32,7 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-templado-3",
+            videoUrl = DEMO_VIDEO_URL,
             category = "Chocolatería",
             title = "Acabado y conservación",
             duration = "10:00",
@@ -42,6 +45,7 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-bolleria-1",
+            videoUrl = DEMO_VIDEO_URL,
             category = "Bollería",
             title = "Bases de la bollería",
             duration = "10:00",
@@ -54,6 +58,7 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-bolleria-2",
+            videoUrl = DEMO_VIDEO_URL,
             category = "Bollería",
             title = "Técnica de laminado",
             duration = "12:00",
@@ -66,6 +71,7 @@ object VideoCatalog {
         ),
         VideoContent(
             id = "leccion-bolleria-3",
+            videoUrl = DEMO_VIDEO_URL,
             category = "Bollería",
             title = "Fermentación y horneado",
             duration = "13:00",
@@ -79,4 +85,15 @@ object VideoCatalog {
     )
 
     fun findById(id: String): VideoContent? = videos.firstOrNull { it.id == id }
+
+    fun nextLesson(id: String): VideoContent? {
+        val current = findById(id) ?: return null
+        val position = current.lessonPosition ?: return null
+        return videos.firstOrNull {
+            it.courseName == current.courseName && it.lessonPosition == position + 1
+        }
+    }
 }
+
+// Video de demostración de YouTube; reemplazar por el material de cada lección.
+private const val DEMO_VIDEO_URL = "https://www.youtube.com/watch?v=M7lc1UVf-VE"

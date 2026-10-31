@@ -249,7 +249,10 @@ fun AppNavigation() {
         AppRoute.Video -> VideoScreen(
             videoId = selectedVideoId,
             onBack = { currentRoute = videoReturnRoute },
-            onNextLesson = { },
+            onNextLesson = {
+                com.example.proyecto_semestral.model.content.VideoCatalog
+                    .nextLesson(selectedVideoId)?.let { selectedVideoId = it.id }
+            },
             onReturnToCourse = { currentRoute = AppRoute.Course }
         )
 

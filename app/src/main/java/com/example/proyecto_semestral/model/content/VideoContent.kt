@@ -9,6 +9,7 @@ data class VideoContent(
     val duration: String,
     val durationSeconds: Int,
     val description: String,
+    val videoUrl: String,
     @DrawableRes val imageRes: Int,
     val courseName: String? = null,
     val lessonPosition: Int? = null,
