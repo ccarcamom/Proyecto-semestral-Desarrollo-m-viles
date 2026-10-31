@@ -18,8 +18,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +31,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.R
+import com.example.proyecto_semestral.model.admin.AppUser
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.admin.AdminNavigationToggle
 import com.example.proyecto_semestral.ui.components.admin.AdminSearchField
@@ -40,44 +42,24 @@ import com.example.proyecto_semestral.ui.components.admin.BlockUserDialog
 import com.example.proyecto_semestral.ui.components.admin.DeleteUserDialog
 import com.example.proyecto_semestral.ui.components.admin.EditUserDialog
 import com.example.proyecto_semestral.ui.components.admin.UserCard
-import com.example.proyecto_semestral.ui.components.admin.UserStatusFilter
 import com.example.proyecto_semestral.ui.components.admin.UserStatusFilters
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
-
-data class AdminUser(
-    val id: String,
-    val name: String,
-    val email: String,
-    val isActive: Boolean
-)
+import com.example.proyecto_semestral.viewmodel.admin.ManageUsersViewModel
 
 @Composable
 fun ManageUsersScreen(
     modifier: Modifier = Modifier,
-    initialUsers: List<AdminUser> = sampleAdminUsers,
     onNavigateToRecipes: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    manageUsersViewModel: ManageUsersViewModel = viewModel()
 ) {
-    val users = remember(initialUsers) { mutableStateListOf<AdminUser>().apply { addAll(initialUsers) } }
-    var query by rememberSaveable { mutableStateOf("") }
-    var selectedFilter by rememberSaveable { mutableStateOf(UserStatusFilter.ALL) }
-    var editingUser by remember { mutableStateOf<AdminUser?>(null) }
-    var deletingUser by remember { mutableStateOf<AdminUser?>(null) }
-    var blockingUser by remember { mutableStateOf<AdminUser?>(null) }
+    val users by manageUsersViewModel.users.collectAsState()
+    val visibleUsers = manageUsersViewModel.filteredUsers(users)
+    var editingUser by remember { mutableStateOf<AppUser?>(null) }
+    var deletingUser by remember { mutableStateOf<AppUser?>(null) }
+    var blockingUser by remember { mutableStateOf<AppUser?>(null) }
     var editedName by rememberSaveable { mutableStateOf("") }
     var editedEmail by rememberSaveable { mutableStateOf("") }
-
-    val visibleUsers = users.filter { user ->
-        val matchesQuery = query.isBlank() ||
-            user.name.contains(query, ignoreCase = true) ||
-            user.email.contains(query, ignoreCase = true)
-        val matchesStatus = when (selectedFilter) {
-            UserStatusFilter.ALL -> true
-            UserStatusFilter.ACTIVE -> user.isActive
-            UserStatusFilter.BLOCKED -> !user.isActive
-        }
-        matchesQuery && matchesStatus
-    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -128,12 +110,15 @@ fun ManageUsersScreen(
                 )
             }
             item {
-                AdminSearchField(value = query, onValueChange = { query = it })
+                AdminSearchField(
+                    value = manageUsersViewModel.query,
+                    onValueChange = manageUsersViewModel::onQueryChange
+                )
             }
             item {
                 UserStatusFilters(
-                    selectedFilter = selectedFilter,
-                    onFilterSelected = { selectedFilter = it }
+                    selectedFilter = manageUsersViewModel.selectedFilter,
+                    onFilterSelected = manageUsersViewModel::onFilterSelected
                 )
             }
             item {
@@ -170,17 +155,17 @@ fun ManageUsersScreen(
                     UserCard(
                         name = user.name,
                         email = user.email,
-                        isActive = user.isActive,
+                        isActive = !user.isBlocked,
                         onEdit = {
                             editedName = user.name
                             editedEmail = user.email
                             editingUser = user
                         },
                         onBlock = {
-                            if (user.isActive) {
+                            if (!user.isBlocked) {
                                 blockingUser = user
                             } else {
-                                users.replace(user.copy(isActive = true))
+                                manageUsersViewModel.unblockUser(user.id)
                             }
                         },
                         onDelete = { deletingUser = user }
@@ -200,8 +185,9 @@ fun ManageUsersScreen(
             onNameChange = { editedName = it },
             onEmailChange = { editedEmail = it },
             onSave = {
-                users.replace(user.copy(name = editedName.trim(), email = editedEmail.trim()))
-                editingUser = null
+                if (manageUsersViewModel.updateUser(user.id, editedName, editedEmail)) {
+                    editingUser = null
+                }
             },
             onDismissRequest = { editingUser = null },
             saveEnabled = editedName.isNotBlank() && editedEmail.isNotBlank()
@@ -211,7 +197,7 @@ fun ManageUsersScreen(
         DeleteUserDialog(
             userName = user.name,
             onConfirm = {
-                users.removeAll { it.id == user.id }
+                manageUsersViewModel.deleteUser(user.id)
                 deletingUser = null
             },
             onDismissRequest = { deletingUser = null }
@@ -221,17 +207,12 @@ fun ManageUsersScreen(
         BlockUserDialog(
             userName = user.name,
             onConfirm = {
-                users.replace(user.copy(isActive = false))
+                manageUsersViewModel.blockUser(user.id)
                 blockingUser = null
             },
             onDismissRequest = { blockingUser = null }
         )
     }
-}
-
-private fun MutableList<AdminUser>.replace(updated: AdminUser) {
-    val index = indexOfFirst { it.id == updated.id }
-    if (index >= 0) this[index] = updated
 }
 
 @Composable
@@ -267,12 +248,6 @@ internal fun AdminInfoBanner(message: String) {
         )
     }
 }
-
-private val sampleAdminUsers = listOf(
-    AdminUser("1", "Ana Martínez", "ana.martinez@correo.cl", true),
-    AdminUser("2", "Carlos Rojas", "carlos.rojas@correo.cl", true),
-    AdminUser("3", "María López", "maria.lopez@correo.cl", false)
-)
 
 @Preview(showBackground = true, widthDp = 430, heightDp = 1000)
 @Composable
