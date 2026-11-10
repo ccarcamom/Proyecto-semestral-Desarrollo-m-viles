@@ -43,6 +43,12 @@ android {
 
 dependencies {
     implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:13.0.0")
+    // Retrofit y Gson Converter
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // Corrutinas para trabajo asincrónico
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
