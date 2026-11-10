@@ -1,7 +1,6 @@
 package com.example.proyecto_semestral.ui.screens.home
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +22,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,22 +46,18 @@ import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.components.ContentCard
-import com.example.proyecto_semestral.ui.components.ConfirmationDialog
 import com.example.proyecto_semestral.ui.components.FeaturedContentCard
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 @Composable
 fun HomeScreen(
-    userName: String,
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     onSearch: (String) -> Unit = {},
     onCourseClick: (String) -> Unit = {},
     onRecipesClick: () -> Unit = {},
     onCoursesClick: () -> Unit = {},
-    onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
     var homeSearchQuery by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
@@ -84,20 +78,7 @@ fun HomeScreen(
                 .padding(horizontal = 22.dp)
         ) {
             Spacer(modifier = Modifier.height(14.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                BrandLogo(modifier = Modifier.weight(1f))
-                TextButton(onClick = { showLogoutDialog = true }) {
-                    Image(
-                        painter = painterResource(R.drawable.logout),
-                        contentDescription = "Cerrar sesión",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
+            BrandLogo()
 
             Spacer(modifier = Modifier.height(26.dp))
             Text(
@@ -111,7 +92,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "Hola, $userName.",
+                text = "Inspírate y aprende.",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = 38.sp,
@@ -213,15 +194,6 @@ fun HomeScreen(
         }
     }
 
-    if (showLogoutDialog) {
-        ConfirmationDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            onConfirm = {
-                showLogoutDialog = false
-                onLogout()
-            }
-        )
-    }
 }
 
 @Composable
@@ -350,6 +322,6 @@ private fun SearchGlyph(color: Color, modifier: Modifier = Modifier) {
 @Composable
 private fun HomeScreenPreview() {
     ProyectoSemestralTheme {
-        HomeScreen(userName = "Andrea")
+        HomeScreen()
     }
 }

@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,24 +35,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyecto_semestral.model.admin.AppRecipe
+import com.example.proyecto_semestral.model.content.RecipeCatalog
+import com.example.proyecto_semestral.model.content.RecipeContent
 import com.example.proyecto_semestral.ui.components.AppTopBar
 import com.example.proyecto_semestral.ui.components.EmbeddedVideoPlayer
 import com.example.proyecto_semestral.ui.components.IngredientRow
 import com.example.proyecto_semestral.ui.components.PreparationStep
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
-import com.example.proyecto_semestral.viewmodel.RecipeDetailViewModel
 
 @Composable
 fun RecipeDetailScreen(
     recipeId: String,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    recipeDetailViewModel: RecipeDetailViewModel = viewModel()
+    modifier: Modifier = Modifier
 ) {
-    val recipes by recipeDetailViewModel.recipes.collectAsState()
-    val recipe = recipes.firstOrNull { it.id == recipeId }
+    val recipe = RecipeCatalog.findById(recipeId)
 
     Column(
         modifier = modifier
@@ -78,7 +74,7 @@ fun RecipeDetailScreen(
 
 @Composable
 private fun RecipeContent(
-    recipe: AppRecipe,
+    recipe: RecipeContent,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -90,10 +86,7 @@ private fun RecipeContent(
             .padding(bottom = 32.dp)
     ) {
         Image(
-            painter = coil.compose.rememberAsyncImagePainter(
-                model = recipe.imageUri ?: recipe.imageRes,
-                error = painterResource(recipe.imageRes)
-            ),
+            painter = painterResource(recipe.imageRes),
             contentDescription = recipe.title,
             modifier = Modifier
                 .fillMaxWidth()
@@ -221,7 +214,7 @@ private fun RecipeContent(
 }
 
 @Composable
-private fun RecipeMetadata(recipe: AppRecipe) {
+private fun RecipeMetadata(recipe: RecipeContent) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

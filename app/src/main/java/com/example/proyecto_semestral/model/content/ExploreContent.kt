@@ -9,6 +9,5 @@ data class ExploreContent(
     val metadata: String,
     val type: ContentFilter,
     @DrawableRes val imageRes: Int,
-    val id: String = title.lowercase().replace(" ", "-"),
-    val imageUri: String? = null
+    val id: String = title.lowercase().replace(" ", "-")
 )

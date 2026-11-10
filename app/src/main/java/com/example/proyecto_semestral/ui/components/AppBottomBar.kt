@@ -40,9 +40,7 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 
 enum class BottomBarItem {
     Home,
-    Explore,
-    Contact,
-    Profile
+    Explore
 }
 
 @Composable
@@ -73,20 +71,6 @@ fun AppBottomBar(
             label = "Explorar",
             selected = selectedItem == BottomBarItem.Explore,
             onClick = { onItemSelected(BottomBarItem.Explore) },
-            modifier = Modifier.weight(1f)
-        )
-        BottomBarButton(
-            item = BottomBarItem.Contact,
-            label = "Contacto",
-            selected = selectedItem == BottomBarItem.Contact,
-            onClick = { onItemSelected(BottomBarItem.Contact) },
-            modifier = Modifier.weight(1f)
-        )
-        BottomBarButton(
-            item = BottomBarItem.Profile,
-            label = "Mi perfil",
-            selected = selectedItem == BottomBarItem.Profile,
-            onClick = { onItemSelected(BottomBarItem.Profile) },
             modifier = Modifier.weight(1f)
         )
     }
@@ -205,45 +189,6 @@ private fun BottomBarIcon(
                 )
             }
 
-            BottomBarItem.Contact -> {
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.14f, size.height * 0.24f),
-                    size = Size(size.width * 0.72f, size.height * 0.52f),
-                    cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx()),
-                    style = Stroke(width = strokeWidth)
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.18f, size.height * 0.3f),
-                    end = Offset(size.width * 0.5f, size.height * 0.52f),
-                    strokeWidth = strokeWidth,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(size.width * 0.82f, size.height * 0.3f),
-                    end = Offset(size.width * 0.5f, size.height * 0.52f),
-                    strokeWidth = strokeWidth,
-                    cap = StrokeCap.Round
-                )
-            }
-
-            BottomBarItem.Profile -> {
-                drawCircle(
-                    color = color,
-                    radius = size.minDimension * 0.18f,
-                    center = Offset(size.width * 0.5f, size.height * 0.32f),
-                    style = if (selected) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width = strokeWidth)
-                )
-                drawRoundRect(
-                    color = color,
-                    topLeft = Offset(size.width * 0.22f, size.height * 0.58f),
-                    size = Size(size.width * 0.56f, size.height * 0.24f),
-                    cornerRadius = CornerRadius(18.dp.toPx(), 18.dp.toPx()),
-                    style = if (selected) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width = strokeWidth)
-                )
-            }
         }
     }
 }

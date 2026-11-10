@@ -23,9 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,9 +37,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.content.ExploreContent
+import com.example.proyecto_semestral.model.content.RecipeCatalog
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
@@ -48,7 +47,6 @@ import com.example.proyecto_semestral.ui.components.ContentFilter
 import com.example.proyecto_semestral.ui.components.ContentFilters
 import com.example.proyecto_semestral.ui.components.ExploreContentRow
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
-import com.example.proyecto_semestral.viewmodel.ExploreViewModel
 
 @Composable
 fun ExploreScreen(
@@ -59,11 +57,19 @@ fun ExploreScreen(
     onSearchQueryChange: (String) -> Unit,
     onRecipeClick: (String) -> Unit,
     onCourseClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier,
-    exploreViewModel: ExploreViewModel = viewModel()
+    modifier: Modifier = Modifier
 ) {
-    val recipes by exploreViewModel.recipes.collectAsState()
-    val allItems = exploreViewModel.recipeItems(recipes) + exploreItems
+    val recipeItems = RecipeCatalog.recipes.map { recipe ->
+        ExploreContent(
+            eyebrow = "RECETA",
+            title = recipe.title,
+            metadata = listOf(recipe.category, recipe.duration).filter { it.isNotBlank() }.joinToString(" · "),
+            type = ContentFilter.Recipes,
+            imageRes = recipe.imageRes,
+            id = recipe.id
+        )
+    }
+    val allItems = recipeItems + exploreItems
     val visibleItems = allItems.filter { item ->
         val matchesFilter = when (selectedFilter) {
             ContentFilter.All -> true

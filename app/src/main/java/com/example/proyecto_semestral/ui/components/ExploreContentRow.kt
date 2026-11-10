@@ -46,10 +46,7 @@ fun ExploreContentRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = coil.compose.rememberAsyncImagePainter(
-                model = item.imageUri ?: item.imageRes,
-                error = painterResource(item.imageRes)
-            ),
+            painter = painterResource(item.imageRes),
             contentDescription = item.title,
             modifier = Modifier
                 .size(92.dp)
