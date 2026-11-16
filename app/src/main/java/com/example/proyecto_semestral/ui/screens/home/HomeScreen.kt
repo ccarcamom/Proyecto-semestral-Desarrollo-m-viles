@@ -58,6 +58,8 @@ fun HomeScreen(
     onRecipesClick: () -> Unit = {},
     onCoursesClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
+    isAdmin: Boolean = false,
+    onAdminClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var homeSearchQuery by rememberSaveable { mutableStateOf("") }
@@ -81,11 +83,19 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(14.dp))
             BrandLogo()
-            TextButton(
-                onClick = onLogoutClick,
-                modifier = Modifier.align(Alignment.End)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Cerrar sesión")
+                if (isAdmin) {
+                    TextButton(onClick = onAdminClick) {
+                        Text("Panel admin")
+                    }
+                }
+                TextButton(onClick = onLogoutClick) {
+                    Text("Cerrar sesión")
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

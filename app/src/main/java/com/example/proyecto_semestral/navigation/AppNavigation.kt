@@ -25,6 +25,7 @@ import com.example.proyecto_semestral.model.content.VideoCatalog
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.ContentFilter
 import com.example.proyecto_semestral.ui.screens.course.CourseDetailScreen
+import com.example.proyecto_semestral.ui.screens.admin.AdminScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
@@ -37,7 +38,8 @@ import com.example.proyecto_semestral.ui.viewmodel.auth.AuthViewModel
 fun AppNavigation(
     authViewModelFactory: ViewModelProvider.Factory,
     recipeListViewModelFactory: ViewModelProvider.Factory,
-    recipeDetailViewModelFactory: (Long) -> ViewModelProvider.Factory
+    recipeDetailViewModelFactory: (Long) -> ViewModelProvider.Factory,
+    adminViewModelFactory: ViewModelProvider.Factory
 ) {
     val authViewModel: AuthViewModel = viewModel(
         factory = authViewModelFactory
@@ -130,7 +132,9 @@ fun AppNavigation(
                     selectedExploreFilter = ContentFilter.Courses
                     currentRoute = AppRoute.Explore
                 },
-                onLogoutClick = authViewModel::logout
+                onLogoutClick = authViewModel::logout,
+                isAdmin = authState.isAdmin,
+                onAdminClick = { currentRoute = AppRoute.Admin }
             )
 
             AppRoute.Explore -> ExploreScreen(
@@ -174,6 +178,18 @@ fun AppNavigation(
                 onReturnToCourse = { currentRoute = AppRoute.Course }
             )
 
+            AppRoute.Admin -> if (authState.isAdmin) {
+                AdminScreen(
+                    viewModelFactory = adminViewModelFactory,
+                    adminEmail = authState.user?.email.orEmpty(),
+                    onBack = { currentRoute = AppRoute.Home }
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    currentRoute = AppRoute.Home
+                }
+            }
+
         }
     }
 }
@@ -183,7 +199,8 @@ private enum class AppRoute {
     Explore,
     Recipe,
     Course,
-    Video
+    Video,
+    Admin
 }
 
 private enum class AuthRoute {

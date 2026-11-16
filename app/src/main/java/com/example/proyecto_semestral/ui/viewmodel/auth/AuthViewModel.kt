@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.proyecto_semestral.domain.repository.AuthException
 import com.example.proyecto_semestral.domain.repository.AuthRepository
 import com.example.proyecto_semestral.model.auth.User
+import com.example.proyecto_semestral.model.auth.canAccessAdminPanel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,9 @@ data class AuthUiState(
 ) {
     val isAuthenticated: Boolean
         get() = user != null
+
+    val isAdmin: Boolean
+        get() = user?.canAccessAdminPanel == true
 }
 
 class AuthViewModel(
