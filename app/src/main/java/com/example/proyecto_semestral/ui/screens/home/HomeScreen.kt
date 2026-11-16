@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,7 @@ fun HomeScreen(
     onCourseClick: (String) -> Unit = {},
     onRecipesClick: () -> Unit = {},
     onCoursesClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var homeSearchQuery by rememberSaveable { mutableStateOf("") }
@@ -79,8 +81,14 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(14.dp))
             BrandLogo()
+            TextButton(
+                onClick = onLogoutClick,
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("Cerrar sesión")
+            }
 
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "UN POCO DE INSPIRACIÓN, CADA DÍA",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
