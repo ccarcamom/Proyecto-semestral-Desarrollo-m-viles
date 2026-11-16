@@ -1,8 +1,6 @@
 package com.example.proyecto_semestral.ui.screens.admin
 
 import android.net.Uri
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,7 +42,6 @@ import com.example.proyecto_semestral.model.admin.AdminRecipeImage
 import com.example.proyecto_semestral.model.admin.AdminRecipe
 import com.example.proyecto_semestral.model.admin.AdminStepDraft
 import com.example.proyecto_semestral.ui.components.PrimaryButton
-import java.io.ByteArrayOutputStream
 
 @Composable
 fun AdminRecipeForm(
@@ -72,8 +69,7 @@ fun AdminRecipeForm(
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         runCatching {
-            val resolver = context.contentResolver
-            val bytes = compressRecipeImage(context.contentResolver, uri)
+            val bytes = compressAdminImage(context.contentResolver, uri)
             AdminRecipeImage(
                 bytes = bytes,
                 fileName = "receta.jpg",
@@ -323,46 +319,5 @@ fun AdminRecipeForm(
             Text("Cancelar")
         }
         Spacer(Modifier.height(20.dp))
-    }
-}
-
-private fun compressRecipeImage(
-    resolver: android.content.ContentResolver,
-    uri: Uri
-): ByteArray {
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-        ?: error("No se pudo leer la imagen")
-
-    var sampleSize = 1
-    while (bounds.outWidth / sampleSize > 1600 || bounds.outHeight / sampleSize > 1600) {
-        sampleSize *= 2
-    }
-
-    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-    val decoded = resolver.openInputStream(uri)?.use {
-        BitmapFactory.decodeStream(it, null, options)
-    } ?: error("El formato de la imagen no es compatible")
-
-    val maxSide = maxOf(decoded.width, decoded.height)
-    val scaled = if (maxSide > 1600) {
-        val ratio = 1600f / maxSide
-        Bitmap.createScaledBitmap(
-            decoded,
-            (decoded.width * ratio).toInt(),
-            (decoded.height * ratio).toInt(),
-            true
-        )
-    } else {
-        decoded
-    }
-
-    return ByteArrayOutputStream().use { output ->
-        check(scaled.compress(Bitmap.CompressFormat.JPEG, 85, output)) {
-            "No se pudo comprimir la imagen"
-        }
-        if (scaled !== decoded) scaled.recycle()
-        decoded.recycle()
-        output.toByteArray()
     }
 }

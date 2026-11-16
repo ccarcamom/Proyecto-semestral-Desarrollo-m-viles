@@ -1,7 +1,5 @@
 package com.example.proyecto_semestral.ui.screens.admin
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -42,7 +40,6 @@ import com.example.proyecto_semestral.model.admin.AdminCourse
 import com.example.proyecto_semestral.model.admin.AdminCourseImage
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import coil.compose.rememberAsyncImagePainter
-import java.io.ByteArrayOutputStream
 
 @Composable
 fun AdminCourseForm(
@@ -67,7 +64,7 @@ fun AdminCourseForm(
         if (uri == null) return@rememberLauncherForActivityResult
         runCatching {
             AdminCourseImage(
-                bytes = compressCourseImage(context.contentResolver, uri),
+                bytes = compressAdminImage(context.contentResolver, uri),
                 fileName = "curso.jpg",
                 contentType = "image/jpeg"
             )
@@ -277,44 +274,5 @@ fun AdminCourseForm(
             Text("Cancelar")
         }
         Spacer(Modifier.height(20.dp))
-    }
-}
-
-private fun compressCourseImage(
-    resolver: android.content.ContentResolver,
-    uri: Uri
-): ByteArray {
-    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-        ?: error("No se pudo leer la imagen")
-
-    var sampleSize = 1
-    while (bounds.outWidth / sampleSize > 1600 || bounds.outHeight / sampleSize > 1600) {
-        sampleSize *= 2
-    }
-
-    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-    val decoded = resolver.openInputStream(uri)?.use {
-        BitmapFactory.decodeStream(it, null, options)
-    } ?: error("El formato de la imagen no es compatible")
-
-    val maxSide = maxOf(decoded.width, decoded.height)
-    val scaled = if (maxSide > 1600) {
-        val ratio = 1600f / maxSide
-        Bitmap.createScaledBitmap(
-            decoded,
-            (decoded.width * ratio).toInt(),
-            (decoded.height * ratio).toInt(),
-            true
-        )
-    } else {
-        decoded
-    }
-
-    return ByteArrayOutputStream().use { output ->
-        check(scaled.compress(Bitmap.CompressFormat.JPEG, 85, output))
-        if (scaled !== decoded) scaled.recycle()
-        decoded.recycle()
-        output.toByteArray()
     }
 }
