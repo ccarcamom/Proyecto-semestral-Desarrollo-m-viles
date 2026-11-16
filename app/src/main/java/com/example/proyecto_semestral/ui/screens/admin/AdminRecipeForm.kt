@@ -1,5 +1,12 @@
 package com.example.proyecto_semestral.ui.screens.admin
 
+import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,13 +32,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.proyecto_semestral.model.admin.AdminCategory
 import com.example.proyecto_semestral.model.admin.AdminIngredientDraft
 import com.example.proyecto_semestral.model.admin.AdminRecipeDraft
+import com.example.proyecto_semestral.model.admin.AdminRecipeImage
 import com.example.proyecto_semestral.model.admin.AdminStepDraft
 import com.example.proyecto_semestral.ui.components.PrimaryButton
+import java.io.ByteArrayOutputStream
 
 @Composable
 fun AdminRecipeForm(
@@ -47,10 +59,32 @@ fun AdminRecipeForm(
     var duration by rememberSaveable { mutableStateOf("") }
     var yield by rememberSaveable { mutableStateOf("") }
     var videoUrl by rememberSaveable { mutableStateOf("") }
-    var imageUrl by rememberSaveable { mutableStateOf("") }
     var published by rememberSaveable { mutableStateOf(true) }
     var categoryId by rememberSaveable { mutableStateOf<Long?>(null) }
     var validationError by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImage by remember { mutableStateOf<AdminRecipeImage?>(null) }
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            val resolver = context.contentResolver
+            val bytes = compressRecipeImage(context.contentResolver, uri)
+            AdminRecipeImage(
+                bytes = bytes,
+                fileName = "receta.jpg",
+                contentType = "image/jpeg"
+            )
+        }.onSuccess { image ->
+            selectedImageUri = uri
+            selectedImage = image
+            validationError = null
+        }.onFailure {
+            validationError = "No se pudo leer la imagen seleccionada."
+        }
+    }
 
     val ingredients = remember { mutableStateListOf(AdminIngredientDraft("", "")) }
     val steps = remember { mutableStateListOf("") }
@@ -72,7 +106,7 @@ fun AdminRecipeForm(
                 duration = duration,
                 yield = yield,
                 videoUrl = videoUrl,
-                imageUrl = imageUrl,
+                image = selectedImage,
                 published = published,
                 createdBy = createdBy,
                 ingredients = ingredients.toList(),
@@ -137,11 +171,33 @@ fun AdminRecipeForm(
             label = "URL del video (YouTube)"
         )
         Spacer(Modifier.height(12.dp))
-        AdminTextField(
-            value = imageUrl,
-            onValueChange = { imageUrl = it },
-            label = "URL de la imagen"
-        )
+        TextButton(
+            onClick = {
+                imagePicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (selectedImageUri == null) "Seleccionar imagen de la galería" else "Cambiar imagen")
+        }
+        selectedImageUri?.let { uri ->
+            Image(
+                painter = rememberAsyncImagePainter(uri),
+                contentDescription = "Vista previa de la receta",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(190.dp),
+                contentScale = ContentScale.Crop
+            )
+            AdminRowAction(
+                text = "Quitar imagen",
+                onClick = {
+                    selectedImageUri = null
+                    selectedImage = null
+                }
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
         Row(
@@ -235,5 +291,46 @@ fun AdminRecipeForm(
             Text("Cancelar")
         }
         Spacer(Modifier.height(20.dp))
+    }
+}
+
+private fun compressRecipeImage(
+    resolver: android.content.ContentResolver,
+    uri: Uri
+): ByteArray {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+        ?: error("No se pudo leer la imagen")
+
+    var sampleSize = 1
+    while (bounds.outWidth / sampleSize > 1600 || bounds.outHeight / sampleSize > 1600) {
+        sampleSize *= 2
+    }
+
+    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+    val decoded = resolver.openInputStream(uri)?.use {
+        BitmapFactory.decodeStream(it, null, options)
+    } ?: error("El formato de la imagen no es compatible")
+
+    val maxSide = maxOf(decoded.width, decoded.height)
+    val scaled = if (maxSide > 1600) {
+        val ratio = 1600f / maxSide
+        Bitmap.createScaledBitmap(
+            decoded,
+            (decoded.width * ratio).toInt(),
+            (decoded.height * ratio).toInt(),
+            true
+        )
+    } else {
+        decoded
+    }
+
+    return ByteArrayOutputStream().use { output ->
+        check(scaled.compress(Bitmap.CompressFormat.JPEG, 85, output)) {
+            "No se pudo comprimir la imagen"
+        }
+        if (scaled !== decoded) scaled.recycle()
+        decoded.recycle()
+        output.toByteArray()
     }
 }

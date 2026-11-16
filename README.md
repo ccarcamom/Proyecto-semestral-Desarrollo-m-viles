@@ -84,7 +84,7 @@ Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta 
 **Recetas** (microservicio `ms-recetas`):
 
 - Listar todas las recetas, incluidas las no publicadas.
-- Crear una receta con título, descripción, categoría, duración, rendimiento, video, imagen, ingredientes y pasos.
+- Crear una receta con título, descripción, categoría, duración, rendimiento, video, una imagen seleccionada desde la galería, ingredientes y pasos.
 - Decidir si se publica de inmediato.
 - Eliminar recetas con confirmación.
 
@@ -101,6 +101,7 @@ Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta 
 ```text
 GET    /api/v1/admin/recipes              Listar todas las recetas
 POST   /api/v1/admin/recipes              Crear receta
+POST   /api/v1/admin/recipes/{id}/image   Subir imagen desde la galería
 DELETE /api/v1/admin/recipes/{id}         Eliminar receta
 GET    /api/v1/recipes/categorias         Categorías de recetas
 
@@ -148,7 +149,7 @@ ui/screens/admin/AdminFormComponents.kt
 
 ## Permisos
 
-Solo se declara `INTERNET`, necesario para consumir el Gateway y reproducir videos de YouTube.
+Solo se declara `INTERNET`, necesario para consumir el Gateway y reproducir videos de YouTube. La selección de imágenes usa el selector de fotos del sistema, por lo que no requiere acceso general al almacenamiento.
 
 ## Tecnologías
 

@@ -112,20 +112,21 @@ fun AppNavigation(
     ) { route ->
         when (route) {
             AppRoute.Home -> HomeScreen(
+                viewModelFactory = recipeListViewModelFactory,
                 onBottomBarItemSelected = ::navigateFromBottomBar,
                 onSearch = { query ->
                     exploreSearchQuery = query
                     selectedExploreFilter = ContentFilter.All
                     currentRoute = AppRoute.Explore
                 },
-                onCourseClick = { courseId ->
-                    selectedCourseId = courseId
-                    currentRoute = AppRoute.Course
-                },
                 onRecipesClick = {
                     exploreSearchQuery = ""
                     selectedExploreFilter = ContentFilter.Recipes
                     currentRoute = AppRoute.Explore
+                },
+                onRecipeClick = { recipeId ->
+                    selectedRecipeId = recipeId
+                    currentRoute = AppRoute.Recipe
                 },
                 onCoursesClick = {
                     exploreSearchQuery = ""

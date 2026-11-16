@@ -34,35 +34,46 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyecto_semestral.R
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
-import com.example.proyecto_semestral.ui.components.ContentCard
-import com.example.proyecto_semestral.ui.components.FeaturedContentCard
-import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListUiState
+import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
 fun HomeScreen(
+    viewModelFactory: ViewModelProvider.Factory,
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     onSearch: (String) -> Unit = {},
-    onCourseClick: (String) -> Unit = {},
     onRecipesClick: () -> Unit = {},
     onCoursesClick: () -> Unit = {},
+    onRecipeClick: (Long) -> Unit = {},
     onLogoutClick: () -> Unit = {},
     isAdmin: Boolean = false,
     onAdminClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var homeSearchQuery by rememberSaveable { mutableStateOf("") }
+    val recipeViewModel: RecipeListViewModel = viewModel(factory = viewModelFactory)
+    val recipeState by recipeViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        recipeViewModel.loadRecipes(page = 0)
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -153,61 +164,72 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
             Text(
-                text = "Elegido para ti",
+                text = "Recetas recientes",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold
                 )
             )
             Spacer(modifier = Modifier.height(14.dp))
-            FeaturedContentCard(
-                category = "Recetas / Galletas",
-                title = "Galletas con chips de chocolate",
-                duration = "35 min",
-                image = painterResource(R.drawable.galletas),
-                onClick = { onBottomBarItemSelected(BottomBarItem.Explore) }
-            )
+            when (val state = recipeState) {
+                RecipeListUiState.Loading -> Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
 
-            Spacer(modifier = Modifier.height(40.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Aprende algo nuevo",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                RecipeListUiState.Empty -> Text(
+                    text = "Aún no hay recetas publicadas.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge
                 )
-                Text(
-                    text = "Ver cursos",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.clickable { onBottomBarItemSelected(BottomBarItem.Explore) }
+
+                is RecipeListUiState.Error -> Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
                 )
+
+                is RecipeListUiState.Success -> state.page.recipes.take(3).forEach { recipe ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onRecipeClick(recipe.id) }
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = recipe.imageUrl,
+                            contentDescription = recipe.title,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .clip(RoundedCornerShape(14.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = recipe.title,
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            Text(
+                                text = listOfNotNull(
+                                    recipe.category?.name,
+                                    recipe.duration.takeIf(String::isNotBlank)
+                                ).joinToString(" · "),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.height(18.dp))
-            ContentCard(
-                eyebrow = "Curso",
-                title = "Fundamentos de chocolatería",
-                metadata = "Chocolatería · 30 min",
-                image = painterResource(R.drawable.chocolate),
-                onClick = { onCourseClick("curso-chocolateria") }
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            ContentCard(
-                eyebrow = "Curso",
-                title = "Introducción a la bollería",
-                metadata = "Bollería · 35 min",
-                image = painterResource(R.drawable.bolleria),
-                onClick = { onCourseClick("curso-bolleria") }
-            )
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -336,10 +358,3 @@ private fun SearchGlyph(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    ProyectoSemestralTheme {
-        HomeScreen()
-    }
-}

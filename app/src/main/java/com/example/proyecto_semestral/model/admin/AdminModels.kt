@@ -34,6 +34,12 @@ data class AdminStepDraft(
     val description: String
 )
 
+data class AdminRecipeImage(
+    val bytes: ByteArray,
+    val fileName: String,
+    val contentType: String
+)
+
 data class AdminRecipeDraft(
     val title: String,
     val description: String,
@@ -41,7 +47,7 @@ data class AdminRecipeDraft(
     val duration: String,
     val yield: String,
     val videoUrl: String,
-    val imageUrl: String,
+    val image: AdminRecipeImage?,
     val published: Boolean,
     val createdBy: String,
     val ingredients: List<AdminIngredientDraft>,

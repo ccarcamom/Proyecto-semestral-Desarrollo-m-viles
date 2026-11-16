@@ -10,10 +10,13 @@ import com.example.proyecto_semestral.data.dto.admin.LessonDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeCategoryDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeDetailDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeSummaryDto
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -24,6 +27,13 @@ interface AdminApi {
 
     @POST("api/v1/admin/recipes")
     suspend fun createRecipe(@Body request: CreateRecipeRequestDto): RecipeDetailDto
+
+    @Multipart
+    @POST("api/v1/admin/recipes/{id}/image")
+    suspend fun uploadRecipeImage(
+        @Path("id") id: Long,
+        @Part image: MultipartBody.Part
+    ): RecipeDetailDto
 
     @DELETE("api/v1/admin/recipes/{id}")
     suspend fun deleteRecipe(@Path("id") id: Long)

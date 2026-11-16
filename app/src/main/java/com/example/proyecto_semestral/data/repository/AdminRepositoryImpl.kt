@@ -23,6 +23,9 @@ import com.example.proyecto_semestral.model.admin.AdminLessonDraft
 import com.example.proyecto_semestral.model.admin.AdminRecipe
 import com.example.proyecto_semestral.model.admin.AdminRecipeDraft
 import com.google.gson.JsonParser
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -36,13 +39,13 @@ class AdminRepositoryImpl(
     }
 
     override suspend fun createRecipe(draft: AdminRecipeDraft): AdminRecipe = apiCall {
-        api.createRecipe(
+        val created = api.createRecipe(
             CreateRecipeRequestDto(
                 titulo = draft.title.trim(),
                 descripcion = draft.description.trim().ifBlank { null },
                 categoriaId = draft.categoryId,
                 videoUrl = draft.videoUrl.trim().ifBlank { null },
-                imagenUrl = draft.imageUrl.trim().ifBlank { null },
+                imagenUrl = null,
                 duracionTexto = draft.duration.trim().ifBlank { null },
                 rendimientoTexto = draft.yield.trim().ifBlank { null },
                 insumosTitulo = null,
@@ -67,7 +70,15 @@ class AdminRepositoryImpl(
                         )
                     }
             )
-        ).toModel()
+        )
+
+        val result = draft.image?.let { image ->
+            val body = image.bytes.toRequestBody(image.contentType.toMediaType())
+            val part = MultipartBody.Part.createFormData("image", image.fileName, body)
+            api.uploadRecipeImage(created.id, part)
+        } ?: created
+
+        result.toModel()
     }
 
     override suspend fun deleteRecipe(id: Long) = apiCall {
