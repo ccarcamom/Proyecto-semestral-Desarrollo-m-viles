@@ -41,6 +41,7 @@ import com.example.proyecto_semestral.model.admin.AdminCategory
 import com.example.proyecto_semestral.model.admin.AdminIngredientDraft
 import com.example.proyecto_semestral.model.admin.AdminRecipeDraft
 import com.example.proyecto_semestral.model.admin.AdminRecipeImage
+import com.example.proyecto_semestral.model.admin.AdminRecipe
 import com.example.proyecto_semestral.model.admin.AdminStepDraft
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import java.io.ByteArrayOutputStream
@@ -50,17 +51,18 @@ fun AdminRecipeForm(
     categories: List<AdminCategory>,
     isSaving: Boolean,
     createdBy: String,
+    initialRecipe: AdminRecipe? = null,
     onCancel: () -> Unit,
     onSubmit: (AdminRecipeDraft) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-    var duration by rememberSaveable { mutableStateOf("") }
-    var yield by rememberSaveable { mutableStateOf("") }
-    var videoUrl by rememberSaveable { mutableStateOf("") }
-    var published by rememberSaveable { mutableStateOf(true) }
-    var categoryId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var title by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.title.orEmpty()) }
+    var description by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.description.orEmpty()) }
+    var duration by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.duration.orEmpty()) }
+    var yield by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.yield.orEmpty()) }
+    var videoUrl by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.videoUrl.orEmpty()) }
+    var published by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.published ?: true) }
+    var categoryId by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.categoryId) }
     var validationError by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var selectedImage by remember { mutableStateOf<AdminRecipeImage?>(null) }
@@ -86,8 +88,18 @@ fun AdminRecipeForm(
         }
     }
 
-    val ingredients = remember { mutableStateListOf(AdminIngredientDraft("", "")) }
-    val steps = remember { mutableStateListOf("") }
+    val ingredients = remember(initialRecipe?.id) {
+        mutableStateListOf<AdminIngredientDraft>().apply {
+            addAll(initialRecipe?.ingredients.orEmpty())
+            if (isEmpty()) add(AdminIngredientDraft("", ""))
+        }
+    }
+    val steps = remember(initialRecipe?.id) {
+        mutableStateListOf<String>().apply {
+            addAll(initialRecipe?.steps.orEmpty().map { it.description })
+            if (isEmpty()) add("")
+        }
+    }
 
     fun submit() {
         validationError = when {
@@ -123,12 +135,16 @@ fun AdminRecipeForm(
             .padding(horizontal = 22.dp, vertical = 16.dp)
     ) {
         Text(
-            text = "Nueva receta",
+            text = if (initialRecipe == null) "Nueva receta" else "Editar receta",
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
         )
         Text(
-            text = "Se guardará en el microservicio de recetas.",
+            text = if (initialRecipe == null) {
+                "Se guardará en el microservicio de recetas."
+            } else {
+                "Modifica los datos guardados en el microservicio."
+            },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -196,6 +212,13 @@ fun AdminRecipeForm(
                     selectedImageUri = null
                     selectedImage = null
                 }
+            )
+        }
+        if (selectedImageUri == null && initialRecipe?.imageUrl != null) {
+            Text(
+                text = "La imagen actual se conservará si no seleccionas otra.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
             )
         }
 
@@ -280,7 +303,13 @@ fun AdminRecipeForm(
 
         Spacer(Modifier.height(20.dp))
         PrimaryButton(
-            text = if (isSaving) "Guardando…" else "Crear receta",
+            text = if (isSaving) {
+                "Guardando…"
+            } else if (initialRecipe == null) {
+                "Crear receta"
+            } else {
+                "Guardar cambios"
+            },
             onClick = ::submit,
             enabled = !isSaving
         )

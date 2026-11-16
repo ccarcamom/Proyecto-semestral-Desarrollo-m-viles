@@ -11,6 +11,7 @@ data class RecipeDetailDto(
     val rendimientoTexto: String?,
     val insumosTitulo: String?,
     val insumosDescripcion: String?,
+    val publicada: Boolean?,
     val ingredientes: List<RecipeIngredientDto>?,
     val pasos: List<RecipeStepDto>?
 )

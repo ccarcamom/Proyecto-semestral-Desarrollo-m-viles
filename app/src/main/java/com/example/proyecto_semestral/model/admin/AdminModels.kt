@@ -11,7 +11,13 @@ data class AdminRecipe(
     val description: String,
     val imageUrl: String?,
     val duration: String,
-    val categoryName: String
+    val categoryId: Long?,
+    val categoryName: String,
+    val videoUrl: String = "",
+    val yield: String = "",
+    val published: Boolean = false,
+    val ingredients: List<AdminIngredientDraft> = emptyList(),
+    val steps: List<AdminStepDraft> = emptyList()
 )
 
 data class AdminCourse(
@@ -19,10 +25,12 @@ data class AdminCourse(
     val title: String,
     val description: String,
     val imageUrl: String?,
+    val categoryId: Long?,
     val categoryName: String,
     val published: Boolean,
     val lessonCount: Int,
-    val durationSeconds: Long
+    val durationSeconds: Long,
+    val objectives: List<String>
 )
 
 data class AdminIngredientDraft(

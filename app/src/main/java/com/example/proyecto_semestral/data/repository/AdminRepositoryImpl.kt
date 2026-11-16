@@ -10,6 +10,7 @@ import com.example.proyecto_semestral.data.dto.admin.CreateLessonRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateObjectiveRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateRecipeRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateStepRequestDto
+import com.example.proyecto_semestral.data.dto.admin.UpdateRecipeRequestDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeCategoryDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeDetailDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeSummaryDto
@@ -19,9 +20,11 @@ import com.example.proyecto_semestral.domain.repository.AdminRepositoryException
 import com.example.proyecto_semestral.model.admin.AdminCategory
 import com.example.proyecto_semestral.model.admin.AdminCourse
 import com.example.proyecto_semestral.model.admin.AdminCourseDraft
+import com.example.proyecto_semestral.model.admin.AdminIngredientDraft
 import com.example.proyecto_semestral.model.admin.AdminLessonDraft
 import com.example.proyecto_semestral.model.admin.AdminRecipe
 import com.example.proyecto_semestral.model.admin.AdminRecipeDraft
+import com.example.proyecto_semestral.model.admin.AdminStepDraft
 import com.google.gson.JsonParser
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -36,6 +39,10 @@ class AdminRepositoryImpl(
 
     override suspend fun getRecipes(): List<AdminRecipe> = apiCall {
         api.getRecipes().map { it.toModel() }
+    }
+
+    override suspend fun getRecipe(id: Long): AdminRecipe = apiCall {
+        api.getRecipe(id).toModel()
     }
 
     override suspend fun createRecipe(draft: AdminRecipeDraft): AdminRecipe = apiCall {
@@ -85,6 +92,22 @@ class AdminRepositoryImpl(
         api.deleteRecipe(id)
     }
 
+    override suspend fun updateRecipe(
+        id: Long,
+        draft: AdminRecipeDraft
+    ): AdminRecipe = apiCall {
+        val updated = api.updateRecipe(
+            id,
+            draft.toUpdateRequest()
+        )
+        val result = draft.image?.let { image ->
+            val body = image.bytes.toRequestBody(image.contentType.toMediaType())
+            val part = MultipartBody.Part.createFormData("image", image.fileName, body)
+            api.uploadRecipeImage(id, part)
+        } ?: updated
+        result.toModel()
+    }
+
     override suspend fun getRecipeCategories(): List<AdminCategory> = apiCall {
         api.getRecipeCategories().map { it.toModel() }
     }
@@ -129,6 +152,21 @@ class AdminRepositoryImpl(
             ).toModel()
         }
 
+    override suspend fun updateCourse(
+        id: Long,
+        draft: AdminCourseDraft
+    ): AdminCourse = apiCall {
+        val updated = api.updateCourse(id, draft.toRequest())
+        if (updated.publicado == draft.publishNow) {
+            updated.toModel()
+        } else {
+            api.changeCoursePublication(
+                id,
+                ChangePublicationRequestDto(publicado = draft.publishNow)
+            ).toModel()
+        }
+    }
+
     override suspend fun deleteCourse(id: Long) = apiCall {
         api.deleteCourse(id)
     }
@@ -157,6 +195,7 @@ class AdminRepositoryImpl(
         description = descripcion.orEmpty(),
         imageUrl = imagenUrl.toGatewayUrl(),
         duration = duracionTexto.orEmpty(),
+        categoryId = categoria?.id,
         categoryName = categoria?.nombre.orEmpty()
     )
 
@@ -166,7 +205,20 @@ class AdminRepositoryImpl(
         description = descripcion.orEmpty(),
         imageUrl = imagenUrl.toGatewayUrl(),
         duration = duracionTexto.orEmpty(),
-        categoryName = categoria?.nombre.orEmpty()
+        categoryId = categoria?.id,
+        categoryName = categoria?.nombre.orEmpty(),
+        videoUrl = videoUrl.orEmpty(),
+        yield = rendimientoTexto.orEmpty(),
+        published = publicada == true,
+        ingredients = ingredientes.orEmpty().map {
+            AdminIngredientDraft(
+                name = it.nombre,
+                amount = it.cantidadTexto.orEmpty()
+            )
+        },
+        steps = pasos.orEmpty().map {
+            AdminStepDraft(description = it.descripcion.orEmpty())
+        }
     )
 
     private fun AdminCourseDto.toModel() = AdminCourse(
@@ -174,10 +226,59 @@ class AdminRepositoryImpl(
         title = titulo,
         description = descripcion.orEmpty(),
         imageUrl = imagenUrl.toGatewayUrl(),
+        categoryId = categoria?.id,
         categoryName = categoria?.nombre.orEmpty(),
         published = publicado == true,
         lessonCount = lecciones?.size ?: 0,
-        durationSeconds = duracionTotalSegundos ?: 0L
+        durationSeconds = duracionTotalSegundos ?: 0L,
+        objectives = objetivos.orEmpty()
+            .sortedBy { it.orden ?: Int.MAX_VALUE }
+            .mapNotNull { it.descripcion?.takeIf(String::isNotBlank) }
+    )
+
+    private fun AdminCourseDraft.toRequest() = CreateCourseRequestDto(
+        titulo = title.trim(),
+        descripcion = description.trim(),
+        categoriaId = categoryId,
+        imagenUrl = imageUrl.trim().ifBlank { null },
+        objetivos = objectives
+            .filter { it.isNotBlank() }
+            .mapIndexed { index, objective ->
+                CreateObjectiveRequestDto(
+                    descripcion = objective.trim(),
+                    orden = index + 1
+                )
+            }
+    )
+
+    private fun AdminRecipeDraft.toUpdateRequest() = UpdateRecipeRequestDto(
+        titulo = title.trim(),
+        descripcion = description.trim(),
+        categoriaId = categoryId,
+        videoUrl = videoUrl.trim(),
+        imagenUrl = null,
+        duracionTexto = duration.trim(),
+        rendimientoTexto = yield.trim(),
+        insumosTitulo = "",
+        insumosDescripcion = "",
+        publicada = published,
+        ingredientes = ingredients
+            .filter { it.name.isNotBlank() }
+            .mapIndexed { index, ingredient ->
+                CreateIngredientRequestDto(
+                    nombre = ingredient.name.trim(),
+                    cantidadTexto = ingredient.amount.trim().ifBlank { null },
+                    orden = index
+                )
+            },
+        pasos = steps
+            .filter { it.description.isNotBlank() }
+            .mapIndexed { index, step ->
+                CreateStepRequestDto(
+                    numero = index + 1,
+                    descripcion = step.description.trim()
+                )
+            }
     )
 
     private fun RecipeCategoryDto.toModel() = AdminCategory(id = id, name = nombre)

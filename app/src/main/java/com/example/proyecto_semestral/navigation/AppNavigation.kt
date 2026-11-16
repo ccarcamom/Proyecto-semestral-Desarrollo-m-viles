@@ -139,7 +139,6 @@ fun AppNavigation(
                 onLogoutClick = authViewModel::logout,
                 isAdmin = authState.isAdmin,
                 onAdminClick = { navController.navigate(Routes.Admin) },
-                onContactClick = { navController.navigate(Routes.Contact) },
                 onCourseClick = { navController.navigate(Routes.course(it)) }
             )
         }

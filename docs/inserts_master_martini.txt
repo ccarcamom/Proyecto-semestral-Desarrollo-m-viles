@@ -1,0 +1,408 @@
+-- MASTER MARTINI
+-- Scripts para crear 4 cursos y 4 recetas sin imágenes.
+-- Ejecutar cada bloque una sola vez para evitar duplicados.
+
+-- ============================================================
+-- SCRIPT 1: CREAR CUATRO CURSOS
+-- ============================================================
+
+USE ms_cursos;
+
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+-- Curso 1: Coctelería básica
+INSERT INTO cursos (
+    titulo, descripcion, categoria_id, imagen_url, publicado
+)
+VALUES (
+    'Coctelería básica desde cero',
+    'Aprende los utensilios, métodos de preparación y fundamentos necesarios para preparar cócteles clásicos.',
+    (SELECT id FROM categorias_curso WHERE nombre = 'Coctelería' LIMIT 1),
+    NULL,
+    TRUE
+);
+
+SET @curso_cocteleria = LAST_INSERT_ID();
+
+INSERT INTO objetivos_aprendizaje (curso_id, descripcion, orden)
+VALUES
+    (@curso_cocteleria, 'Identificar los utensilios básicos utilizados en coctelería.', 1),
+    (@curso_cocteleria, 'Aplicar técnicas de mezclado, agitado y servido.', 2),
+    (@curso_cocteleria, 'Preparar un mojito tradicional correctamente.', 3);
+
+INSERT INTO lecciones (
+    curso_id, titulo, descripcion, orden, video_url, duracion_segundos
+)
+VALUES
+    (
+        @curso_cocteleria,
+        'Introducción a la coctelería',
+        'Conoce los conceptos y herramientas esenciales para comenzar en la coctelería.',
+        1,
+        'https://www.youtube.com/watch?v=-oAgnW_XWGY',
+        780
+    ),
+    (
+        @curso_cocteleria,
+        'Preparación de un mojito tradicional',
+        'Aprende a preparar correctamente un mojito utilizando ingredientes frescos.',
+        2,
+        'https://www.youtube.com/watch?v=9fDULgAgSJY',
+        300
+    );
+
+-- Curso 2: Barismo
+INSERT INTO cursos (
+    titulo, descripcion, categoria_id, imagen_url, publicado
+)
+VALUES (
+    'Fundamentos del barismo',
+    'Curso introductorio para aprender la preparación de café, el uso de leche y las diferencias entre las principales bebidas.',
+    (SELECT id FROM categorias_curso WHERE nombre = 'Barismo' LIMIT 1),
+    NULL,
+    TRUE
+);
+
+SET @curso_barismo = LAST_INSERT_ID();
+
+INSERT INTO objetivos_aprendizaje (curso_id, descripcion, orden)
+VALUES
+    (@curso_barismo, 'Reconocer las principales bebidas elaboradas con café y leche.', 1),
+    (@curso_barismo, 'Comprender la importancia de la textura y temperatura de la leche.', 2),
+    (@curso_barismo, 'Preparar cappuccino y latte con una textura adecuada.', 3);
+
+INSERT INTO lecciones (
+    curso_id, titulo, descripcion, orden, video_url, duracion_segundos
+)
+VALUES
+    (
+        @curso_barismo,
+        'Bebidas de café con leche',
+        'Conoce las diferencias entre cappuccino, latte y otras preparaciones con leche.',
+        1,
+        'https://www.youtube.com/watch?v=h5e6mtk8CYs',
+        630
+    ),
+    (
+        @curso_barismo,
+        'Cómo texturizar leche correctamente',
+        'Aprende a conseguir una leche cremosa y con la textura adecuada para café.',
+        2,
+        'https://www.youtube.com/watch?v=novvpVi1ctY',
+        540
+    );
+
+-- Curso 3: Repostería
+INSERT INTO cursos (
+    titulo, descripcion, categoria_id, imagen_url, publicado
+)
+VALUES (
+    'Brownies y cheesecake',
+    'Aprende las técnicas esenciales para preparar brownies húmedos y cheesecake cremoso.',
+    (SELECT id FROM categorias_curso WHERE nombre = 'Repostería' LIMIT 1),
+    NULL,
+    TRUE
+);
+
+SET @curso_reposteria = LAST_INSERT_ID();
+
+INSERT INTO objetivos_aprendizaje (curso_id, descripcion, orden)
+VALUES
+    (@curso_reposteria, 'Preparar una mezcla de brownie con textura húmeda.', 1),
+    (@curso_reposteria, 'Elaborar una mezcla de cheesecake suave y uniforme.', 2),
+    (@curso_reposteria, 'Controlar correctamente el tiempo y la temperatura de horneado.', 3);
+
+INSERT INTO lecciones (
+    curso_id, titulo, descripcion, orden, video_url, duracion_segundos
+)
+VALUES
+    (
+        @curso_reposteria,
+        'Preparación de brownie cheesecake',
+        'Aprende a combinar brownie de chocolate con una capa cremosa de cheesecake.',
+        1,
+        'https://www.youtube.com/watch?v=gXKGhO8B-UY',
+        720
+    ),
+    (
+        @curso_reposteria,
+        'Técnicas para un cheesecake cremoso',
+        'Revisa el proceso de mezclado y horneado para conseguir una textura cremosa.',
+        2,
+        'https://www.youtube.com/watch?v=mDIA65XmXcg',
+        660
+    );
+
+-- Curso 4: Técnicas básicas
+INSERT INTO cursos (
+    titulo, descripcion, categoria_id, imagen_url, publicado
+)
+VALUES (
+    'Organización y técnicas básicas de cocina',
+    'Aprende a organizar tu espacio de trabajo y a utilizar cuchillos de forma segura y eficiente.',
+    (SELECT id FROM categorias_curso WHERE nombre = 'Técnicas básicas' LIMIT 1),
+    NULL,
+    TRUE
+);
+
+SET @curso_tecnicas = LAST_INSERT_ID();
+
+INSERT INTO objetivos_aprendizaje (curso_id, descripcion, orden)
+VALUES
+    (@curso_tecnicas, 'Organizar correctamente una mise en place.', 1),
+    (@curso_tecnicas, 'Trabajar de manera más limpia y eficiente.', 2),
+    (@curso_tecnicas, 'Utilizar cuchillos de forma segura.', 3),
+    (@curso_tecnicas, 'Aplicar diferentes tipos de cortes básicos.', 4);
+
+INSERT INTO lecciones (
+    curso_id, titulo, descripcion, orden, video_url, duracion_segundos
+)
+VALUES
+    (
+        @curso_tecnicas,
+        'Cómo organizar la mise en place',
+        'Aprende a preparar y organizar ingredientes y utensilios antes de cocinar.',
+        1,
+        'https://www.youtube.com/watch?v=-XTr_M5eRlo',
+        480
+    ),
+    (
+        @curso_tecnicas,
+        'Técnicas básicas de corte',
+        'Conoce diferentes cortes y aprende a utilizar correctamente el cuchillo.',
+        2,
+        'https://www.youtube.com/watch?v=zVZzlsGN0Z8',
+        720
+    );
+
+COMMIT;
+
+SELECT id, titulo, publicado, imagen_url
+FROM cursos
+WHERE id IN (
+    @curso_cocteleria,
+    @curso_barismo,
+    @curso_reposteria,
+    @curso_tecnicas
+);
+
+
+-- ============================================================
+-- SCRIPT 2: CREAR CUATRO RECETAS
+-- ============================================================
+
+USE ms_recetas;
+
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+-- Receta 1: Mojito tradicional
+INSERT INTO recetas (
+    titulo,
+    descripcion,
+    categoria_id,
+    video_url,
+    imagen_url,
+    duracion_texto,
+    rendimiento_texto,
+    insumos_titulo,
+    insumos_descripcion,
+    publicada,
+    creado_por,
+    actualizado_en
+)
+VALUES (
+    'Mojito tradicional',
+    'Cóctel cubano refrescante preparado con ron blanco, limón, menta y agua con gas.',
+    (SELECT id FROM categorias_receta WHERE nombre = 'Cócteles' LIMIT 1),
+    'https://www.youtube.com/watch?v=9fDULgAgSJY',
+    NULL,
+    '10 minutos',
+    '1 porción',
+    'Utensilios necesarios',
+    'Vaso alto, cuchara de bar, medidor y mortero.',
+    TRUE,
+    'admin@mastermartini.cl',
+    NOW()
+);
+
+SET @receta_mojito = LAST_INSERT_ID();
+
+INSERT INTO ingredientes_receta (receta_id, nombre, cantidad_texto, orden)
+VALUES
+    (@receta_mojito, 'Ron blanco', '60 ml', 1),
+    (@receta_mojito, 'Limón', '1 unidad', 2),
+    (@receta_mojito, 'Azúcar', '2 cucharaditas', 3),
+    (@receta_mojito, 'Hojas de menta', '8 unidades', 4),
+    (@receta_mojito, 'Agua con gas', '100 ml', 5),
+    (@receta_mojito, 'Hielo', 'Cantidad necesaria', 6);
+
+INSERT INTO pasos_preparacion (receta_id, numero, descripcion)
+VALUES
+    (@receta_mojito, 1, 'Cortar el limón en trozos y colocarlo dentro de un vaso alto.'),
+    (@receta_mojito, 2, 'Agregar el azúcar y presionar suavemente para extraer el jugo.'),
+    (@receta_mojito, 3, 'Añadir las hojas de menta y presionarlas ligeramente sin romperlas demasiado.'),
+    (@receta_mojito, 4, 'Agregar abundante hielo y verter el ron blanco.'),
+    (@receta_mojito, 5, 'Completar con agua con gas y mezclar suavemente.');
+
+-- Receta 2: Margarita clásica
+INSERT INTO recetas (
+    titulo,
+    descripcion,
+    categoria_id,
+    video_url,
+    imagen_url,
+    duracion_texto,
+    rendimiento_texto,
+    insumos_titulo,
+    insumos_descripcion,
+    publicada,
+    creado_por,
+    actualizado_en
+)
+VALUES (
+    'Margarita clásica',
+    'Cóctel clásico preparado con tequila, licor de naranja y jugo fresco de limón.',
+    (SELECT id FROM categorias_receta WHERE nombre = 'Cócteles' LIMIT 1),
+    'https://www.youtube.com/watch?v=iHauf78Gf9o',
+    NULL,
+    '10 minutos',
+    '1 porción',
+    'Utensilios necesarios',
+    'Coctelera, colador, medidor y copa para margarita.',
+    TRUE,
+    'admin@mastermartini.cl',
+    NOW()
+);
+
+SET @receta_margarita = LAST_INSERT_ID();
+
+INSERT INTO ingredientes_receta (receta_id, nombre, cantidad_texto, orden)
+VALUES
+    (@receta_margarita, 'Tequila', '50 ml', 1),
+    (@receta_margarita, 'Licor de naranja', '25 ml', 2),
+    (@receta_margarita, 'Jugo de limón', '25 ml', 3),
+    (@receta_margarita, 'Sal', 'Cantidad necesaria', 4),
+    (@receta_margarita, 'Hielo', 'Cantidad necesaria', 5),
+    (@receta_margarita, 'Rodaja de limón', '1 unidad', 6);
+
+INSERT INTO pasos_preparacion (receta_id, numero, descripcion)
+VALUES
+    (@receta_margarita, 1, 'Humedecer el borde de la copa con limón y cubrirlo con sal.'),
+    (@receta_margarita, 2, 'Agregar hielo, tequila, licor de naranja y jugo de limón en una coctelera.'),
+    (@receta_margarita, 3, 'Agitar enérgicamente durante aproximadamente 15 segundos.'),
+    (@receta_margarita, 4, 'Colar la preparación dentro de la copa previamente enfriada.'),
+    (@receta_margarita, 5, 'Decorar con una rodaja de limón y servir inmediatamente.');
+
+-- Receta 3: Brownie cheesecake
+INSERT INTO recetas (
+    titulo,
+    descripcion,
+    categoria_id,
+    video_url,
+    imagen_url,
+    duracion_texto,
+    rendimiento_texto,
+    insumos_titulo,
+    insumos_descripcion,
+    publicada,
+    creado_por,
+    actualizado_en
+)
+VALUES (
+    'Brownie cheesecake',
+    'Postre que combina un brownie húmedo de chocolate con una capa suave y cremosa de cheesecake.',
+    (SELECT id FROM categorias_receta WHERE nombre = 'Repostería' LIMIT 1),
+    'https://www.youtube.com/watch?v=gXKGhO8B-UY',
+    NULL,
+    '1 hora y 15 minutos',
+    '10 porciones',
+    'Molde recomendado',
+    'Molde cuadrado de aproximadamente 20 x 20 centímetros.',
+    TRUE,
+    'admin@mastermartini.cl',
+    NOW()
+);
+
+SET @receta_brownie = LAST_INSERT_ID();
+
+INSERT INTO ingredientes_receta (receta_id, nombre, cantidad_texto, orden)
+VALUES
+    (@receta_brownie, 'Chocolate semiamargo', '200 g', 1),
+    (@receta_brownie, 'Mantequilla', '150 g', 2),
+    (@receta_brownie, 'Azúcar', '200 g', 3),
+    (@receta_brownie, 'Huevos', '4 unidades', 4),
+    (@receta_brownie, 'Harina', '100 g', 5),
+    (@receta_brownie, 'Cacao en polvo', '30 g', 6),
+    (@receta_brownie, 'Queso crema', '400 g', 7),
+    (@receta_brownie, 'Esencia de vainilla', '2 cucharaditas', 8);
+
+INSERT INTO pasos_preparacion (receta_id, numero, descripcion)
+VALUES
+    (@receta_brownie, 1, 'Precalentar el horno a 175 grados Celsius y preparar el molde con papel para hornear.'),
+    (@receta_brownie, 2, 'Derretir el chocolate junto con la mantequilla y dejar enfriar ligeramente.'),
+    (@receta_brownie, 3, 'Mezclar dos huevos con la mitad del azúcar y agregar el chocolate derretido.'),
+    (@receta_brownie, 4, 'Incorporar la harina y el cacao tamizados hasta obtener una mezcla uniforme.'),
+    (@receta_brownie, 5, 'Batir el queso crema con el azúcar restante, dos huevos y la vainilla.'),
+    (@receta_brownie, 6, 'Verter la mezcla de brownie en el molde y cubrir con la mezcla de cheesecake.'),
+    (@receta_brownie, 7, 'Hornear durante 40 a 45 minutos y enfriar completamente antes de cortar.');
+
+-- Receta 4: Cappuccino cremoso
+INSERT INTO recetas (
+    titulo,
+    descripcion,
+    categoria_id,
+    video_url,
+    imagen_url,
+    duracion_texto,
+    rendimiento_texto,
+    insumos_titulo,
+    insumos_descripcion,
+    publicada,
+    creado_por,
+    actualizado_en
+)
+VALUES (
+    'Cappuccino cremoso',
+    'Café espresso combinado con leche vaporizada y una capa uniforme de espuma.',
+    (SELECT id FROM categorias_receta WHERE nombre = 'Técnicas básicas' LIMIT 1),
+    'https://www.youtube.com/watch?v=i69sEPnpu-k',
+    NULL,
+    '10 minutos',
+    '1 porción',
+    'Utensilios necesarios',
+    'Máquina de espresso o cafetera, jarra para leche y taza de cappuccino.',
+    TRUE,
+    'admin@mastermartini.cl',
+    NOW()
+);
+
+SET @receta_cappuccino = LAST_INSERT_ID();
+
+INSERT INTO ingredientes_receta (receta_id, nombre, cantidad_texto, orden)
+VALUES
+    (@receta_cappuccino, 'Café espresso', '30 ml', 1),
+    (@receta_cappuccino, 'Leche entera fría', '120 ml', 2),
+    (@receta_cappuccino, 'Cacao en polvo', 'Opcional', 3),
+    (@receta_cappuccino, 'Azúcar', 'Opcional', 4);
+
+INSERT INTO pasos_preparacion (receta_id, numero, descripcion)
+VALUES
+    (@receta_cappuccino, 1, 'Preparar un espresso directamente en una taza de cappuccino.'),
+    (@receta_cappuccino, 2, 'Verter la leche fría en una jarra dejando espacio suficiente para que aumente su volumen.'),
+    (@receta_cappuccino, 3, 'Vaporizar la leche hasta obtener una textura cremosa y sin burbujas grandes.'),
+    (@receta_cappuccino, 4, 'Golpear suavemente la jarra y realizar movimientos circulares para integrar la espuma.'),
+    (@receta_cappuccino, 5, 'Verter la leche sobre el espresso y terminar con una capa uniforme de espuma.'),
+    (@receta_cappuccino, 6, 'Agregar cacao en polvo de manera opcional y servir inmediatamente.');
+
+COMMIT;
+
+SELECT id, titulo, publicada, imagen_url, video_url
+FROM recetas
+WHERE id IN (
+    @receta_mojito,
+    @receta_margarita,
+    @receta_brownie,
+    @receta_cappuccino
+);

@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.draw.clip
@@ -52,6 +53,8 @@ import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListUiState
 import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListViewModel
 import com.example.proyecto_semestral.ui.viewmodel.course.CourseListUiState
 import com.example.proyecto_semestral.ui.viewmodel.course.CourseListViewModel
+import com.example.proyecto_semestral.model.recipe.RecipeSummary
+import com.example.proyecto_semestral.model.course.CourseSummary
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,7 +72,6 @@ fun HomeScreen(
     onLogoutClick: () -> Unit = {},
     isAdmin: Boolean = false,
     onAdminClick: () -> Unit = {},
-    onContactClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var homeSearchQuery by rememberSaveable { mutableStateOf("") }
@@ -107,9 +109,6 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onContactClick) {
-                    Text("Contacto")
-                }
                 if (isAdmin) {
                     TextButton(onClick = onAdminClick) {
                         Text("Panel admin")
@@ -175,7 +174,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
             Text(
-                text = "Recetas recientes",
+                text = "Recomendación para ti",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.Bold
@@ -204,66 +203,38 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                is RecipeListUiState.Success -> state.page.recipes.take(3).forEach { recipe ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onRecipeClick(recipe.id) }
-                            .padding(vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AsyncImage(
-                            model = recipe.imageUrl,
-                            contentDescription = recipe.title,
-                            modifier = Modifier
-                                .size(88.dp)
-                                .clip(RoundedCornerShape(14.dp)),
-                            contentScale = ContentScale.Crop
+                is RecipeListUiState.Success -> {
+                    state.page.recipes.firstOrNull()?.let { recipe ->
+                        FeaturedRecipeCard(
+                            recipe = recipe,
+                            onClick = { onRecipeClick(recipe.id) }
                         )
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = recipe.title,
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
+                    }
+                    if (state.page.recipes.size > 1) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        SectionHeader(
+                            title = "Recetas recientes",
+                            action = "Ver todas",
+                            onAction = onRecipesClick
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        state.page.recipes.drop(1).take(2).forEach { recipe ->
+                            RecipeCompactCard(
+                                recipe = recipe,
+                                onClick = { onRecipeClick(recipe.id) }
                             )
-                            Text(
-                                text = listOfNotNull(
-                                    recipe.category?.name,
-                                    recipe.duration.takeIf(String::isNotBlank)
-                                ).joinToString(" · "),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(30.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Cursos recientes",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                Text(
-                    text = "Ver cursos",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.clickable(onClick = onCoursesClick)
-                )
-            }
+            SectionHeader(
+                title = "Cursos recientes",
+                action = "Ver cursos",
+                onAction = onCoursesClick
+            )
             Spacer(modifier = Modifier.height(14.dp))
 
             when (val state = courseState) {
@@ -289,43 +260,11 @@ fun HomeScreen(
                 )
 
                 is CourseListUiState.Success -> state.page.courses.forEach { course ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onCourseClick(course.id) }
-                            .padding(vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AsyncImage(
-                            model = course.imageUrl,
-                            contentDescription = course.title,
-                            modifier = Modifier
-                                .size(88.dp)
-                                .clip(RoundedCornerShape(14.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = course.title,
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Text(
-                                text = buildList {
-                                    if (course.categoryName.isNotBlank()) add(course.categoryName)
-                                    add("${course.lessonCount} lecciones")
-                                    if (course.durationSeconds > 0) {
-                                        add("${course.durationSeconds / 60} min")
-                                    }
-                                }.joinToString(" · "),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
+                    CourseHomeCard(
+                        course = course,
+                        onClick = { onCourseClick(course.id) }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -333,6 +272,206 @@ fun HomeScreen(
     }
 
 }
+
+@Composable
+private fun FeaturedRecipeCard(
+    recipe: RecipeSummary,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(26.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+    ) {
+        HomeImage(
+            imageUrl = recipe.imageUrl,
+            contentDescription = recipe.title,
+            fallback = "🍰",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(155.dp)
+        )
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "RECETA DESTACADA",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.4.sp
+                )
+            )
+            Spacer(Modifier.height(7.dp))
+            Text(
+                text = recipe.title,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+            )
+            if (recipe.description.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = recipe.description,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = recipeMetadata(recipe),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecipeCompactCard(
+    recipe: RecipeSummary,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        HomeImage(
+            imageUrl = recipe.imageUrl,
+            contentDescription = recipe.title,
+            fallback = "🍮",
+            modifier = Modifier
+                .size(82.dp)
+                .clip(RoundedCornerShape(15.dp))
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = recipe.title,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = recipeMetadata(recipe),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        Text("›", color = MaterialTheme.colorScheme.primary, fontSize = 28.sp)
+    }
+}
+
+@Composable
+private fun CourseHomeCard(
+    course: CourseSummary,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        HomeImage(
+            imageUrl = course.imageUrl,
+            contentDescription = course.title,
+            fallback = "🎓",
+            modifier = Modifier
+                .size(92.dp)
+                .clip(RoundedCornerShape(16.dp))
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = course.title,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                text = buildList {
+                    if (course.categoryName.isNotBlank()) add(course.categoryName)
+                    add("${course.lessonCount} lecciones")
+                    if (course.durationSeconds > 0) add("${course.durationSeconds / 60} min")
+                }.joinToString(" · "),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+        Text("›", color = MaterialTheme.colorScheme.primary, fontSize = 28.sp)
+    }
+}
+
+@Composable
+private fun HomeImage(
+    imageUrl: String?,
+    contentDescription: String,
+    fallback: String,
+    modifier: Modifier = Modifier
+) {
+    if (imageUrl.isNullOrBlank()) {
+        Box(
+            modifier = modifier.background(
+                Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
+                    )
+                )
+            ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = fallback, fontSize = 42.sp)
+        }
+    } else {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    action: String,
+    onAction: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+        )
+        Text(
+            text = action,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.clickable(onClick = onAction)
+        )
+    }
+}
+
+private fun recipeMetadata(recipe: RecipeSummary): String =
+    listOfNotNull(
+        recipe.category?.name,
+        recipe.duration.takeIf(String::isNotBlank)
+    ).joinToString(" · ").ifBlank { "Ver receta" }
 
 @Composable
 private fun HomeSearchField(

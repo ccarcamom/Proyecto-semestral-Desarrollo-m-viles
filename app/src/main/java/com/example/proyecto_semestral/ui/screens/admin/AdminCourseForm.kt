@@ -29,24 +29,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.proyecto_semestral.model.admin.AdminCategory
 import com.example.proyecto_semestral.model.admin.AdminCourseDraft
+import com.example.proyecto_semestral.model.admin.AdminCourse
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 
 @Composable
 fun AdminCourseForm(
     categories: List<AdminCategory>,
     isSaving: Boolean,
+    initialCourse: AdminCourse? = null,
     onCancel: () -> Unit,
     onSubmit: (AdminCourseDraft) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-    var imageUrl by rememberSaveable { mutableStateOf("") }
-    var publishNow by rememberSaveable { mutableStateOf(false) }
-    var categoryId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var title by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.title.orEmpty()) }
+    var description by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.description.orEmpty()) }
+    var imageUrl by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.imageUrl.orEmpty()) }
+    var publishNow by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.published ?: false) }
+    var categoryId by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.categoryId) }
     var validationError by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val objectives = remember { mutableStateListOf("") }
+    val objectives = remember(initialCourse?.id) {
+        mutableStateListOf<String>().apply {
+            addAll(initialCourse?.objectives.orEmpty())
+            if (isEmpty()) add("")
+        }
+    }
 
     fun submit() {
         validationError = when {
@@ -78,12 +85,16 @@ fun AdminCourseForm(
             .padding(horizontal = 22.dp, vertical = 16.dp)
     ) {
         Text(
-            text = "Nuevo curso",
+            text = if (initialCourse == null) "Nuevo curso" else "Editar curso",
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
         )
         Text(
-            text = "Se guardará en el microservicio de cursos.",
+            text = if (initialCourse == null) {
+                "Se guardará en el microservicio de cursos."
+            } else {
+                "Modifica los datos guardados en el microservicio."
+            },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -179,7 +190,13 @@ fun AdminCourseForm(
 
         Spacer(Modifier.height(20.dp))
         PrimaryButton(
-            text = if (isSaving) "Guardando…" else "Crear curso",
+            text = if (isSaving) {
+                "Guardando…"
+            } else if (initialCourse == null) {
+                "Crear curso"
+            } else {
+                "Guardar cambios"
+            },
             onClick = ::submit,
             enabled = !isSaving
         )

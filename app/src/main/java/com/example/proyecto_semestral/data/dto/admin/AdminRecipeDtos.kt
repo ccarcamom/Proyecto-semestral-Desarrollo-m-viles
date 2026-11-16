@@ -16,6 +16,21 @@ data class CreateRecipeRequestDto(
     val pasos: List<CreateStepRequestDto>
 )
 
+data class UpdateRecipeRequestDto(
+    val titulo: String,
+    val descripcion: String?,
+    val categoriaId: Long,
+    val videoUrl: String?,
+    val imagenUrl: String?,
+    val duracionTexto: String?,
+    val rendimientoTexto: String?,
+    val insumosTitulo: String?,
+    val insumosDescripcion: String?,
+    val publicada: Boolean,
+    val ingredientes: List<CreateIngredientRequestDto>,
+    val pasos: List<CreateStepRequestDto>
+)
+
 data class CreateIngredientRequestDto(
     val nombre: String,
     val cantidadTexto: String?,

@@ -6,6 +6,7 @@ import com.example.proyecto_semestral.data.dto.admin.CourseCategoryDto
 import com.example.proyecto_semestral.data.dto.admin.CreateCourseRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateLessonRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateRecipeRequestDto
+import com.example.proyecto_semestral.data.dto.admin.UpdateRecipeRequestDto
 import com.example.proyecto_semestral.data.dto.admin.LessonDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeCategoryDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeDetailDto
@@ -18,6 +19,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.Multipart
 import retrofit2.http.Part
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface AdminApi {
@@ -27,6 +29,15 @@ interface AdminApi {
 
     @POST("api/v1/admin/recipes")
     suspend fun createRecipe(@Body request: CreateRecipeRequestDto): RecipeDetailDto
+
+    @GET("api/v1/admin/recipes/{id}")
+    suspend fun getRecipe(@Path("id") id: Long): RecipeDetailDto
+
+    @PUT("api/v1/admin/recipes/{id}")
+    suspend fun updateRecipe(
+        @Path("id") id: Long,
+        @Body request: UpdateRecipeRequestDto
+    ): RecipeDetailDto
 
     @Multipart
     @POST("api/v1/admin/recipes/{id}/image")
@@ -46,6 +57,12 @@ interface AdminApi {
 
     @POST("api/cursos")
     suspend fun createCourse(@Body request: CreateCourseRequestDto): AdminCourseDto
+
+    @PUT("api/cursos/{id}")
+    suspend fun updateCourse(
+        @Path("id") id: Long,
+        @Body request: CreateCourseRequestDto
+    ): AdminCourseDto
 
     @PATCH("api/cursos/{id}/publicacion")
     suspend fun changeCoursePublication(

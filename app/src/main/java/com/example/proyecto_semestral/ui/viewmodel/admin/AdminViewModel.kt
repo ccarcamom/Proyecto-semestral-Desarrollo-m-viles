@@ -24,6 +24,8 @@ data class AdminUiState(
     val courses: List<AdminCourse> = emptyList(),
     val recipeCategories: List<AdminCategory> = emptyList(),
     val courseCategories: List<AdminCategory> = emptyList(),
+    val recipeForEdit: AdminRecipe? = null,
+    val isLoadingEditor: Boolean = false,
     val error: String? = null,
     val message: String? = null
 )
@@ -79,9 +81,51 @@ class AdminViewModel(
         }
     }
 
+    fun updateRecipe(id: Long, draft: AdminRecipeDraft) {
+        runAction("Receta actualizada correctamente.") {
+            repository.updateRecipe(id, draft)
+        }
+    }
+
+    fun loadRecipeForEdit(id: Long) {
+        if (_uiState.value.isLoadingEditor) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isLoadingEditor = true, error = null, message = null)
+            }
+            try {
+                val recipe = repository.getRecipe(id)
+                _uiState.update {
+                    it.copy(isLoadingEditor = false, recipeForEdit = recipe)
+                }
+            } catch (exception: AdminRepositoryException) {
+                _uiState.update {
+                    it.copy(isLoadingEditor = false, error = exception.message)
+                }
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoadingEditor = false,
+                        error = "No se pudo cargar la receta para editar."
+                    )
+                }
+            }
+        }
+    }
+
+    fun closeRecipeEditor() {
+        _uiState.update { it.copy(recipeForEdit = null) }
+    }
+
     fun createCourse(draft: AdminCourseDraft) {
         runAction("Curso creado correctamente.") {
             repository.createCourse(draft)
+        }
+    }
+
+    fun updateCourse(id: Long, draft: AdminCourseDraft) {
+        runAction("Curso actualizado correctamente.") {
+            repository.updateCourse(id, draft)
         }
     }
 

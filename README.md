@@ -25,7 +25,13 @@ La app incluye autenticación con JWT, almacenamiento seguro del token, listado 
 - Reproducción de los videos reales configurados en cada lección.
 - Formulario de contacto conectado con `ms-contacto`.
 - Navegación implementada con Navigation Compose.
-- **Panel de administración** para crear recetas y cursos.
+- **Panel de administración** para crear, editar y eliminar recetas y cursos.
+
+## Datos de demostración
+
+Puedes descargar y ejecutar en MySQL Workbench el script con cuatro recetas y cuatro cursos publicados. Incluye ingredientes, pasos, objetivos, lecciones y enlaces reales de video; las imágenes quedan vacías para agregarlas posteriormente desde el panel.
+
+[Descargar `inserts_master_martini.txt`](docs/inserts_master_martini.txt)
 
 ## Arquitectura
 
@@ -88,6 +94,7 @@ Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta 
 
 - Listar todas las recetas, incluidas las no publicadas.
 - Crear una receta con título, descripción, categoría, duración, rendimiento, video, una imagen seleccionada desde la galería, ingredientes y pasos.
+- Editar todos los datos de una receta y reemplazar opcionalmente su imagen.
 - Decidir si se publica de inmediato.
 - Eliminar recetas con confirmación.
 
@@ -95,6 +102,7 @@ Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta 
 
 - Listar todos los cursos, incluidos los borradores.
 - Crear un curso con título, descripción, categoría, imagen y objetivos de aprendizaje.
+- Editar título, descripción, categoría, imagen, objetivos y estado de publicación.
 - Publicar u ocultar un curso.
 - Agregar lecciones con título, descripción, orden, URL de video y duración.
 - Eliminar cursos y sus lecciones con confirmación.
@@ -104,12 +112,15 @@ Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta 
 ```text
 GET    /api/v1/admin/recipes              Listar todas las recetas
 POST   /api/v1/admin/recipes              Crear receta
+GET    /api/v1/admin/recipes/{id}         Obtener receta para edición
+PUT    /api/v1/admin/recipes/{id}         Editar receta
 POST   /api/v1/admin/recipes/{id}/image   Subir imagen desde la galería
 DELETE /api/v1/admin/recipes/{id}         Eliminar receta
 GET    /api/v1/recipes/categorias         Categorías de recetas
 
 GET    /api/v1/admin/cursos               Listar todos los cursos (incluye borradores)
 POST   /api/cursos                        Crear curso
+PUT    /api/cursos/{id}                   Editar curso
 PATCH  /api/cursos/{id}/publicacion       Publicar u ocultar curso
 DELETE /api/cursos/{id}                   Eliminar curso
 POST   /api/cursos/{cursoId}/lecciones    Agregar lección

@@ -9,12 +9,15 @@ import com.example.proyecto_semestral.model.admin.AdminRecipeDraft
 
 interface AdminRepository {
     suspend fun getRecipes(): List<AdminRecipe>
+    suspend fun getRecipe(id: Long): AdminRecipe
     suspend fun createRecipe(draft: AdminRecipeDraft): AdminRecipe
+    suspend fun updateRecipe(id: Long, draft: AdminRecipeDraft): AdminRecipe
     suspend fun deleteRecipe(id: Long)
     suspend fun getRecipeCategories(): List<AdminCategory>
 
     suspend fun getCourses(): List<AdminCourse>
     suspend fun createCourse(draft: AdminCourseDraft): AdminCourse
+    suspend fun updateCourse(id: Long, draft: AdminCourseDraft): AdminCourse
     suspend fun changeCoursePublication(id: Long, published: Boolean): AdminCourse
     suspend fun deleteCourse(id: Long)
     suspend fun addLesson(courseId: Long, draft: AdminLessonDraft)

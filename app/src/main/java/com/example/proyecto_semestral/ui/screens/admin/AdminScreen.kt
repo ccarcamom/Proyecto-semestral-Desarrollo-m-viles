@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +59,7 @@ fun AdminScreen(
     var tab by rememberSaveable { mutableStateOf(AdminTab.Recipes) }
     var showRecipeForm by rememberSaveable { mutableStateOf(false) }
     var showCourseForm by rememberSaveable { mutableStateOf(false) }
+    var courseToEdit by remember { mutableStateOf<AdminCourse?>(null) }
     var lessonCourseId by rememberSaveable { mutableStateOf<Long?>(null) }
     var lessonOrder by rememberSaveable { mutableStateOf(1) }
     var recipeToDelete by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -83,24 +85,38 @@ fun AdminScreen(
                 .padding(innerPadding)
         ) {
             when {
-                showRecipeForm -> AdminRecipeForm(
+                showRecipeForm || state.recipeForEdit != null -> AdminRecipeForm(
                     categories = state.recipeCategories,
                     isSaving = state.isSaving,
                     createdBy = adminEmail,
-                    onCancel = { showRecipeForm = false },
-                    onSubmit = { draft ->
-                        viewModel.createRecipe(draft)
+                    initialRecipe = state.recipeForEdit,
+                    onCancel = {
                         showRecipeForm = false
+                        viewModel.closeRecipeEditor()
+                    },
+                    onSubmit = { draft ->
+                        state.recipeForEdit?.let {
+                            viewModel.updateRecipe(it.id, draft)
+                        } ?: viewModel.createRecipe(draft)
+                        showRecipeForm = false
+                        viewModel.closeRecipeEditor()
                     }
                 )
 
-                showCourseForm -> AdminCourseForm(
+                showCourseForm || courseToEdit != null -> AdminCourseForm(
                     categories = state.courseCategories,
                     isSaving = state.isSaving,
-                    onCancel = { showCourseForm = false },
-                    onSubmit = { draft ->
-                        viewModel.createCourse(draft)
+                    initialCourse = courseToEdit,
+                    onCancel = {
                         showCourseForm = false
+                        courseToEdit = null
+                    },
+                    onSubmit = { draft ->
+                        courseToEdit?.let {
+                            viewModel.updateCourse(it.id, draft)
+                        } ?: viewModel.createCourse(draft)
+                        showCourseForm = false
+                        courseToEdit = null
                     }
                 )
 
@@ -121,6 +137,14 @@ fun AdminScreen(
                     },
                     onDeleteRecipe = { recipeToDelete = it.id },
                     onDeleteCourse = { courseToDelete = it.id },
+                    onEditRecipe = {
+                        viewModel.clearFeedback()
+                        viewModel.loadRecipeForEdit(it.id)
+                    },
+                    onEditCourse = {
+                        viewModel.clearFeedback()
+                        courseToEdit = it
+                    },
                     onTogglePublication = { course ->
                         viewModel.changeCoursePublication(course.id, !course.published)
                     },
@@ -201,6 +225,8 @@ private fun AdminHome(
     onNewCourse: () -> Unit,
     onDeleteRecipe: (AdminRecipe) -> Unit,
     onDeleteCourse: (AdminCourse) -> Unit,
+    onEditRecipe: (AdminRecipe) -> Unit,
+    onEditCourse: (AdminCourse) -> Unit,
     onTogglePublication: (AdminCourse) -> Unit,
     onAddLesson: (AdminCourse) -> Unit
 ) {
@@ -253,7 +279,7 @@ private fun AdminHome(
                     PrimaryButton(
                         text = if (tab == AdminTab.Recipes) "Nueva receta" else "Nuevo curso",
                         onClick = if (tab == AdminTab.Recipes) onNewRecipe else onNewCourse,
-                        enabled = !state.isSaving
+                    enabled = !state.isSaving && !state.isLoadingEditor
                     )
                 }
 
@@ -270,6 +296,7 @@ private fun AdminHome(
                     items(items = state.recipes, key = { it.id }) { recipe ->
                         AdminRecipeRow(
                             recipe = recipe,
+                            onEdit = { onEditRecipe(recipe) },
                             onDelete = { onDeleteRecipe(recipe) }
                         )
                     }
@@ -286,6 +313,7 @@ private fun AdminHome(
                     items(items = state.courses, key = { it.id }) { course ->
                         AdminCourseRow(
                             course = course,
+                            onEdit = { onEditCourse(course) },
                             onTogglePublication = { onTogglePublication(course) },
                             onAddLesson = { onAddLesson(course) },
                             onDelete = { onDeleteCourse(course) }
@@ -328,6 +356,7 @@ private fun AdminTabChip(
 @Composable
 private fun AdminRecipeRow(
     recipe: AdminRecipe,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(
@@ -357,6 +386,7 @@ private fun AdminRecipeRow(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            AdminRowAction(text = "Editar", onClick = onEdit)
             AdminRowAction(text = "Eliminar", onClick = onDelete)
         }
     }
@@ -365,6 +395,7 @@ private fun AdminRecipeRow(
 @Composable
 private fun AdminCourseRow(
     course: AdminCourse,
+    onEdit: () -> Unit,
     onTogglePublication: () -> Unit,
     onAddLesson: () -> Unit,
     onDelete: () -> Unit
@@ -406,6 +437,7 @@ private fun AdminCourseRow(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            AdminRowAction(text = "Editar", onClick = onEdit)
             AdminRowAction(
                 text = if (course.published) "Ocultar" else "Publicar",
                 onClick = onTogglePublication
