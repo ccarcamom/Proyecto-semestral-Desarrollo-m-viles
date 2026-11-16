@@ -50,6 +50,8 @@ import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
 import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListUiState
 import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListViewModel
+import com.example.proyecto_semestral.ui.viewmodel.course.CourseListUiState
+import com.example.proyecto_semestral.ui.viewmodel.course.CourseListViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,22 +59,28 @@ import androidx.compose.material3.CircularProgressIndicator
 @Composable
 fun HomeScreen(
     viewModelFactory: ViewModelProvider.Factory,
+    courseViewModelFactory: ViewModelProvider.Factory,
     onBottomBarItemSelected: (BottomBarItem) -> Unit = {},
     onSearch: (String) -> Unit = {},
     onRecipesClick: () -> Unit = {},
     onCoursesClick: () -> Unit = {},
     onRecipeClick: (Long) -> Unit = {},
+    onCourseClick: (Long) -> Unit = {},
     onLogoutClick: () -> Unit = {},
     isAdmin: Boolean = false,
     onAdminClick: () -> Unit = {},
+    onContactClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var homeSearchQuery by rememberSaveable { mutableStateOf("") }
     val recipeViewModel: RecipeListViewModel = viewModel(factory = viewModelFactory)
     val recipeState by recipeViewModel.uiState.collectAsState()
+    val courseViewModel: CourseListViewModel = viewModel(factory = courseViewModelFactory)
+    val courseState by courseViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
         recipeViewModel.loadRecipes(page = 0)
+        courseViewModel.loadCourses(size = 3)
     }
 
     Scaffold(
@@ -99,6 +107,9 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                TextButton(onClick = onContactClick) {
+                    Text("Contacto")
+                }
                 if (isAdmin) {
                     TextButton(onClick = onAdminClick) {
                         Text("Panel admin")
@@ -223,6 +234,93 @@ fun HomeScreen(
                                     recipe.category?.name,
                                     recipe.duration.takeIf(String::isNotBlank)
                                 ).joinToString(" · "),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Cursos recientes",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
+                    text = "Ver cursos",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.clickable(onClick = onCoursesClick)
+                )
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+
+            when (val state = courseState) {
+                CourseListUiState.Loading -> Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+
+                CourseListUiState.Empty -> Text(
+                    text = "Aún no hay cursos publicados.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                is CourseListUiState.Error -> Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                is CourseListUiState.Success -> state.page.courses.forEach { course ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onCourseClick(course.id) }
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = course.imageUrl,
+                            contentDescription = course.title,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .clip(RoundedCornerShape(14.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = course.title,
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            Text(
+                                text = buildList {
+                                    if (course.categoryName.isNotBlank()) add(course.categoryName)
+                                    add("${course.lessonCount} lecciones")
+                                    if (course.durationSeconds > 0) {
+                                        add("${course.durationSeconds / 60} min")
+                                    }
+                                }.joinToString(" · "),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium
                             )

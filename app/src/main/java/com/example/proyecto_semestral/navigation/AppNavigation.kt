@@ -1,12 +1,8 @@
 package com.example.proyecto_semestral.navigation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -14,197 +10,232 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyecto_semestral.model.content.VideoCatalog
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.ContentFilter
-import com.example.proyecto_semestral.ui.screens.course.CourseDetailScreen
 import com.example.proyecto_semestral.ui.screens.admin.AdminScreen
 import com.example.proyecto_semestral.ui.screens.auth.LoginScreen
 import com.example.proyecto_semestral.ui.screens.auth.RegisterScreen
+import com.example.proyecto_semestral.ui.screens.contact.ContactScreen
+import com.example.proyecto_semestral.ui.screens.course.CourseDetailScreen
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.recipe.RecipeDetailScreen
 import com.example.proyecto_semestral.ui.screens.video.VideoScreen
 import com.example.proyecto_semestral.ui.viewmodel.auth.AuthViewModel
 
+private object Routes {
+    const val Login = "login"
+    const val Register = "register"
+    const val Home = "home"
+    const val Explore = "explore"
+    const val Admin = "admin"
+    const val Contact = "contact"
+    const val Recipe = "recipe/{recipeId}"
+    const val Course = "course/{courseId}"
+    const val Lesson = "course/{courseId}/lesson/{lessonId}"
+
+    fun recipe(id: Long) = "recipe/$id"
+    fun course(id: Long) = "course/$id"
+    fun lesson(courseId: Long, lessonId: Long) = "course/$courseId/lesson/$lessonId"
+}
+
 @Composable
 fun AppNavigation(
     authViewModelFactory: ViewModelProvider.Factory,
     recipeListViewModelFactory: ViewModelProvider.Factory,
+    courseListViewModelFactory: ViewModelProvider.Factory,
     recipeDetailViewModelFactory: (Long) -> ViewModelProvider.Factory,
+    courseDetailViewModelFactory: (Long) -> ViewModelProvider.Factory,
+    lessonViewModelFactory: (Long, Long) -> ViewModelProvider.Factory,
+    contactViewModelFactory: ViewModelProvider.Factory,
     adminViewModelFactory: ViewModelProvider.Factory
 ) {
-    val authViewModel: AuthViewModel = viewModel(
-        factory = authViewModelFactory
-    )
+    val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
     val authState by authViewModel.uiState.collectAsState()
-    var authRoute by rememberSaveable { mutableStateOf(AuthRoute.Login) }
-    var currentRoute by rememberSaveable { mutableStateOf(AppRoute.Home) }
-    var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
-    var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
-    var selectedRecipeId by rememberSaveable { mutableStateOf<Long?>(null) }
-    var selectedVideoId by rememberSaveable { mutableStateOf("") }
-    var selectedCourseId by rememberSaveable { mutableStateOf("") }
-
-    LaunchedEffect(authState.isAuthenticated) {
-        if (!authState.isAuthenticated) currentRoute = AppRoute.Home
-    }
 
     if (authState.isRestoring) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
         return
     }
 
-    if (!authState.isAuthenticated) {
-        when (authRoute) {
-            AuthRoute.Login -> LoginScreen(
+    val navController = rememberNavController()
+    var selectedFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+
+    LaunchedEffect(authState.isAuthenticated) {
+        val target = if (authState.isAuthenticated) Routes.Home else Routes.Login
+        navController.navigate(target) {
+            popUpTo(navController.graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = if (authState.isAuthenticated) Routes.Home else Routes.Login
+    ) {
+        composable(Routes.Login) {
+            LoginScreen(
                 isLoading = authState.isLoading,
                 serverError = authState.error,
                 onLogin = authViewModel::login,
                 onRegisterClick = {
                     authViewModel.clearError()
-                    authRoute = AuthRoute.Register
+                    navController.navigate(Routes.Register)
                 },
                 onInputChanged = authViewModel::clearError
             )
+        }
 
-            AuthRoute.Register -> RegisterScreen(
+        composable(Routes.Register) {
+            RegisterScreen(
                 isLoading = authState.isLoading,
                 serverError = authState.error,
                 onRegister = authViewModel::register,
                 onLoginClick = {
                     authViewModel.clearError()
-                    authRoute = AuthRoute.Login
+                    navController.popBackStack()
                 },
                 onInputChanged = authViewModel::clearError
             )
         }
-        return
-    }
 
-    fun navigateFromBottomBar(item: BottomBarItem) {
-        currentRoute = when (item) {
-            BottomBarItem.Home -> AppRoute.Home
-            BottomBarItem.Explore -> AppRoute.Explore
-        }
-    }
-
-    AnimatedContent(
-        targetState = currentRoute,
-        transitionSpec = {
-            val direction = if (targetState.ordinal >= initialState.ordinal) 1 else -1
-            (slideInHorizontally(tween(320)) { direction * it / 5 } + fadeIn(tween(240))) togetherWith
-                (slideOutHorizontally(tween(320)) { -direction * it / 5 } + fadeOut(tween(220)))
-        },
-        label = "Transición entre pantallas"
-    ) { route ->
-        when (route) {
-            AppRoute.Home -> HomeScreen(
+        composable(Routes.Home) {
+            HomeScreen(
                 viewModelFactory = recipeListViewModelFactory,
-                onBottomBarItemSelected = ::navigateFromBottomBar,
+                courseViewModelFactory = courseListViewModelFactory,
+                onBottomBarItemSelected = { navController.navigateBottom(it) },
                 onSearch = { query ->
-                    exploreSearchQuery = query
-                    selectedExploreFilter = ContentFilter.All
-                    currentRoute = AppRoute.Explore
+                    searchQuery = query
+                    selectedFilter = ContentFilter.All
+                    navController.navigate(Routes.Explore)
                 },
                 onRecipesClick = {
-                    exploreSearchQuery = ""
-                    selectedExploreFilter = ContentFilter.Recipes
-                    currentRoute = AppRoute.Explore
-                },
-                onRecipeClick = { recipeId ->
-                    selectedRecipeId = recipeId
-                    currentRoute = AppRoute.Recipe
+                    searchQuery = ""
+                    selectedFilter = ContentFilter.Recipes
+                    navController.navigate(Routes.Explore)
                 },
                 onCoursesClick = {
-                    exploreSearchQuery = ""
-                    selectedExploreFilter = ContentFilter.Courses
-                    currentRoute = AppRoute.Explore
+                    searchQuery = ""
+                    selectedFilter = ContentFilter.Courses
+                    navController.navigate(Routes.Explore)
                 },
+                onRecipeClick = { navController.navigate(Routes.recipe(it)) },
                 onLogoutClick = authViewModel::logout,
                 isAdmin = authState.isAdmin,
-                onAdminClick = { currentRoute = AppRoute.Admin }
+                onAdminClick = { navController.navigate(Routes.Admin) },
+                onContactClick = { navController.navigate(Routes.Contact) },
+                onCourseClick = { navController.navigate(Routes.course(it)) }
             )
+        }
 
-            AppRoute.Explore -> ExploreScreen(
+        composable(Routes.Explore) {
+            ExploreScreen(
                 viewModelFactory = recipeListViewModelFactory,
-                onBottomBarItemSelected = ::navigateFromBottomBar,
-                selectedFilter = selectedExploreFilter,
-                searchQuery = exploreSearchQuery,
-                onFilterSelected = { selectedExploreFilter = it },
-                onSearchQueryChange = { exploreSearchQuery = it },
-                onRecipeClick = { recipeId ->
-                    selectedRecipeId = recipeId
-                    currentRoute = AppRoute.Recipe
-                },
-                onCourseClick = { courseId ->
-                    selectedCourseId = courseId
-                    currentRoute = AppRoute.Course
+                courseViewModelFactory = courseListViewModelFactory,
+                onBottomBarItemSelected = { navController.navigateBottom(it) },
+                selectedFilter = selectedFilter,
+                searchQuery = searchQuery,
+                onFilterSelected = { selectedFilter = it },
+                onSearchQueryChange = { searchQuery = it },
+                onRecipeClick = { navController.navigate(Routes.recipe(it)) },
+                onCourseClick = { navController.navigate(Routes.course(it)) }
+            )
+        }
+
+        composable(
+            route = Routes.Recipe,
+            arguments = listOf(navArgument("recipeId") { type = NavType.LongType })
+        ) { entry ->
+            val id = entry.arguments?.getLong("recipeId") ?: return@composable
+            RecipeDetailScreen(
+                recipeId = id,
+                viewModelFactory = recipeDetailViewModelFactory(id),
+                onBack = navController::popBackStack
+            )
+        }
+
+        composable(
+            route = Routes.Course,
+            arguments = listOf(navArgument("courseId") { type = NavType.LongType })
+        ) { entry ->
+            val courseId = entry.arguments?.getLong("courseId") ?: return@composable
+            CourseDetailScreen(
+                viewModelFactory = courseDetailViewModelFactory(courseId),
+                onBack = navController::popBackStack,
+                onLessonClick = { lessonId ->
+                    navController.navigate(Routes.lesson(courseId, lessonId))
                 }
             )
+        }
 
-            AppRoute.Recipe -> RecipeDetailScreen(
-                recipeId = selectedRecipeId ?: 0L,
-                viewModelFactory = recipeDetailViewModelFactory(selectedRecipeId ?: 0L),
-                onBack = { currentRoute = AppRoute.Explore }
+        composable(
+            route = Routes.Lesson,
+            arguments = listOf(
+                navArgument("courseId") { type = NavType.LongType },
+                navArgument("lessonId") { type = NavType.LongType }
             )
-
-            AppRoute.Course -> CourseDetailScreen(
-                courseId = selectedCourseId,
-                onBack = { currentRoute = AppRoute.Explore },
-                onLessonClick = { videoId ->
-                    selectedVideoId = videoId
-                    currentRoute = AppRoute.Video
+        ) { entry ->
+            val courseId = entry.arguments?.getLong("courseId") ?: return@composable
+            val lessonId = entry.arguments?.getLong("lessonId") ?: return@composable
+            VideoScreen(
+                viewModelFactory = lessonViewModelFactory(courseId, lessonId),
+                onBack = navController::popBackStack,
+                onNextLesson = { nextId ->
+                    navController.navigate(Routes.lesson(courseId, nextId)) {
+                        popUpTo(Routes.course(courseId))
+                    }
+                },
+                onReturnToCourse = {
+                    navController.popBackStack(Routes.course(courseId), inclusive = false)
                 }
             )
+        }
 
-            AppRoute.Video -> VideoScreen(
-                videoId = selectedVideoId,
-                onBack = { currentRoute = AppRoute.Course },
-                onNextLesson = {
-                    VideoCatalog.nextLesson(selectedVideoId)?.let { selectedVideoId = it.id }
-                },
-                onReturnToCourse = { currentRoute = AppRoute.Course }
-            )
-
-            AppRoute.Admin -> if (authState.isAdmin) {
+        composable(Routes.Admin) {
+            if (authState.isAdmin) {
                 AdminScreen(
                     viewModelFactory = adminViewModelFactory,
                     adminEmail = authState.user?.email.orEmpty(),
-                    onBack = { currentRoute = AppRoute.Home }
+                    onBack = navController::popBackStack
                 )
             } else {
-                LaunchedEffect(Unit) {
-                    currentRoute = AppRoute.Home
-                }
+                LaunchedEffect(Unit) { navController.popBackStack() }
             }
+        }
 
+        composable(Routes.Contact) {
+            ContactScreen(
+                viewModelFactory = contactViewModelFactory,
+                userId = authState.user?.id,
+                initialEmail = authState.user?.email.orEmpty(),
+                onBack = navController::popBackStack
+            )
         }
     }
 }
 
-private enum class AppRoute {
-    Home,
-    Explore,
-    Recipe,
-    Course,
-    Video,
-    Admin
-}
-
-private enum class AuthRoute {
-    Login,
-    Register
+private fun NavHostController.navigateBottom(item: BottomBarItem) {
+    val route = when (item) {
+        BottomBarItem.Home -> Routes.Home
+        BottomBarItem.Explore -> Routes.Explore
+    }
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
 }

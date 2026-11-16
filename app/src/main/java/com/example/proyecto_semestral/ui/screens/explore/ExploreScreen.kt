@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.content.ExploreContent
 import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.BottomBarItem
@@ -50,34 +49,52 @@ import com.example.proyecto_semestral.ui.components.ContentFilters
 import com.example.proyecto_semestral.ui.components.ExploreContentRow
 import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListUiState
 import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListViewModel
+import com.example.proyecto_semestral.ui.viewmodel.course.CourseListUiState
+import com.example.proyecto_semestral.ui.viewmodel.course.CourseListViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun ExploreScreen(
     viewModelFactory: ViewModelProvider.Factory,
+    courseViewModelFactory: ViewModelProvider.Factory,
     onBottomBarItemSelected: (BottomBarItem) -> Unit,
     selectedFilter: ContentFilter,
     searchQuery: String,
     onFilterSelected: (ContentFilter) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onRecipeClick: (Long) -> Unit,
-    onCourseClick: (String) -> Unit = {},
+    onCourseClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val viewModel: RecipeListViewModel = viewModel(factory = viewModelFactory)
     val recipeState by viewModel.uiState.collectAsState()
+    val courseViewModel: CourseListViewModel = viewModel(factory = courseViewModelFactory)
+    val courseState by courseViewModel.uiState.collectAsState()
 
     LaunchedEffect(searchQuery) {
         delay(300)
         viewModel.loadRecipes(query = searchQuery)
+        courseViewModel.loadCourses(query = searchQuery)
     }
 
-    val courseItems = exploreItems.filter { item ->
-        searchQuery.isBlank() ||
-            item.title.contains(searchQuery, ignoreCase = true) ||
-            item.metadata.contains(searchQuery, ignoreCase = true) ||
-            item.eyebrow.contains(searchQuery, ignoreCase = true)
-    }
+    val courseItems = (courseState as? CourseListUiState.Success)
+        ?.page
+        ?.courses
+        .orEmpty()
+        .map { course ->
+            ExploreContent(
+                eyebrow = "CURSO",
+                title = course.title,
+                metadata = buildList {
+                    if (course.categoryName.isNotBlank()) add(course.categoryName)
+                    add("${course.lessonCount} lecciones")
+                    if (course.durationSeconds > 0) add("${course.durationSeconds / 60} min")
+                }.joinToString(" · "),
+                type = ContentFilter.Courses,
+                imageUrl = course.imageUrl,
+                id = course.id.toString()
+            )
+        }
     val recipeItems = (recipeState as? RecipeListUiState.Success)
         ?.page
         ?.recipes
@@ -101,6 +118,7 @@ fun ExploreScreen(
         ContentFilter.Courses -> courseItems
     }
     val recipesAreVisible = selectedFilter != ContentFilter.Courses
+    val coursesAreVisible = selectedFilter != ContentFilter.Recipes
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -163,13 +181,27 @@ fun ExploreScreen(
                     is RecipeListUiState.Success -> Unit
                 }
             }
+            if (coursesAreVisible) {
+                when (val state = courseState) {
+                    CourseListUiState.Loading -> LoadingContentState("Cargando cursos…")
+                    is CourseListUiState.Error -> ContentErrorState(
+                        message = state.message,
+                        onRetry = courseViewModel::retry
+                    )
+                    CourseListUiState.Empty,
+                    is CourseListUiState.Success -> Unit
+                }
+            }
 
             if (visibleItems.isEmpty()) {
                 val isWaitingForRecipes =
                     recipesAreVisible && recipeState is RecipeListUiState.Loading
+                val isWaitingForCourses =
+                    coursesAreVisible && courseState is CourseListUiState.Loading
                 val alreadyShowsError =
-                    recipesAreVisible && recipeState is RecipeListUiState.Error
-                if (!isWaitingForRecipes && !alreadyShowsError) {
+                    (recipesAreVisible && recipeState is RecipeListUiState.Error) ||
+                        (coursesAreVisible && courseState is CourseListUiState.Error)
+                if (!isWaitingForRecipes && !isWaitingForCourses && !alreadyShowsError) {
                     EmptyExploreState()
                 }
             } else {
@@ -186,7 +218,7 @@ fun ExploreScreen(
                         onClick = {
                             when (item.type) {
                                 ContentFilter.Recipes -> item.id.toLongOrNull()?.let(onRecipeClick)
-                                ContentFilter.Courses -> onCourseClick(item.id)
+                                ContentFilter.Courses -> item.id.toLongOrNull()?.let(onCourseClick)
                                 ContentFilter.All -> Unit
                             }
                         }
@@ -203,7 +235,10 @@ fun ExploreScreen(
 }
 
 @Composable
-private fun LoadingRecipesState() {
+private fun LoadingRecipesState() = LoadingContentState("Cargando recetas…")
+
+@Composable
+private fun LoadingContentState(label: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,12 +247,16 @@ private fun LoadingRecipesState() {
     ) {
         CircularProgressIndicator()
         Spacer(modifier = Modifier.height(12.dp))
-        Text("Cargando recetas…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-private fun RecipeErrorState(message: String, onRetry: () -> Unit) {
+private fun RecipeErrorState(message: String, onRetry: () -> Unit) =
+    ContentErrorState(message, onRetry)
+
+@Composable
+private fun ContentErrorState(message: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -303,8 +342,3 @@ private fun SearchIcon(color: Color, modifier: Modifier = Modifier) {
         drawLine(color, Offset(size.width * 0.64f, size.height * 0.64f), Offset(size.width * 0.9f, size.height * 0.9f), stroke, cap = StrokeCap.Round)
     }
 }
-
-private val exploreItems = listOf(
-    ExploreContent("CURSO", "Fundamentos de chocolatería", "Chocolatería · 30 min", ContentFilter.Courses, R.drawable.chocolate, id = "curso-chocolateria"),
-    ExploreContent("CURSO", "Introducción a la bollería", "Bollería · 35 min", ContentFilter.Courses, R.drawable.bolleria, id = "curso-bolleria")
-)

@@ -17,11 +17,14 @@ La app incluye autenticación con JWT, almacenamiento seguro del token, listado 
 - Registro e inicio de sesión con JWT.
 - Restauración de sesión y cierre de sesión.
 - Inicio con accesos directos a recetas y cursos.
+- Inicio con recetas y cursos publicados obtenidos desde sus microservicios.
 - Exploración y búsqueda de recetas contra el microservicio de recetas.
 - Filtros por recetas o cursos.
 - Detalle de receta con ingredientes, preparación e insumos.
-- Cursos y lecciones.
-- Reproducción de videos de YouTube.
+- Cursos publicados, detalle, objetivos y lecciones obtenidos desde `ms-cursos`.
+- Reproducción de los videos reales configurados en cada lección.
+- Formulario de contacto conectado con `ms-contacto`.
+- Navegación implementada con Navigation Compose.
 - **Panel de administración** para crear recetas y cursos.
 
 ## Arquitectura
@@ -111,6 +114,10 @@ PATCH  /api/cursos/{id}/publicacion       Publicar u ocultar curso
 DELETE /api/cursos/{id}                   Eliminar curso
 POST   /api/cursos/{cursoId}/lecciones    Agregar lección
 GET    /api/categorias                    Categorías de cursos
+
+GET    /api/cursos                        Cursos publicados
+GET    /api/cursos/{id}                   Detalle, objetivos y lecciones
+POST   /api/contacto                      Enviar formulario de contacto
 ```
 
 ### Categorías iniciales
@@ -176,7 +183,7 @@ app/src/main/java/com/example/proyecto_semestral/
 ├── domain/repository/  # Contratos de repositorio
 ├── model/              # Modelos de auth, recetas, admin y contenido
 ├── di/                 # AppContainer
-├── navigation/         # Flujo de navegación
+├── navigation/         # NavHost y rutas con Navigation Compose
 ├── ui/
 │   ├── components/     # Componentes reutilizables
 │   ├── screens/        # Auth, inicio, exploración, recetas, cursos, videos y admin
@@ -195,7 +202,7 @@ app/src/main/java/com/example/proyecto_semestral/
 
 ## Ejecución
 
-1. Levanta `ms-auth`, `ms-recetas`, `ms-cursos` y `api_gateway`.
+1. Levanta `ms-auth`, `ms-recetas`, `ms-cursos`, `ms-contacto` y `api_gateway`.
 2. Abre el proyecto en Android Studio.
 3. Espera a que Gradle sincronice las dependencias.
 4. Selecciona un dispositivo o emulador.

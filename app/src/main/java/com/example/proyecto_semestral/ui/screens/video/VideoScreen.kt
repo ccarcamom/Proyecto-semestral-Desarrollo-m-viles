@@ -2,161 +2,132 @@ package com.example.proyecto_semestral.ui.screens.video
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyecto_semestral.model.content.VideoCatalog
-import com.example.proyecto_semestral.model.content.VideoContent
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_semestral.ui.components.AppTopBar
-import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.components.EmbeddedVideoPlayer
-import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.ui.components.PrimaryButton
+import com.example.proyecto_semestral.ui.viewmodel.course.LessonUiState
+import com.example.proyecto_semestral.ui.viewmodel.course.LessonViewModel
 
 @Composable
 fun VideoScreen(
-    videoId: String,
+    viewModelFactory: ViewModelProvider.Factory,
     onBack: () -> Unit,
-    onNextLesson: () -> Unit,
+    onNextLesson: (Long) -> Unit,
     onReturnToCourse: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val video = VideoCatalog.findById(videoId)
+    val viewModel: LessonViewModel = viewModel(factory = viewModelFactory)
+    val state by viewModel.uiState.collectAsState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        AppTopBar(
-            title = "Lección en video",
-            onBackClick = onBack
-        )
+        AppTopBar(title = "Lección en video", onBackClick = onBack)
 
-        if (video == null) {
-            MissingVideoState(
+        when (val current = state) {
+            LessonUiState.Loading -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+
+            is LessonUiState.Error -> MissingVideoState(
+                message = current.message,
                 onBack = onBack,
                 modifier = Modifier.weight(1f)
             )
-        } else {
-            VideoContent(
-                video = video,
-                onNextLesson = onNextLesson,
-                onReturnToCourse = onReturnToCourse,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
 
-@Composable
-private fun VideoContent(
-    video: VideoContent,
-    onNextLesson: () -> Unit,
-    onReturnToCourse: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 20.dp)
-    ) {
-        key(video.id) {
-            EmbeddedVideoPlayer(videoUrl = video.videoUrl)
-        }
-
-        Spacer(modifier = Modifier.height(42.dp))
-        Text(
-            text = video.category.uppercase(),
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.8.sp
-            )
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = video.title,
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontSize = 38.sp,
-                lineHeight = 44.sp,
-                fontWeight = FontWeight.Bold
-            )
-        )
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = video.description,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontSize = 22.sp,
-                lineHeight = 34.sp
-            )
-        )
-
-        video.courseName?.let { courseName ->
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "$courseName · Lección ${video.lessonPosition} de ${video.totalLessons}",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-            )
-        }
-
-        if (video.isLesson) {
-            Spacer(modifier = Modifier.height(28.dp))
-            if (video.isLastLesson) {
-                PrimaryButton(
+            is LessonUiState.Success -> Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
+            ) {
+                key(current.lesson.id) {
+                    EmbeddedVideoPlayer(videoUrl = current.lesson.videoUrl)
+                }
+                Spacer(modifier = Modifier.height(42.dp))
+                Text(
+                    text = current.course.categoryName.uppercase(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.8.sp
+                    )
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = current.lesson.title,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontSize = 38.sp,
+                        lineHeight = 44.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                if (current.lesson.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = current.lesson.description,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 22.sp,
+                            lineHeight = 34.sp
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "${current.course.title} · Lección ${current.position + 1} de ${current.course.lessons.size}",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Spacer(modifier = Modifier.height(28.dp))
+                current.nextLesson?.let { next ->
+                    PrimaryButton(
+                        text = "Siguiente lección",
+                        onClick = { onNextLesson(next.id) }
+                    )
+                } ?: PrimaryButton(
                     text = "Volver al curso",
                     onClick = onReturnToCourse
                 )
-            } else {
-                PrimaryButton(
-                    text = "Siguiente lección",
-                    onClick = onNextLesson
-                )
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
-
-        Spacer(modifier = Modifier.height(28.dp))
-        Text(
-            text = "Lleva la técnica a tu negocio",
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
-            )
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Observa los pasos, revisa los ingredientes y vuelve a consultar el contenido cuando lo necesites.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontSize = 21.sp,
-                lineHeight = 32.sp
-            )
-        )
     }
 }
 
 @Composable
 private fun MissingVideoState(
+    message: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -166,47 +137,21 @@ private fun MissingVideoState(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "No encontramos este video.",
+            text = "No encontramos esta lección.",
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "El contenido puede haber sido movido o ya no estar disponible.",
+            text = message,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onBack) {
-            Text(text = "Volver")
+            Text("Volver")
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 900)
-@Composable
-private fun VideoScreenPreview() {
-    ProyectoSemestralTheme {
-        VideoScreen(
-            videoId = "leccion-templado-1",
-            onBack = {},
-            onNextLesson = {},
-            onReturnToCourse = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 900)
-@Composable
-private fun VideoLessonScreenPreview() {
-    ProyectoSemestralTheme {
-        VideoScreen(
-            videoId = "leccion-templado-3",
-            onBack = {},
-            onNextLesson = {},
-            onReturnToCourse = {}
-        )
     }
 }

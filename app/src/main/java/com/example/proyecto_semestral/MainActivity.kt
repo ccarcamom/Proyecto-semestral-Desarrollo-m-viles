@@ -18,7 +18,11 @@ class MainActivity : ComponentActivity() {
                 AppNavigation(
                     authViewModelFactory = container.authViewModelFactory,
                     recipeListViewModelFactory = container.recipeListViewModelFactory,
+                    courseListViewModelFactory = container.courseListViewModelFactory,
                     recipeDetailViewModelFactory = container::recipeDetailViewModelFactory,
+                    courseDetailViewModelFactory = container::courseDetailViewModelFactory,
+                    lessonViewModelFactory = container::lessonViewModelFactory,
+                    contactViewModelFactory = container.contactViewModelFactory,
                     adminViewModelFactory = container.adminViewModelFactory
                 )
             }
