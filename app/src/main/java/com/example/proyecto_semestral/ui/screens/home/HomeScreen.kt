@@ -288,7 +288,7 @@ private fun FeaturedRecipeCard(
         HomeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
-            fallback = "🍰",
+            fallbackIcon = ShortcutIcon.Book,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(155.dp)
@@ -344,7 +344,7 @@ private fun RecipeCompactCard(
         HomeImage(
             imageUrl = recipe.imageUrl,
             contentDescription = recipe.title,
-            fallback = "🍮",
+            fallbackIcon = ShortcutIcon.Book,
             modifier = Modifier
                 .size(82.dp)
                 .clip(RoundedCornerShape(15.dp))
@@ -384,7 +384,7 @@ private fun CourseHomeCard(
         HomeImage(
             imageUrl = course.imageUrl,
             contentDescription = course.title,
-            fallback = "🎓",
+            fallbackIcon = ShortcutIcon.Course,
             modifier = Modifier
                 .size(92.dp)
                 .clip(RoundedCornerShape(16.dp))
@@ -415,7 +415,7 @@ private fun CourseHomeCard(
 private fun HomeImage(
     imageUrl: String?,
     contentDescription: String,
-    fallback: String,
+    fallbackIcon: ShortcutIcon,
     modifier: Modifier = Modifier
 ) {
     if (imageUrl.isNullOrBlank()) {
@@ -430,7 +430,11 @@ private fun HomeImage(
             ),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = fallback, fontSize = 42.sp)
+            ShortcutGlyph(
+                icon = fallbackIcon,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(48.dp)
+            )
         }
     } else {
         AsyncImage(

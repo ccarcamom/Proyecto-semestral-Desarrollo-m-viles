@@ -64,6 +64,13 @@ interface AdminApi {
         @Body request: CreateCourseRequestDto
     ): AdminCourseDto
 
+    @Multipart
+    @POST("api/cursos/{id}/image")
+    suspend fun uploadCourseImage(
+        @Path("id") id: Long,
+        @Part image: MultipartBody.Part
+    ): AdminCourseDto
+
     @PATCH("api/cursos/{id}/publicacion")
     suspend fun changeCoursePublication(
         @Path("id") id: Long,

@@ -48,6 +48,12 @@ data class AdminRecipeImage(
     val contentType: String
 )
 
+data class AdminCourseImage(
+    val bytes: ByteArray,
+    val fileName: String,
+    val contentType: String
+)
+
 data class AdminRecipeDraft(
     val title: String,
     val description: String,
@@ -67,6 +73,7 @@ data class AdminCourseDraft(
     val description: String,
     val categoryId: Long,
     val imageUrl: String,
+    val image: AdminCourseImage?,
     val objectives: List<String>,
     val publishNow: Boolean
 )

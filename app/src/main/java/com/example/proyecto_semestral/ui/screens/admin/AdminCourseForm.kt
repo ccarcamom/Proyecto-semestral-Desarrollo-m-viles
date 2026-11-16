@@ -1,5 +1,12 @@
 package com.example.proyecto_semestral.ui.screens.admin
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,12 +32,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.proyecto_semestral.model.admin.AdminCategory
 import com.example.proyecto_semestral.model.admin.AdminCourseDraft
 import com.example.proyecto_semestral.model.admin.AdminCourse
+import com.example.proyecto_semestral.model.admin.AdminCourseImage
 import com.example.proyecto_semestral.ui.components.PrimaryButton
+import coil.compose.rememberAsyncImagePainter
+import java.io.ByteArrayOutputStream
 
 @Composable
 fun AdminCourseForm(
@@ -43,10 +55,30 @@ fun AdminCourseForm(
 ) {
     var title by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.title.orEmpty()) }
     var description by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.description.orEmpty()) }
-    var imageUrl by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.imageUrl.orEmpty()) }
     var publishNow by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.published ?: false) }
     var categoryId by rememberSaveable(initialCourse?.id) { mutableStateOf(initialCourse?.categoryId) }
     var validationError by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImage by remember { mutableStateOf<AdminCourseImage?>(null) }
+    val context = LocalContext.current
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            AdminCourseImage(
+                bytes = compressCourseImage(context.contentResolver, uri),
+                fileName = "curso.jpg",
+                contentType = "image/jpeg"
+            )
+        }.onSuccess { image ->
+            selectedImageUri = uri
+            selectedImage = image
+            validationError = null
+        }.onFailure {
+            validationError = "No se pudo leer la imagen seleccionada."
+        }
+    }
 
     val objectives = remember(initialCourse?.id) {
         mutableStateListOf<String>().apply {
@@ -70,7 +102,8 @@ fun AdminCourseForm(
                 title = title,
                 description = description,
                 categoryId = selectedCategory,
-                imageUrl = imageUrl,
+                imageUrl = "",
+                image = selectedImage,
                 objectives = objectives.toList(),
                 publishNow = publishNow
             )
@@ -119,11 +152,48 @@ fun AdminCourseForm(
             onSelect = { categoryId = it }
         )
         Spacer(Modifier.height(16.dp))
-        AdminTextField(
-            value = imageUrl,
-            onValueChange = { imageUrl = it },
-            label = "URL de la imagen"
-        )
+        TextButton(
+            onClick = {
+                imagePicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (selectedImageUri == null && initialCourse?.imageUrl == null) {
+                    "Seleccionar imagen de la galería"
+                } else {
+                    "Cambiar imagen"
+                }
+            )
+        }
+        val preview = selectedImageUri ?: initialCourse?.imageUrl
+        preview?.let {
+            Image(
+                painter = rememberAsyncImagePainter(it),
+                contentDescription = "Vista previa del curso",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(190.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
+        if (selectedImageUri != null) {
+            AdminRowAction(
+                text = "Quitar nueva imagen",
+                onClick = {
+                    selectedImageUri = null
+                    selectedImage = null
+                }
+            )
+        } else if (initialCourse?.imageUrl != null) {
+            Text(
+                text = "La imagen actual se conservará si no seleccionas otra.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
         Row(
@@ -207,5 +277,44 @@ fun AdminCourseForm(
             Text("Cancelar")
         }
         Spacer(Modifier.height(20.dp))
+    }
+}
+
+private fun compressCourseImage(
+    resolver: android.content.ContentResolver,
+    uri: Uri
+): ByteArray {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+        ?: error("No se pudo leer la imagen")
+
+    var sampleSize = 1
+    while (bounds.outWidth / sampleSize > 1600 || bounds.outHeight / sampleSize > 1600) {
+        sampleSize *= 2
+    }
+
+    val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+    val decoded = resolver.openInputStream(uri)?.use {
+        BitmapFactory.decodeStream(it, null, options)
+    } ?: error("El formato de la imagen no es compatible")
+
+    val maxSide = maxOf(decoded.width, decoded.height)
+    val scaled = if (maxSide > 1600) {
+        val ratio = 1600f / maxSide
+        Bitmap.createScaledBitmap(
+            decoded,
+            (decoded.width * ratio).toInt(),
+            (decoded.height * ratio).toInt(),
+            true
+        )
+    } else {
+        decoded
+    }
+
+    return ByteArrayOutputStream().use { output ->
+        check(scaled.compress(Bitmap.CompressFormat.JPEG, 85, output))
+        if (scaled !== decoded) scaled.recycle()
+        decoded.recycle()
+        output.toByteArray()
     }
 }

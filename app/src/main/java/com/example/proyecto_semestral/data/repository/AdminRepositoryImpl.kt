@@ -117,7 +117,7 @@ class AdminRepositoryImpl(
     }
 
     override suspend fun createCourse(draft: AdminCourseDraft): AdminCourse = apiCall {
-        val created = api.createCourse(
+        var created = api.createCourse(
             CreateCourseRequestDto(
                 titulo = draft.title.trim(),
                 descripcion = draft.description.trim(),
@@ -133,6 +133,12 @@ class AdminRepositoryImpl(
                     }
             )
         )
+
+        draft.image?.let { image ->
+            val body = image.bytes.toRequestBody(image.contentType.toMediaType())
+            val part = MultipartBody.Part.createFormData("image", image.fileName, body)
+            created = api.uploadCourseImage(created.id, part)
+        }
 
         if (draft.publishNow) {
             api.changeCoursePublication(
@@ -156,7 +162,12 @@ class AdminRepositoryImpl(
         id: Long,
         draft: AdminCourseDraft
     ): AdminCourse = apiCall {
-        val updated = api.updateCourse(id, draft.toRequest())
+        var updated = api.updateCourse(id, draft.toRequest())
+        draft.image?.let { image ->
+            val body = image.bytes.toRequestBody(image.contentType.toMediaType())
+            val part = MultipartBody.Part.createFormData("image", image.fileName, body)
+            updated = api.uploadCourseImage(id, part)
+        }
         if (updated.publicado == draft.publishNow) {
             updated.toModel()
         } else {
@@ -240,7 +251,7 @@ class AdminRepositoryImpl(
         titulo = title.trim(),
         descripcion = description.trim(),
         categoriaId = categoryId,
-        imagenUrl = imageUrl.trim().ifBlank { null },
+        imagenUrl = null,
         objetivos = objectives
             .filter { it.isNotBlank() }
             .mapIndexed { index, objective ->

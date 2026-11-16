@@ -197,15 +197,18 @@ fun AdminRecipeForm(
         ) {
             Text(if (selectedImageUri == null) "Seleccionar imagen de la galería" else "Cambiar imagen")
         }
-        selectedImageUri?.let { uri ->
+        val imagePreview = selectedImageUri ?: initialRecipe?.imageUrl
+        imagePreview?.let { preview ->
             Image(
-                painter = rememberAsyncImagePainter(uri),
+                painter = rememberAsyncImagePainter(preview),
                 contentDescription = "Vista previa de la receta",
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(190.dp),
                 contentScale = ContentScale.Crop
             )
+        }
+        if (selectedImageUri != null) {
             AdminRowAction(
                 text = "Quitar imagen",
                 onClick = {

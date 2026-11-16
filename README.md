@@ -101,7 +101,7 @@ Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta 
 **Cursos** (microservicio `ms-cursos`):
 
 - Listar todos los cursos, incluidos los borradores.
-- Crear un curso con título, descripción, categoría, imagen y objetivos de aprendizaje.
+- Crear un curso con título, descripción, categoría, una imagen seleccionada desde la galería y objetivos de aprendizaje.
 - Editar título, descripción, categoría, imagen, objetivos y estado de publicación.
 - Publicar u ocultar un curso.
 - Agregar lecciones con título, descripción, orden, URL de video y duración.
@@ -121,6 +121,7 @@ GET    /api/v1/recipes/categorias         Categorías de recetas
 GET    /api/v1/admin/cursos               Listar todos los cursos (incluye borradores)
 POST   /api/cursos                        Crear curso
 PUT    /api/cursos/{id}                   Editar curso
+POST   /api/cursos/{id}/image             Subir imagen del curso desde la galería
 PATCH  /api/cursos/{id}/publicacion       Publicar u ocultar curso
 DELETE /api/cursos/{id}                   Eliminar curso
 POST   /api/cursos/{cursoId}/lecciones    Agregar lección
