@@ -5,20 +5,33 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.proyecto_semestral.data.local.AuthTokenStore
 import com.example.proyecto_semestral.data.remote.AuthApi
 import com.example.proyecto_semestral.data.remote.NetworkProvider
+import com.example.proyecto_semestral.data.remote.RecipeApi
 import com.example.proyecto_semestral.data.repository.AuthRepositoryImpl
+import com.example.proyecto_semestral.data.repository.RecipeRepositoryImpl
 import com.example.proyecto_semestral.domain.repository.AuthRepository
+import com.example.proyecto_semestral.domain.repository.RecipeRepository
 import com.example.proyecto_semestral.ui.viewmodel.auth.AuthViewModel
+import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeDetailViewModel
+import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeListViewModel
 
 class AppContainer(context: Context) {
     private val tokenStore = AuthTokenStore(context.applicationContext)
-    private val authApi = NetworkProvider.createRetrofit(tokenStore)
-        .create(AuthApi::class.java)
+    private val retrofit = NetworkProvider.createRetrofit(tokenStore)
+    private val authApi = retrofit.create(AuthApi::class.java)
+    private val recipeApi = retrofit.create(RecipeApi::class.java)
 
     private val authRepository: AuthRepository = AuthRepositoryImpl(
         tokenStore = tokenStore,
         api = authApi
     )
+    private val recipeRepository: RecipeRepository = RecipeRepositoryImpl(recipeApi)
 
     val authViewModelFactory: ViewModelProvider.Factory =
         AuthViewModel.factory(authRepository)
+
+    val recipeListViewModelFactory: ViewModelProvider.Factory =
+        RecipeListViewModel.factory(recipeRepository)
+
+    fun recipeDetailViewModelFactory(recipeId: Long): ViewModelProvider.Factory =
+        RecipeDetailViewModel.factory(recipeId, recipeRepository)
 }

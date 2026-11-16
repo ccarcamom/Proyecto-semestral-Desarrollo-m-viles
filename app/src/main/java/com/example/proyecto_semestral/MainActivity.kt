@@ -14,10 +14,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ProyectoSemestralTheme {
+                val container = (application as MartiniApplication).container
                 AppNavigation(
-                    authViewModelFactory = (application as MartiniApplication)
-                        .container
-                        .authViewModelFactory
+                    authViewModelFactory = container.authViewModelFactory,
+                    recipeListViewModelFactory = container.recipeListViewModelFactory,
+                    recipeDetailViewModelFactory = container::recipeDetailViewModelFactory
                 )
             }
         }

@@ -1,6 +1,6 @@
-package com.example.proyecto_semestral.data
+package com.example.proyecto_semestral.data.dto.recipe
 
-data class PageResponse<T>(
+data class PageResponseDto<T>(
     val content: List<T>,
     val number: Int,
     val size: Int,

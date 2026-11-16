@@ -1,4 +1,4 @@
-package com.example.proyecto_semestral.data
+package com.example.proyecto_semestral.data.dto.recipe
 
 data class RecipeSummaryDto(
     val id: Long,
@@ -6,5 +6,5 @@ data class RecipeSummaryDto(
     val descripcion: String?,
     val imagenUrl: String?,
     val duracionTexto: String?,
-    val categoria: CategoryDto?
+    val categoria: RecipeCategoryDto?
 )

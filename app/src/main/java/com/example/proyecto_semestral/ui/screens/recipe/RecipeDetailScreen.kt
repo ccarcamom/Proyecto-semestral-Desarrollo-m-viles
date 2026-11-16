@@ -1,7 +1,6 @@
 package com.example.proyecto_semestral.ui.screens.recipe
 
 import android.content.Intent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,10 +16,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,24 +33,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyecto_semestral.model.content.RecipeCatalog
-import com.example.proyecto_semestral.model.content.RecipeContent
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.proyecto_semestral.R
+import com.example.proyecto_semestral.model.recipe.RecipeDetail
 import com.example.proyecto_semestral.ui.components.AppTopBar
 import com.example.proyecto_semestral.ui.components.EmbeddedVideoPlayer
 import com.example.proyecto_semestral.ui.components.IngredientRow
 import com.example.proyecto_semestral.ui.components.PreparationStep
-import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeDetailUiState
+import com.example.proyecto_semestral.ui.viewmodel.recipe.RecipeDetailViewModel
 
 @Composable
 fun RecipeDetailScreen(
-    recipeId: String,
+    recipeId: Long,
+    viewModelFactory: ViewModelProvider.Factory,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val recipe = RecipeCatalog.findById(recipeId)
+    val viewModel: RecipeDetailViewModel = viewModel(
+        key = "recipe-$recipeId",
+        factory = viewModelFactory
+    )
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = modifier
@@ -61,20 +70,27 @@ fun RecipeDetailScreen(
             onBackClick = onBack
         )
 
-        if (recipe == null) {
-            MissingRecipeState(onBack = onBack, modifier = Modifier.weight(1f))
-        } else {
-            RecipeContent(
-                recipe = recipe,
+        when (val state = uiState) {
+            RecipeDetailUiState.Loading -> LoadingRecipeState(modifier = Modifier.weight(1f))
+            RecipeDetailUiState.Empty -> MissingRecipeState(
+                onBack = onBack,
+                modifier = Modifier.weight(1f)
+            )
+            is RecipeDetailUiState.Error -> RecipeErrorState(
+                message = state.message,
+                onRetry = viewModel::loadRecipe,
+                modifier = Modifier.weight(1f)
+            )
+            is RecipeDetailUiState.Success -> RecipeContent(
+                recipe = state.recipe,
                 modifier = Modifier.weight(1f)
             )
         }
     }
 }
-
 @Composable
 private fun RecipeContent(
-    recipe: RecipeContent,
+    recipe: RecipeDetail,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -85,9 +101,12 @@ private fun RecipeContent(
             .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp)
     ) {
-        Image(
-            painter = painterResource(recipe.imageRes),
+        AsyncImage(
+            model = recipe.imageUrl,
             contentDescription = recipe.title,
+            placeholder = painterResource(R.drawable.galletas),
+            error = painterResource(R.drawable.galletas),
+            fallback = painterResource(R.drawable.galletas),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(256.dp),
@@ -97,7 +116,7 @@ private fun RecipeContent(
         Column(modifier = Modifier.padding(horizontal = 26.dp)) {
             Spacer(modifier = Modifier.height(28.dp))
             Text(
-                text = recipe.category.uppercase(),
+                text = recipe.category?.name?.uppercase().orEmpty(),
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
@@ -130,7 +149,7 @@ private fun RecipeContent(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            if (recipe.videoUrl.isNotBlank()) {
+            if (!recipe.videoUrl.isNullOrBlank()) {
                 if (showVideo) {
                     EmbeddedVideoPlayer(videoUrl = recipe.videoUrl)
                     Spacer(modifier = Modifier.height(12.dp))
@@ -151,7 +170,7 @@ private fun RecipeContent(
                     val shareText = buildString {
                         appendLine(recipe.title)
                         appendLine(recipe.description)
-                        if (recipe.videoUrl.isNotBlank()) {
+                        if (!recipe.videoUrl.isNullOrBlank()) {
                             appendLine(recipe.videoUrl)
                         }
                         appendLine()
@@ -195,8 +214,8 @@ private fun RecipeContent(
                 Spacer(modifier = Modifier.height(20.dp))
                 recipe.steps.forEachIndexed { index, step ->
                     PreparationStep(
-                        stepNumber = index + 1,
-                        description = step
+                        stepNumber = step.number.takeIf { it > 0 } ?: index + 1,
+                        description = step.description
                     )
                     if (index != recipe.steps.lastIndex) {
                         Spacer(modifier = Modifier.height(22.dp))
@@ -214,7 +233,7 @@ private fun RecipeContent(
 }
 
 @Composable
-private fun RecipeMetadata(recipe: RecipeContent) {
+private fun RecipeMetadata(recipe: RecipeDetail) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -235,6 +254,42 @@ private fun RecipeMetadata(recipe: RecipeContent) {
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 19.sp)
             )
+        }
+    }
+}
+@Composable
+private fun LoadingRecipeState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator()
+        Spacer(modifier = Modifier.height(12.dp))
+        Text("Cargando receta…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun RecipeErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onRetry) {
+            Text("Reintentar")
         }
     }
 }
@@ -310,24 +365,5 @@ private fun MissingRecipeState(
         Button(onClick = onBack) {
             Text(text = "Volver")
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 900)
-@Composable
-private fun RecipeDetailScreenPreview() {
-    ProyectoSemestralTheme {
-        RecipeDetailScreen(
-            recipeId = "galletas-chips-chocolate",
-            onBack = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MissingRecipeStatePreview() {
-    ProyectoSemestralTheme {
-        MissingRecipeState(onBack = {})
     }
 }

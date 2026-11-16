@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.proyecto_semestral.R
 import com.example.proyecto_semestral.model.content.ExploreContent
 import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
+import coil.compose.AsyncImage
 
 @Composable
 fun ExploreContentRow(
@@ -45,14 +46,28 @@ fun ExploreContentRow(
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(item.imageRes),
-            contentDescription = item.title,
-            modifier = Modifier
-                .size(92.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            contentScale = ContentScale.Crop
-        )
+        if (item.imageUrl != null) {
+            AsyncImage(
+                model = item.imageUrl,
+                contentDescription = item.title,
+                placeholder = painterResource(R.drawable.galletas),
+                error = painterResource(R.drawable.galletas),
+                fallback = painterResource(R.drawable.galletas),
+                modifier = Modifier
+                    .size(92.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Image(
+                painter = painterResource(item.imageRes ?: R.drawable.galletas),
+                contentDescription = item.title,
+                modifier = Modifier
+                    .size(92.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
 
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {

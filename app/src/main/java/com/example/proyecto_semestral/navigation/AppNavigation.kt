@@ -35,7 +35,9 @@ import com.example.proyecto_semestral.ui.viewmodel.auth.AuthViewModel
 
 @Composable
 fun AppNavigation(
-    authViewModelFactory: ViewModelProvider.Factory
+    authViewModelFactory: ViewModelProvider.Factory,
+    recipeListViewModelFactory: ViewModelProvider.Factory,
+    recipeDetailViewModelFactory: (Long) -> ViewModelProvider.Factory
 ) {
     val authViewModel: AuthViewModel = viewModel(
         factory = authViewModelFactory
@@ -45,7 +47,7 @@ fun AppNavigation(
     var currentRoute by rememberSaveable { mutableStateOf(AppRoute.Home) }
     var selectedExploreFilter by rememberSaveable { mutableStateOf(ContentFilter.All) }
     var exploreSearchQuery by rememberSaveable { mutableStateOf("") }
-    var selectedRecipeId by rememberSaveable { mutableStateOf("") }
+    var selectedRecipeId by rememberSaveable { mutableStateOf<Long?>(null) }
     var selectedVideoId by rememberSaveable { mutableStateOf("") }
     var selectedCourseId by rememberSaveable { mutableStateOf("") }
 
@@ -132,6 +134,7 @@ fun AppNavigation(
             )
 
             AppRoute.Explore -> ExploreScreen(
+                viewModelFactory = recipeListViewModelFactory,
                 onBottomBarItemSelected = ::navigateFromBottomBar,
                 selectedFilter = selectedExploreFilter,
                 searchQuery = exploreSearchQuery,
@@ -148,7 +151,8 @@ fun AppNavigation(
             )
 
             AppRoute.Recipe -> RecipeDetailScreen(
-                recipeId = selectedRecipeId,
+                recipeId = selectedRecipeId ?: 0L,
+                viewModelFactory = recipeDetailViewModelFactory(selectedRecipeId ?: 0L),
                 onBack = { currentRoute = AppRoute.Explore }
             )
 

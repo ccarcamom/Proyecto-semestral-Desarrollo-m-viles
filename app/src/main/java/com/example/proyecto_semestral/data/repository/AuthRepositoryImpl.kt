@@ -3,8 +3,8 @@ package com.example.proyecto_semestral.data.repository
 import com.example.proyecto_semestral.data.dto.auth.AuthResponseDto
 import com.example.proyecto_semestral.data.dto.auth.LoginRequestDto
 import com.example.proyecto_semestral.data.dto.auth.RegisterRequestDto
+import com.example.proyecto_semestral.data.dto.auth.UserDto
 import com.example.proyecto_semestral.data.local.AuthTokenStore
-import com.example.proyecto_semestral.data.mapper.auth.toModel
 import com.example.proyecto_semestral.data.remote.AuthApi
 import com.example.proyecto_semestral.domain.repository.AuthException
 import com.example.proyecto_semestral.domain.repository.AuthRepository
@@ -66,6 +66,15 @@ class AuthRepositoryImpl(
         tokenStore.saveToken(response.accessToken)
         return response.usuario.toModel()
     }
+
+    private fun UserDto.toModel(): User = User(
+        id = id,
+        name = nombre,
+        email = email,
+        role = rol,
+        isActive = activo,
+        createdAt = creadoEn
+    )
 
     private suspend fun <T> apiCall(block: suspend () -> T): T =
         try {
