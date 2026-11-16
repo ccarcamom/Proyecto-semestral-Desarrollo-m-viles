@@ -132,6 +132,15 @@ GET    /api/cursos/{id}                   Detalle, objetivos y lecciones
 POST   /api/contacto                      Enviar formulario de contacto
 ```
 
+### Almacenamiento de imágenes
+
+Las imágenes se envían como `multipart/form-data` y se guardan directamente en MySQL:
+
+- `ms_recetas.imagenes_receta` (receta_id, nombre, tipo de contenido y `datos` en `LONGBLOB`).
+- `ms_cursos.imagenes_curso` (curso_id, nombre, tipo de contenido y `datos` en `LONGBLOB`).
+
+La columna `imagen_url` solo conserva la ruta lógica `/imagenes/recetas/{id}` o `/imagenes/cursos/{id}`. El Gateway resuelve esas rutas leyendo el binario desde la base de datos, por lo que no se usan carpetas de archivos en disco.
+
 ### Categorías iniciales
 
 Las bases de datos se crean con Liquibase. Para que los formularios tengan opciones desde el primer arranque, se insertan categorías iniciales:
