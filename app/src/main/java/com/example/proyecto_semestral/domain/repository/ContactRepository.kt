@@ -11,8 +11,13 @@ data class ContactDraft(
 )
 
 interface ContactRepository {
-    suspend fun send(draft: ContactDraft)
+    suspend fun send(draft: ContactDraft): ContactReceipt
 }
+
+data class ContactReceipt(
+    val id: Long,
+    val status: String
+)
 
 class ContactRepositoryException(
     message: String,

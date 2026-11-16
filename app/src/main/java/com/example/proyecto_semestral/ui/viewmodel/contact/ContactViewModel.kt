@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.proyecto_semestral.domain.repository.ContactDraft
 import com.example.proyecto_semestral.domain.repository.ContactRepository
 import com.example.proyecto_semestral.domain.repository.ContactRepositoryException
+import com.example.proyecto_semestral.domain.repository.ContactReceipt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,9 +14,12 @@ import kotlinx.coroutines.launch
 
 data class ContactUiState(
     val isSending: Boolean = false,
-    val sent: Boolean = false,
+    val receipt: ContactReceipt? = null,
     val error: String? = null
-)
+) {
+    val sent: Boolean
+        get() = receipt != null
+}
 
 class ContactViewModel(
     private val repository: ContactRepository
@@ -28,8 +32,7 @@ class ContactViewModel(
         viewModelScope.launch {
             _uiState.value = ContactUiState(isSending = true)
             _uiState.value = try {
-                repository.send(draft)
-                ContactUiState(sent = true)
+                ContactUiState(receipt = repository.send(draft))
             } catch (exception: ContactRepositoryException) {
                 ContactUiState(error = exception.message)
             } catch (_: Exception) {
@@ -40,6 +43,10 @@ class ContactViewModel(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun reset() {
+        _uiState.value = ContactUiState()
     }
 
     companion object {

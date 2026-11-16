@@ -77,9 +77,11 @@ fun AppNavigation(
 
     LaunchedEffect(authState.isAuthenticated) {
         val target = if (authState.isAuthenticated) Routes.Home else Routes.Login
-        navController.navigate(target) {
-            popUpTo(navController.graph.id) { inclusive = true }
-            launchSingleTop = true
+        if (navController.currentDestination?.route != target) {
+            navController.navigate(target) {
+                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -222,20 +224,29 @@ fun AppNavigation(
                 viewModelFactory = contactViewModelFactory,
                 userId = authState.user?.id,
                 initialEmail = authState.user?.email.orEmpty(),
-                onBack = navController::popBackStack
+                onBottomBarItemSelected = { navController.navigateBottom(it) }
             )
         }
     }
 }
 
 private fun NavHostController.navigateBottom(item: BottomBarItem) {
-    val route = when (item) {
-        BottomBarItem.Home -> Routes.Home
-        BottomBarItem.Explore -> Routes.Explore
-    }
-    navigate(route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+    when (item) {
+        BottomBarItem.Home -> {
+            if (!popBackStack(Routes.Home, inclusive = false)) {
+                navigate(Routes.Home) {
+                    popUpTo(graph.findStartDestination().id)
+                    launchSingleTop = true
+                }
+            }
+        }
+        BottomBarItem.Explore -> navigate(Routes.Explore) {
+            popUpTo(Routes.Home)
+            launchSingleTop = true
+        }
+        BottomBarItem.Contact -> navigate(Routes.Contact) {
+            popUpTo(Routes.Home)
+            launchSingleTop = true
+        }
     }
 }
