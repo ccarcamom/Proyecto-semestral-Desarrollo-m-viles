@@ -1,4 +1,4 @@
-package com.example.proyecto_semestral.data.auth
+package com.example.proyecto_semestral.data.local
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit

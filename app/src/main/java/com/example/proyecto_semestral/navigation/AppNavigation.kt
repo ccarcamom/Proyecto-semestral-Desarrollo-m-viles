@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -20,10 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyecto_semestral.data.auth.AuthRepository
-import com.example.proyecto_semestral.data.auth.AuthTokenStore
 import com.example.proyecto_semestral.model.content.VideoCatalog
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.ContentFilter
@@ -34,16 +31,14 @@ import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
 import com.example.proyecto_semestral.ui.screens.recipe.RecipeDetailScreen
 import com.example.proyecto_semestral.ui.screens.video.VideoScreen
-import com.example.proyecto_semestral.ui.auth.AuthViewModel
+import com.example.proyecto_semestral.ui.viewmodel.auth.AuthViewModel
 
 @Composable
-fun AppNavigation() {
-    val context = LocalContext.current
-    val repository = remember {
-        AuthRepository(AuthTokenStore(context.applicationContext))
-    }
+fun AppNavigation(
+    authViewModelFactory: ViewModelProvider.Factory
+) {
     val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModel.factory(repository)
+        factory = authViewModelFactory
     )
     val authState by authViewModel.uiState.collectAsState()
     var authRoute by rememberSaveable { mutableStateOf(AuthRoute.Login) }

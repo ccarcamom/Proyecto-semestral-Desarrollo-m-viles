@@ -1,7 +1,7 @@
 package com.example.proyecto_semestral.data.remote
 
 import com.example.proyecto_semestral.BuildConfig
-import com.example.proyecto_semestral.data.auth.AuthTokenStore
+import com.example.proyecto_semestral.data.local.AuthTokenStore
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

@@ -14,7 +14,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ProyectoSemestralTheme {
-                AppNavigation()
+                AppNavigation(
+                    authViewModelFactory = (application as MartiniApplication)
+                        .container
+                        .authViewModelFactory
+                )
             }
         }
     }

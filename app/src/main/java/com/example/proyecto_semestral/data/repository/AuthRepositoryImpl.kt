@@ -1,46 +1,55 @@
-package com.example.proyecto_semestral.data.auth
+package com.example.proyecto_semestral.data.repository
 
+import com.example.proyecto_semestral.data.dto.auth.AuthResponseDto
+import com.example.proyecto_semestral.data.dto.auth.LoginRequestDto
+import com.example.proyecto_semestral.data.dto.auth.RegisterRequestDto
+import com.example.proyecto_semestral.data.local.AuthTokenStore
+import com.example.proyecto_semestral.data.mapper.auth.toModel
 import com.example.proyecto_semestral.data.remote.AuthApi
-import com.example.proyecto_semestral.data.remote.NetworkProvider
+import com.example.proyecto_semestral.domain.repository.AuthException
+import com.example.proyecto_semestral.domain.repository.AuthRepository
+import com.example.proyecto_semestral.model.auth.User
 import com.google.gson.JsonParser
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
 import java.io.IOException
 
-class AuthRepository(
+class AuthRepositoryImpl(
     private val tokenStore: AuthTokenStore,
-    private val api: AuthApi = NetworkProvider.createRetrofit(tokenStore)
-        .create(AuthApi::class.java)
-) {
-    val token: Flow<String?> = tokenStore.token
+    private val api: AuthApi
+) : AuthRepository {
+    override val hasStoredSession: Flow<Boolean> = tokenStore.token.map { it != null }
 
-    suspend fun register(nombre: String, email: String, password: String): UserDto =
+    override suspend fun register(name: String, email: String, password: String): User =
         apiCall {
-            val response = api.register(
-                RegisterRequestDto(
-                    nombre = nombre.trim(),
-                    email = email.trim().lowercase(),
-                    password = password
+            persistSession(
+                api.register(
+                    RegisterRequestDto(
+                        nombre = name.trim(),
+                        email = email.trim().lowercase(),
+                        password = password
+                    )
                 )
             )
-            persistSession(response)
         }
 
-    suspend fun login(email: String, password: String): UserDto =
+    override suspend fun login(email: String, password: String): User =
         apiCall {
-            val response = api.login(
-                LoginRequestDto(
-                    email = email.trim().lowercase(),
-                    password = password
+            persistSession(
+                api.login(
+                    LoginRequestDto(
+                        email = email.trim().lowercase(),
+                        password = password
+                    )
                 )
             )
-            persistSession(response)
         }
 
-    suspend fun restoreSession(): UserDto? {
+    override suspend fun restoreSession(): User? {
         if (tokenStore.getToken() == null) return null
         return try {
-            api.me()
+            api.me().toModel()
         } catch (exception: HttpException) {
             if (exception.code() == 401) tokenStore.clearToken()
             throw exception.toAuthException()
@@ -49,13 +58,13 @@ class AuthRepository(
         }
     }
 
-    suspend fun logout() {
+    override suspend fun logout() {
         tokenStore.clearToken()
     }
 
-    private suspend fun persistSession(response: AuthResponseDto): UserDto {
+    private suspend fun persistSession(response: AuthResponseDto): User {
         tokenStore.saveToken(response.accessToken)
-        return response.usuario
+        return response.usuario.toModel()
     }
 
     private suspend fun <T> apiCall(block: suspend () -> T): T =
@@ -89,5 +98,3 @@ class AuthRepository(
         return AuthException(serverMessage ?: fallback)
     }
 }
-
-class AuthException(message: String) : Exception(message)

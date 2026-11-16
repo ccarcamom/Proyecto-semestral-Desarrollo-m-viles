@@ -1,11 +1,11 @@
-package com.example.proyecto_semestral.ui.auth
+package com.example.proyecto_semestral.ui.viewmodel.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.proyecto_semestral.data.auth.AuthException
-import com.example.proyecto_semestral.data.auth.AuthRepository
-import com.example.proyecto_semestral.data.auth.UserDto
+import com.example.proyecto_semestral.domain.repository.AuthException
+import com.example.proyecto_semestral.domain.repository.AuthRepository
+import com.example.proyecto_semestral.model.auth.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 data class AuthUiState(
     val isRestoring: Boolean = true,
     val isLoading: Boolean = false,
-    val user: UserDto? = null,
+    val user: User? = null,
     val error: String? = null
 ) {
     val isAuthenticated: Boolean
@@ -39,9 +39,9 @@ class AuthViewModel(
         }
     }
 
-    fun register(nombre: String, email: String, password: String) {
+    fun register(name: String, email: String, password: String) {
         executeAuthentication {
-            repository.register(nombre, email, password)
+            repository.register(name, email, password)
         }
     }
 
@@ -77,7 +77,7 @@ class AuthViewModel(
         }
     }
 
-    private fun executeAuthentication(block: suspend () -> UserDto) {
+    private fun executeAuthentication(block: suspend () -> User) {
         if (_uiState.value.isLoading) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -102,8 +102,8 @@ class AuthViewModel(
 
     private fun observeInvalidatedSession() {
         viewModelScope.launch {
-            repository.token.collect { token ->
-                if (token == null && _uiState.value.user != null) {
+            repository.hasStoredSession.collect { hasStoredSession ->
+                if (!hasStoredSession && _uiState.value.user != null) {
                     _uiState.value = AuthUiState(
                         isRestoring = false,
                         error = "Tu sesión expiró. Inicia sesión nuevamente."

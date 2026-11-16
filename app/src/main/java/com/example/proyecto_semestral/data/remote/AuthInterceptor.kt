@@ -1,6 +1,6 @@
 package com.example.proyecto_semestral.data.remote
 
-import com.example.proyecto_semestral.data.auth.AuthTokenStore
+import com.example.proyecto_semestral.data.local.AuthTokenStore
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
