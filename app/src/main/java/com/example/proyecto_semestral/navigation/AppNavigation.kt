@@ -30,6 +30,7 @@ import com.example.proyecto_semestral.ui.screens.contact.ContactScreen
 import com.example.proyecto_semestral.ui.screens.course.CourseDetailScreen
 import com.example.proyecto_semestral.ui.screens.explore.ExploreScreen
 import com.example.proyecto_semestral.ui.screens.home.HomeScreen
+import com.example.proyecto_semestral.ui.screens.profile.ProfileScreen
 import com.example.proyecto_semestral.ui.screens.recipe.RecipeDetailScreen
 import com.example.proyecto_semestral.ui.screens.video.VideoScreen
 import com.example.proyecto_semestral.ui.viewmodel.auth.AuthViewModel
@@ -41,6 +42,7 @@ private object Routes {
     const val Explore = "explore"
     const val Admin = "admin"
     const val Contact = "contact"
+    const val Profile = "profile"
     const val Recipe = "recipe/{recipeId}"
     const val Course = "course/{courseId}"
     const val Lesson = "course/{courseId}/lesson/{lessonId}"
@@ -237,6 +239,27 @@ fun AppNavigation(
                 viewModelFactory = contactViewModelFactory,
                 userId = authState.user?.id,
                 initialEmail = authState.user?.email.orEmpty(),
+                businessName = authState.user?.businessName.orEmpty(),
+                businessType = authState.user?.businessType.orEmpty(),
+                businessSize = authState.user?.businessSize.orEmpty(),
+                onBottomBarItemSelected = { navController.navigateBottom(it) }
+            )
+        }
+
+        composable(Routes.Profile) {
+            ProfileScreen(
+                user = authState.user,
+                isSavingProfile = authState.isSavingProfile,
+                profileMessage = authState.profileMessage,
+                error = authState.error,
+                onSaveProfile = authViewModel::updateProfile,
+                onPhotoSelected = authViewModel::updateProfilePhoto,
+                onClearFeedback = authViewModel::clearProfileFeedback,
+                onLoginClick = {
+                    authViewModel.clearError()
+                    navController.navigate(Routes.Login)
+                },
+                onLogoutClick = authViewModel::logout,
                 onBottomBarItemSelected = { navController.navigateBottom(it) }
             )
         }
@@ -258,6 +281,10 @@ private fun NavHostController.navigateBottom(item: BottomBarItem) {
             launchSingleTop = true
         }
         BottomBarItem.Contact -> navigate(Routes.Contact) {
+            popUpTo(Routes.Home)
+            launchSingleTop = true
+        }
+        BottomBarItem.Profile -> navigate(Routes.Profile) {
             popUpTo(Routes.Home)
             launchSingleTop = true
         }

@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,14 +26,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.proyecto_semestral.ui.components.BUSINESS_SIZE_PLACEHOLDER
 import com.example.proyecto_semestral.ui.components.BrandLogo
+import com.example.proyecto_semestral.ui.components.NO_BUSINESS
 import com.example.proyecto_semestral.ui.components.PrimaryButton
+import com.example.proyecto_semestral.ui.components.SelectionField
+import com.example.proyecto_semestral.ui.components.businessSizeOptions
+import com.example.proyecto_semestral.ui.components.businessTypeOptions
+import com.example.proyecto_semestral.ui.components.toBusinessValue
 
 @Composable
 fun RegisterScreen(
     isLoading: Boolean,
     serverError: String?,
-    onRegister: (name: String, email: String, password: String) -> Unit,
+    onRegister: (
+        name: String,
+        email: String,
+        password: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) -> Unit,
     onLoginClick: () -> Unit,
     onInputChanged: () -> Unit,
     modifier: Modifier = Modifier
@@ -40,6 +55,9 @@ fun RegisterScreen(
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var businessName by rememberSaveable { mutableStateOf("") }
+    var businessType by rememberSaveable { mutableStateOf(NO_BUSINESS) }
+    var businessSize by rememberSaveable { mutableStateOf(BUSINESS_SIZE_PLACEHOLDER) }
     var nameError by rememberSaveable { mutableStateOf<String?>(null) }
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
     var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -69,7 +87,14 @@ fun RegisterScreen(
             null
         }
         if (listOf(nameError, emailError, passwordError, confirmPasswordError).all { it == null }) {
-            onRegister(name, email, password)
+            onRegister(
+                name,
+                email,
+                password,
+                businessName.trim(),
+                businessType.toBusinessValue().orEmpty(),
+                businessSize.toBusinessValue().orEmpty()
+            )
         }
     }
 
@@ -144,6 +169,63 @@ fun RegisterScreen(
             passwordVisible = passwordVisible,
             onPasswordVisibilityChange = { passwordVisible = !passwordVisible }
         )
+
+        Spacer(Modifier.height(22.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+        Spacer(Modifier.height(18.dp))
+        Text(
+            text = "Datos de tu negocio",
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Opcional. Podrás actualizarlos más adelante desde tu perfil.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(Modifier.height(14.dp))
+        AuthTextField(
+            value = businessName,
+            onValueChange = {
+                businessName = it.take(150)
+                onInputChanged()
+            },
+            label = "Nombre del negocio",
+            imeAction = ImeAction.Done
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = "Tipo de negocio",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(Modifier.height(4.dp))
+        SelectionField(
+            value = businessType,
+            options = businessTypeOptions,
+            onValueChange = {
+                businessType = it
+                onInputChanged()
+            }
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = "Tamaño del negocio",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(Modifier.height(4.dp))
+        SelectionField(
+            value = businessSize,
+            options = businessSizeOptions,
+            onValueChange = {
+                businessSize = it
+                onInputChanged()
+            }
+        )
+
         if (serverError != null) {
             Spacer(Modifier.height(12.dp))
             AuthErrorMessage(serverError)

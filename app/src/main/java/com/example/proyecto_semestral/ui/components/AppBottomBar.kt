@@ -41,7 +41,8 @@ import com.example.proyecto_semestral.ui.theme.ProyectoSemestralTheme
 enum class BottomBarItem {
     Home,
     Explore,
-    Contact
+    Contact,
+    Profile
 }
 
 @Composable
@@ -81,6 +82,13 @@ fun AppBottomBar(
             onClick = { onItemSelected(BottomBarItem.Contact) },
             modifier = Modifier.weight(1f)
         )
+        BottomBarButton(
+            item = BottomBarItem.Profile,
+            label = "Perfil",
+            selected = selectedItem == BottomBarItem.Profile,
+            onClick = { onItemSelected(BottomBarItem.Profile) },
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -110,7 +118,7 @@ private fun BottomBarButton(
         label = "bottomBarIndicatorColor"
     )
     val indicatorWidth by animateDpAsState(
-        targetValue = if (selected) 118.dp else 48.dp,
+        targetValue = if (selected) 72.dp else 48.dp,
         animationSpec = tween(durationMillis = 240),
         label = "bottomBarIndicatorWidth"
     )
@@ -219,6 +227,51 @@ private fun BottomBarIcon(
                     strokeWidth = strokeWidth,
                     cap = StrokeCap.Round
                 )
+            }
+
+            BottomBarItem.Profile -> {
+                drawCircle(
+                    color = color,
+                    radius = size.minDimension * 0.18f,
+                    center = Offset(size.width * 0.5f, size.height * 0.32f),
+                    style = if (selected) {
+                        androidx.compose.ui.graphics.drawscope.Fill
+                    } else {
+                        Stroke(width = strokeWidth)
+                    }
+                )
+                val shoulders = Path().apply {
+                    moveTo(size.width * 0.2f, size.height * 0.86f)
+                    cubicTo(
+                        size.width * 0.2f,
+                        size.height * 0.64f,
+                        size.width * 0.34f,
+                        size.height * 0.58f,
+                        size.width * 0.5f,
+                        size.height * 0.58f
+                    )
+                    cubicTo(
+                        size.width * 0.66f,
+                        size.height * 0.58f,
+                        size.width * 0.8f,
+                        size.height * 0.64f,
+                        size.width * 0.8f,
+                        size.height * 0.86f
+                    )
+                    close()
+                }
+                if (selected) {
+                    drawPath(path = shoulders, color = color)
+                } else {
+                    drawPath(
+                        path = shoulders,
+                        color = color,
+                        style = Stroke(
+                            width = strokeWidth,
+                            join = androidx.compose.ui.graphics.StrokeJoin.Round
+                        )
+                    )
+                }
             }
 
         }

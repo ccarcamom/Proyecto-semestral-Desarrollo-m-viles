@@ -26,6 +26,8 @@ La app incluye autenticación con JWT, almacenamiento seguro del token, listado 
 - Cursos publicados, detalle, objetivos y lecciones obtenidos desde `ms-cursos`.
 - Reproducción de los videos reales configurados en cada lección.
 - Formulario de contacto conectado con `ms-contacto`.
+- **Perfil de usuario** con datos de la cuenta y del negocio, edición del nombre y foto de perfil elegida desde la galería.
+- El formulario de contacto solo solicita correo, teléfono y descripción; los datos del negocio se toman del perfil registrado.
 - Navegación implementada con Navigation Compose.
 - **Panel de administración** para crear, editar y eliminar recetas y cursos, gestionar lecciones, categorías y consultas de contacto.
 
@@ -66,7 +68,7 @@ http://10.0.2.2:8083/     (emulador Android)
 | `ms-recetas` | 8090 | `/api/v1/recipes/**`, `/api/v1/admin/recipes/**` |
 | `ms-cursos` | 8091 | `/api/cursos/**`, `/api/categorias/**`, `/api/v1/admin/cursos/**` |
 | `ms-contacto` | 8092 | `/api/contacto/**`, `/api/consultas/**` |
-| `ms-auth` | 8094 | `/api/auth/**` |
+| `ms-auth` | 8094 | `/api/auth/**`, `/imagenes/perfiles/**` |
 | `api_gateway` | 8083 | Punto único de entrada |
 
 > `10.0.2.2` solo funciona en el emulador. En un teléfono físico hay que usar la IP LAN del PC y agregarla a `network_security_config.xml`.
@@ -140,8 +142,25 @@ Las imágenes se envían como `multipart/form-data` y se guardan directamente en
 
 - `ms_recetas.imagenes_receta` (receta_id, nombre, tipo de contenido y `datos` en `LONGBLOB`).
 - `ms_cursos.imagenes_curso` (curso_id, nombre, tipo de contenido y `datos` en `LONGBLOB`).
+- `ms_auth.imagenes_perfil` (usuario_id, nombre, tipo de contenido y `datos` en `LONGBLOB`).
 
-La columna `imagen_url` solo conserva la ruta lógica `/imagenes/recetas/{id}` o `/imagenes/cursos/{id}`. El Gateway resuelve esas rutas leyendo el binario desde la base de datos, por lo que no se usan carpetas de archivos en disco.
+La columna `imagen_url` solo conserva la ruta lógica `/imagenes/recetas/{id}`, `/imagenes/cursos/{id}` o `/imagenes/perfiles/{usuarioId}`. El Gateway resuelve esas rutas leyendo el binario desde la base de datos, por lo que no se usan carpetas de archivos en disco.
+
+### Perfil de usuario
+
+Desde la pestaña **Perfil** de la barra inferior, un usuario autenticado puede:
+
+- Ver su nombre, correo y rol.
+- Consultar y editar el nombre del negocio, el tipo de negocio y el tamaño.
+- Cambiar la foto de perfil seleccionándola desde la galería del dispositivo.
+
+Los usuarios invitados ven un acceso directo para iniciar sesión. Los datos del negocio capturados en el registro son opcionales y se pueden completar después desde el perfil. El formulario de contacto los reutiliza automáticamente y solo pide correo, teléfono y descripción.
+
+```text
+PUT    /api/auth/perfil                   Actualizar nombre y datos del negocio
+POST   /api/auth/perfil/foto              Subir foto de perfil (multipart)
+GET    /imagenes/perfiles/{usuarioId}     Obtener la foto de perfil
+```
 
 ### Categorías iniciales
 
@@ -175,7 +194,7 @@ ui/screens/admin/AdminFormComponents.kt
 - El token JWT se guarda cifrado con **AES/GCM** en DataStore Preferences; la clave permanece en **Android Keystore**.
 - El token se envía automáticamente como `Authorization: Bearer` mediante un interceptor de OkHttp.
 - Si el backend responde `401`, la sesión se limpia y la app vuelve al inicio como invitado.
-- No se almacenan imágenes del dispositivo ni datos sensibles adicionales.
+- No se almacenan imágenes del dispositivo ni datos sensibles adicionales; la foto de perfil se envía al backend y se sirve desde `ms-auth`.
 
 ## Permisos
 
@@ -209,7 +228,7 @@ app/src/main/java/com/example/proyecto_semestral/
 ├── navigation/         # NavHost y rutas con Navigation Compose
 ├── ui/
 │   ├── components/     # Componentes reutilizables
-│   ├── screens/        # Auth, inicio, exploración, recetas, cursos, videos y admin
+│   ├── screens/        # Auth, inicio, exploración, recetas, cursos, videos, perfil y admin
 │   ├── viewmodel/      # ViewModels por feature
 │   └── theme/          # Colores, tipografías y formas
 └── MainActivity.kt     # Punto de entrada

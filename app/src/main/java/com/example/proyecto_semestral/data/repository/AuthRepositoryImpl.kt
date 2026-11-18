@@ -1,8 +1,10 @@
 package com.example.proyecto_semestral.data.repository
 
+import com.example.proyecto_semestral.BuildConfig
 import com.example.proyecto_semestral.data.dto.auth.AuthResponseDto
 import com.example.proyecto_semestral.data.dto.auth.LoginRequestDto
 import com.example.proyecto_semestral.data.dto.auth.RegisterRequestDto
+import com.example.proyecto_semestral.data.dto.auth.UpdateProfileRequestDto
 import com.example.proyecto_semestral.data.dto.auth.UserDto
 import com.example.proyecto_semestral.data.local.AuthTokenStore
 import com.example.proyecto_semestral.data.remote.AuthApi
@@ -12,23 +14,37 @@ import com.example.proyecto_semestral.model.auth.User
 import com.google.gson.JsonParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.IOException
 
 class AuthRepositoryImpl(
     private val tokenStore: AuthTokenStore,
-    private val api: AuthApi
+    private val api: AuthApi,
+    private val gatewayBaseUrl: String = BuildConfig.API_BASE_URL
 ) : AuthRepository {
     override val hasStoredSession: Flow<Boolean> = tokenStore.token.map { it != null }
 
-    override suspend fun register(name: String, email: String, password: String): User =
+    override suspend fun register(
+        name: String,
+        email: String,
+        password: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ): User =
         apiCall {
             persistSession(
                 api.register(
                     RegisterRequestDto(
                         nombre = name.trim(),
                         email = email.trim().lowercase(),
-                        password = password
+                        password = password,
+                        nombreNegocio = businessName.trim().ifBlank { null },
+                        tipoNegocio = businessType.trim().ifBlank { null },
+                        tamanoNegocio = businessSize.trim().ifBlank { null }
                     )
                 )
             )
@@ -58,6 +74,32 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun updateProfile(
+        name: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ): User = apiCall {
+        api.updateProfile(
+            UpdateProfileRequestDto(
+                nombre = name.trim(),
+                nombreNegocio = businessName.trim().ifBlank { null },
+                tipoNegocio = businessType.trim().ifBlank { null },
+                tamanoNegocio = businessSize.trim().ifBlank { null }
+            )
+        ).toModel()
+    }
+
+    override suspend fun uploadProfilePhoto(
+        imageBytes: ByteArray,
+        fileName: String,
+        contentType: String
+    ): User = apiCall {
+        val body = imageBytes.toRequestBody(contentType.toMediaType())
+        val part = MultipartBody.Part.createFormData("image", fileName, body)
+        api.uploadProfilePhoto(part).toModel()
+    }
+
     override suspend fun logout() {
         tokenStore.clearToken()
     }
@@ -73,7 +115,17 @@ class AuthRepositoryImpl(
         email = email,
         role = rol,
         isActive = activo,
-        createdAt = creadoEn
+        createdAt = creadoEn,
+        updatedAt = actualizadoEn.orEmpty(),
+        businessName = nombreNegocio.orEmpty(),
+        businessType = tipoNegocio.orEmpty(),
+        businessSize = tamanoNegocio.orEmpty(),
+        profilePhotoUrl = fotoPerfilUrl.toGatewayUrl()?.let { url ->
+            val version = actualizadoEn
+                ?.filter(Char::isDigit)
+                ?.takeIf(String::isNotBlank)
+            if (version != null) "$url?v=$version" else url
+        }
     )
 
     private suspend fun <T> apiCall(block: suspend () -> T): T =
@@ -105,5 +157,11 @@ class AuthRepositoryImpl(
             else -> "No se pudo completar la solicitud."
         }
         return AuthException(serverMessage ?: fallback)
+    }
+
+    private fun String?.toGatewayUrl(): String? {
+        val value = this?.trim()?.takeIf(String::isNotEmpty) ?: return null
+        if (value.startsWith("http://") || value.startsWith("https://")) return value
+        return gatewayBaseUrl.trimEnd('/') + "/" + value.trimStart('/')
     }
 }

@@ -6,7 +6,12 @@ data class User(
     val email: String,
     val role: String,
     val isActive: Boolean,
-    val createdAt: String
+    val createdAt: String,
+    val updatedAt: String = "",
+    val businessName: String = "",
+    val businessType: String = "",
+    val businessSize: String = "",
+    val profilePhotoUrl: String? = null
 )
 
 val User.canAccessAdminPanel: Boolean

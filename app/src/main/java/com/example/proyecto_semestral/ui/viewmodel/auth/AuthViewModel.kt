@@ -17,7 +17,9 @@ data class AuthUiState(
     val isRestoring: Boolean = true,
     val isLoading: Boolean = false,
     val user: User? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isSavingProfile: Boolean = false,
+    val profileMessage: String? = null
 ) {
     val isAuthenticated: Boolean
         get() = user != null
@@ -43,9 +45,16 @@ class AuthViewModel(
         }
     }
 
-    fun register(name: String, email: String, password: String) {
+    fun register(
+        name: String,
+        email: String,
+        password: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) {
         executeAuthentication {
-            repository.register(name, email, password)
+            repository.register(name, email, password, businessName, businessType, businessSize)
         }
     }
 
@@ -59,6 +68,84 @@ class AuthViewModel(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun updateProfile(
+        name: String,
+        businessName: String,
+        businessType: String,
+        businessSize: String
+    ) {
+        if (_uiState.value.isSavingProfile) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isSavingProfile = true, error = null, profileMessage = null)
+            }
+            try {
+                val user = repository.updateProfile(
+                    name = name,
+                    businessName = businessName,
+                    businessType = businessType,
+                    businessSize = businessSize
+                )
+                _uiState.update {
+                    it.copy(
+                        isSavingProfile = false,
+                        user = user,
+                        profileMessage = "Perfil actualizado correctamente."
+                    )
+                }
+            } catch (exception: AuthException) {
+                _uiState.update {
+                    it.copy(isSavingProfile = false, error = exception.message)
+                }
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSavingProfile = false,
+                        error = "No se pudo actualizar el perfil."
+                    )
+                }
+            }
+        }
+    }
+
+    fun updateProfilePhoto(imageBytes: ByteArray) {
+        if (_uiState.value.isSavingProfile) return
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isSavingProfile = true, error = null, profileMessage = null)
+            }
+            try {
+                val user = repository.uploadProfilePhoto(
+                    imageBytes = imageBytes,
+                    fileName = "perfil.jpg",
+                    contentType = "image/jpeg"
+                )
+                _uiState.update {
+                    it.copy(
+                        isSavingProfile = false,
+                        user = user,
+                        profileMessage = "Foto de perfil actualizada."
+                    )
+                }
+            } catch (exception: AuthException) {
+                _uiState.update {
+                    it.copy(isSavingProfile = false, error = exception.message)
+                }
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSavingProfile = false,
+                        error = "No se pudo actualizar la foto de perfil."
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearProfileFeedback() {
+        _uiState.update { it.copy(error = null, profileMessage = null) }
     }
 
     private fun restoreSession() {

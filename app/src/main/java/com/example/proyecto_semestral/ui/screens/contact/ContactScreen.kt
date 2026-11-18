@@ -1,26 +1,16 @@
 package com.example.proyecto_semestral.ui.screens.contact
 
 import android.util.Patterns
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,15 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -49,6 +33,7 @@ import com.example.proyecto_semestral.ui.components.AppBottomBar
 import com.example.proyecto_semestral.ui.components.AppTextField
 import com.example.proyecto_semestral.ui.components.BottomBarItem
 import com.example.proyecto_semestral.ui.components.BrandLogo
+import com.example.proyecto_semestral.ui.components.NO_BUSINESS
 import com.example.proyecto_semestral.ui.components.PrimaryButton
 import com.example.proyecto_semestral.ui.viewmodel.contact.ContactViewModel
 
@@ -57,6 +42,9 @@ fun ContactScreen(
     viewModelFactory: ViewModelProvider.Factory,
     userId: Long?,
     initialEmail: String,
+    businessName: String,
+    businessType: String,
+    businessSize: String,
     onBottomBarItemSelected: (BottomBarItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -64,12 +52,8 @@ fun ContactScreen(
     val state by viewModel.uiState.collectAsState()
     var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
     var phone by rememberSaveable { mutableStateOf("") }
-    var businessName by rememberSaveable { mutableStateOf("") }
-    var businessType by rememberSaveable { mutableStateOf(businessTypes.first()) }
-    var businessSize by rememberSaveable { mutableStateOf(businessSizes.first()) }
     var description by rememberSaveable { mutableStateOf("") }
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
-    var businessNameError by rememberSaveable { mutableStateOf<String?>(null) }
     var descriptionError by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -111,7 +95,17 @@ fun ContactScreen(
                     lineHeight = 27.sp
                 )
             )
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(modifier = Modifier.height(18.dp))
+            Text(
+                text = if (businessName.isNotBlank()) {
+                    "Usaremos los datos de tu negocio ($businessName) guardados en tu perfil."
+                } else {
+                    "Completa los datos de tu negocio en tu perfil para asociarlos a esta consulta."
+                },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(22.dp))
 
             ContactField("Correo electrónico *") {
                 AppTextField(
@@ -134,35 +128,6 @@ fun ContactScreen(
                     onValueChange = { phone = it.take(30) },
                     placeholder = "+56",
                     keyboardType = KeyboardType.Phone
-                )
-            }
-            Spacer(modifier = Modifier.height(18.dp))
-            ContactField("Nombre del negocio *") {
-                AppTextField(
-                    value = businessName,
-                    onValueChange = {
-                        businessName = it.take(150)
-                        businessNameError = null
-                    },
-                    placeholder = "Nombre de tu negocio",
-                    isError = businessNameError != null,
-                    supportingText = businessNameError
-                )
-            }
-            Spacer(modifier = Modifier.height(18.dp))
-            ContactField("Tipo de negocio") {
-                ContactDropdown(
-                    value = businessType,
-                    options = businessTypes,
-                    onValueChange = { businessType = it }
-                )
-            }
-            Spacer(modifier = Modifier.height(18.dp))
-            ContactField("Tamaño del negocio") {
-                ContactDropdown(
-                    value = businessSize,
-                    options = businessSizes,
-                    onValueChange = { businessSize = it }
                 )
             }
             Spacer(modifier = Modifier.height(18.dp))
@@ -192,25 +157,20 @@ fun ContactScreen(
                     emailError = if (
                         email.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()
                     ) "Ingresa un correo válido." else null
-                    businessNameError = if (businessName.isBlank()) {
-                        "Ingresa el nombre de tu negocio."
-                    } else null
                     descriptionError = if (description.isBlank()) {
                         "Escribe tu consulta."
                     } else null
 
-                    if (emailError == null && businessNameError == null && descriptionError == null) {
+                    if (emailError == null && descriptionError == null) {
                         viewModel.send(
                             ContactDraft(
                                 userId = userId,
-                                email = email,
-                                phone = phone,
-                                businessName = businessName,
+                                email = email.trim(),
+                                phone = phone.trim(),
+                                businessName = businessName.ifBlank { NO_BUSINESS },
                                 businessType = businessType,
-                                businessSize = businessSize.takeUnless {
-                                    it == businessSizes.first()
-                                }.orEmpty(),
-                                description = description
+                                businessSize = businessSize,
+                                description = description.trim()
                             )
                         )
                     }
@@ -263,92 +223,3 @@ private fun ContactField(
         content()
     }
 }
-
-@Composable
-private fun ContactDropdown(
-    value: String,
-    options: List<String>,
-    onValueChange: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.55f),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable { expanded = true }
-                .padding(horizontal = 18.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = value,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
-            )
-            DownArrow(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onValueChange(option)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DownArrow(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val stroke = 2.4.dp.toPx()
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.22f, size.height * 0.36f),
-            end = Offset(size.width * 0.5f, size.height * 0.64f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = color,
-            start = Offset(size.width * 0.5f, size.height * 0.64f),
-            end = Offset(size.width * 0.78f, size.height * 0.36f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-    }
-}
-
-private val businessTypes = listOf(
-    "Sin negocio",
-    "Pastelería",
-    "Panadería",
-    "Cafetería",
-    "Restaurante",
-    "Otro"
-)
-
-private val businessSizes = listOf(
-    "Selecciona una opción",
-    "Emprendimiento",
-    "Pequeño",
-    "Mediano",
-    "Grande"
-)
