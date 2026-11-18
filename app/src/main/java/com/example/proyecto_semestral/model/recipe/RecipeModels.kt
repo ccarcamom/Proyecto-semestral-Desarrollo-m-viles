@@ -11,7 +11,8 @@ data class RecipeSummary(
     val description: String,
     val imageUrl: String?,
     val duration: String,
-    val category: RecipeCategory?
+    val category: RecipeCategory?,
+    val published: Boolean? = null
 )
 
 data class RecipeIngredient(

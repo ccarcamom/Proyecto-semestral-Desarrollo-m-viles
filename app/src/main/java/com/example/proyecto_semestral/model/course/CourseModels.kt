@@ -1,5 +1,10 @@
 package com.example.proyecto_semestral.model.course
 
+data class CourseCategory(
+    val id: Long,
+    val name: String
+)
+
 data class CourseSummary(
     val id: Long,
     val title: String,

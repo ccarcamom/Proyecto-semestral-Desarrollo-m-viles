@@ -34,6 +34,7 @@ fun LoginScreen(
     onLogin: (email: String, password: String) -> Unit,
     onRegisterClick: () -> Unit,
     onInputChanged: () -> Unit,
+    onGuestClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var email by rememberSaveable { mutableStateOf("") }
@@ -121,6 +122,11 @@ fun LoginScreen(
             prompt = "¿Aún no tienes una cuenta?",
             action = "Crear cuenta",
             onClick = onRegisterClick
+        )
+        AuthFooter(
+            prompt = "¿Solo quieres explorar?",
+            action = "Continuar como invitado",
+            onClick = onGuestClick
         )
     }
 }

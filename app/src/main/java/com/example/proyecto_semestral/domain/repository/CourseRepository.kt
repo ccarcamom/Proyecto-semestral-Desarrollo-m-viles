@@ -1,9 +1,12 @@
 package com.example.proyecto_semestral.domain.repository
 
+import com.example.proyecto_semestral.model.course.CourseCategory
 import com.example.proyecto_semestral.model.course.CoursePage
 import com.example.proyecto_semestral.model.course.CourseDetail
 
 interface CourseRepository {
+    suspend fun getCategories(): List<CourseCategory>
+
     suspend fun getCourses(
         query: String? = null,
         categoryId: Long? = null,

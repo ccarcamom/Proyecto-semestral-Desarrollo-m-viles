@@ -1,5 +1,6 @@
 package com.example.proyecto_semestral.data.remote
 
+import com.example.proyecto_semestral.data.dto.course.CourseCategoryDto
 import com.example.proyecto_semestral.data.dto.course.CourseSummaryDto
 import com.example.proyecto_semestral.data.dto.course.CourseDetailDto
 import com.example.proyecto_semestral.data.dto.recipe.PageResponseDto
@@ -18,4 +19,7 @@ interface CourseApi {
 
     @GET("api/cursos/{id}")
     suspend fun getCourse(@Path("id") id: Long): CourseDetailDto
+
+    @GET("api/categorias")
+    suspend fun getCategories(): List<CourseCategoryDto>
 }

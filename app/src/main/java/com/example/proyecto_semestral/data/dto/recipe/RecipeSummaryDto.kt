@@ -6,5 +6,6 @@ data class RecipeSummaryDto(
     val descripcion: String?,
     val imagenUrl: String?,
     val duracionTexto: String?,
-    val categoria: RecipeCategoryDto?
+    val categoria: RecipeCategoryDto?,
+    val publicada: Boolean? = null
 )

@@ -23,6 +23,10 @@ class RecipeRepositoryImpl(
     private val api: RecipeApi,
     private val gatewayBaseUrl: String = BuildConfig.API_BASE_URL
 ) : RecipeRepository {
+    override suspend fun getCategories(): List<RecipeCategory> = networkCall {
+        api.getCategories().map { it.toModel() }
+    }
+
     override suspend fun getRecipes(
         query: String?,
         categoryId: Long?,
@@ -71,7 +75,8 @@ class RecipeRepositoryImpl(
         description = descripcion.orEmpty(),
         imageUrl = imagenUrl.toGatewayUrl(),
         duration = duracionTexto.orEmpty(),
-        category = categoria?.toModel()
+        category = categoria?.toModel(),
+        published = publicada
     )
 
     private fun RecipeDetailDto.toModel() = RecipeDetail(

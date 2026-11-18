@@ -3,6 +3,7 @@ package com.example.proyecto_semestral.data.repository
 import com.example.proyecto_semestral.BuildConfig
 import com.example.proyecto_semestral.data.dto.admin.AdminCourseDto
 import com.example.proyecto_semestral.data.dto.admin.ChangePublicationRequestDto
+import com.example.proyecto_semestral.data.dto.admin.ContactQueryDto
 import com.example.proyecto_semestral.data.dto.admin.CourseCategoryDto
 import com.example.proyecto_semestral.data.dto.admin.CreateCourseRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateIngredientRequestDto
@@ -10,6 +11,9 @@ import com.example.proyecto_semestral.data.dto.admin.CreateLessonRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateObjectiveRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateRecipeRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateStepRequestDto
+import com.example.proyecto_semestral.data.dto.admin.SaveCategoryRequestDto
+import com.example.proyecto_semestral.data.dto.admin.UpdateContactStatusRequestDto
+import com.example.proyecto_semestral.data.dto.admin.UpdateLessonRequestDto
 import com.example.proyecto_semestral.data.dto.admin.UpdateRecipeRequestDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeCategoryDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeDetailDto
@@ -18,9 +22,11 @@ import com.example.proyecto_semestral.data.remote.AdminApi
 import com.example.proyecto_semestral.domain.repository.AdminRepository
 import com.example.proyecto_semestral.domain.repository.AdminRepositoryException
 import com.example.proyecto_semestral.model.admin.AdminCategory
+import com.example.proyecto_semestral.model.admin.AdminContactQuery
 import com.example.proyecto_semestral.model.admin.AdminCourse
 import com.example.proyecto_semestral.model.admin.AdminCourseDraft
 import com.example.proyecto_semestral.model.admin.AdminIngredientDraft
+import com.example.proyecto_semestral.model.admin.AdminLesson
 import com.example.proyecto_semestral.model.admin.AdminLessonDraft
 import com.example.proyecto_semestral.model.admin.AdminRecipe
 import com.example.proyecto_semestral.model.admin.AdminRecipeDraft
@@ -55,8 +61,8 @@ class AdminRepositoryImpl(
                 imagenUrl = null,
                 duracionTexto = draft.duration.trim().ifBlank { null },
                 rendimientoTexto = draft.yield.trim().ifBlank { null },
-                insumosTitulo = null,
-                insumosDescripcion = null,
+                insumosTitulo = draft.suppliesTitle.trim().ifBlank { null },
+                insumosDescripcion = draft.suppliesDescription.trim().ifBlank { null },
                 publicada = draft.published,
                 creadoPor = draft.createdBy.trim(),
                 ingredientes = draft.ingredients
@@ -196,8 +202,61 @@ class AdminRepositoryImpl(
         Unit
     }
 
+    override suspend fun updateLesson(
+        courseId: Long,
+        lessonId: Long,
+        draft: AdminLessonDraft
+    ) = apiCall {
+        api.updateLesson(
+            courseId = courseId,
+            lessonId = lessonId,
+            request = UpdateLessonRequestDto(
+                titulo = draft.title.trim(),
+                descripcion = draft.description.trim().ifBlank { null },
+                orden = draft.order,
+                videoUrl = draft.videoUrl.trim(),
+                duracionSegundos = draft.durationSeconds
+            )
+        )
+        Unit
+    }
+
+    override suspend fun deleteLesson(courseId: Long, lessonId: Long) = apiCall {
+        api.deleteLesson(courseId, lessonId)
+    }
+
     override suspend fun getCourseCategories(): List<AdminCategory> = apiCall {
         api.getCourseCategories().map { it.toModel() }
+    }
+
+    override suspend fun createCourseCategory(name: String): AdminCategory = apiCall {
+        api.createCourseCategory(SaveCategoryRequestDto(nombre = name.trim())).toModel()
+    }
+
+    override suspend fun updateCourseCategory(id: Long, name: String): AdminCategory = apiCall {
+        api.updateCourseCategory(id, SaveCategoryRequestDto(nombre = name.trim())).toModel()
+    }
+
+    override suspend fun deleteCourseCategory(id: Long) = apiCall {
+        api.deleteCourseCategory(id)
+    }
+
+    override suspend fun getContactQueries(): List<AdminContactQuery> = apiCall {
+        api.getContactQueries().map { it.toModel() }
+    }
+
+    override suspend fun updateContactQueryStatus(
+        id: Long,
+        status: String
+    ): AdminContactQuery = apiCall {
+        api.updateContactQueryStatus(
+            id,
+            UpdateContactStatusRequestDto(estado = status)
+        ).toModel()
+    }
+
+    override suspend fun deleteContactQuery(id: Long) = apiCall {
+        api.deleteContactQuery(id)
     }
 
     private fun RecipeSummaryDto.toModel() = AdminRecipe(
@@ -207,7 +266,8 @@ class AdminRepositoryImpl(
         imageUrl = imagenUrl.toGatewayUrl(),
         duration = duracionTexto.orEmpty(),
         categoryId = categoria?.id,
-        categoryName = categoria?.nombre.orEmpty()
+        categoryName = categoria?.nombre.orEmpty(),
+        published = publicada == true
     )
 
     private fun RecipeDetailDto.toModel() = AdminRecipe(
@@ -220,6 +280,8 @@ class AdminRepositoryImpl(
         categoryName = categoria?.nombre.orEmpty(),
         videoUrl = videoUrl.orEmpty(),
         yield = rendimientoTexto.orEmpty(),
+        suppliesTitle = insumosTitulo.orEmpty(),
+        suppliesDescription = insumosDescripcion.orEmpty(),
         published = publicada == true,
         ingredients = ingredientes.orEmpty().map {
             AdminIngredientDraft(
@@ -244,7 +306,19 @@ class AdminRepositoryImpl(
         durationSeconds = duracionTotalSegundos ?: 0L,
         objectives = objetivos.orEmpty()
             .sortedBy { it.orden ?: Int.MAX_VALUE }
-            .mapNotNull { it.descripcion?.takeIf(String::isNotBlank) }
+            .mapNotNull { it.descripcion?.takeIf(String::isNotBlank) },
+        lessons = lecciones.orEmpty()
+            .sortedBy { it.orden ?: Int.MAX_VALUE }
+            .map { lesson ->
+                AdminLesson(
+                    id = lesson.id,
+                    title = lesson.titulo,
+                    description = lesson.descripcion.orEmpty(),
+                    order = lesson.orden ?: 0,
+                    videoUrl = lesson.videoUrl.orEmpty(),
+                    durationSeconds = lesson.duracionSegundos ?: 0
+                )
+            }
     )
 
     private fun AdminCourseDraft.toRequest() = CreateCourseRequestDto(
@@ -270,8 +344,8 @@ class AdminRepositoryImpl(
         imagenUrl = null,
         duracionTexto = duration.trim(),
         rendimientoTexto = yield.trim(),
-        insumosTitulo = "",
-        insumosDescripcion = "",
+        insumosTitulo = suppliesTitle.trim(),
+        insumosDescripcion = suppliesDescription.trim(),
         publicada = published,
         ingredientes = ingredients
             .filter { it.name.isNotBlank() }
@@ -295,6 +369,19 @@ class AdminRepositoryImpl(
     private fun RecipeCategoryDto.toModel() = AdminCategory(id = id, name = nombre)
 
     private fun CourseCategoryDto.toModel() = AdminCategory(id = id, name = nombre)
+
+    private fun ContactQueryDto.toModel() = AdminContactQuery(
+        id = id,
+        userId = usuarioId,
+        email = email,
+        phone = telefono.orEmpty(),
+        businessName = nombreNegocio,
+        businessType = tipoNegocio.orEmpty(),
+        businessSize = tamanoNegocio.orEmpty(),
+        description = descripcion,
+        status = estado.orEmpty().uppercase(),
+        createdAt = creadoEn.orEmpty()
+    )
 
     private suspend fun <T> apiCall(block: suspend () -> T): T =
         try {

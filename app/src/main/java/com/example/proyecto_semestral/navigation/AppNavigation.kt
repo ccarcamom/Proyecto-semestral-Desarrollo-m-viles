@@ -76,9 +76,9 @@ fun AppNavigation(
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(authState.isAuthenticated) {
-        val target = if (authState.isAuthenticated) Routes.Home else Routes.Login
-        if (navController.currentDestination?.route != target) {
-            navController.navigate(target) {
+        val currentRoute = navController.currentDestination?.route
+        if (currentRoute != null && currentRoute != Routes.Home) {
+            navController.navigate(Routes.Home) {
                 popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 launchSingleTop = true
             }
@@ -87,7 +87,7 @@ fun AppNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = if (authState.isAuthenticated) Routes.Home else Routes.Login
+        startDestination = Routes.Home
     ) {
         composable(Routes.Login) {
             LoginScreen(
@@ -97,6 +97,15 @@ fun AppNavigation(
                 onRegisterClick = {
                     authViewModel.clearError()
                     navController.navigate(Routes.Register)
+                },
+                onGuestClick = {
+                    authViewModel.clearError()
+                    if (!navController.popBackStack(Routes.Home, inclusive = false)) {
+                        navController.navigate(Routes.Home) {
+                            popUpTo(navController.graph.findStartDestination().id)
+                            launchSingleTop = true
+                        }
+                    }
                 },
                 onInputChanged = authViewModel::clearError
             )
@@ -137,6 +146,11 @@ fun AppNavigation(
                 },
                 onRecipeClick = { navController.navigate(Routes.recipe(it)) },
                 onLogoutClick = authViewModel::logout,
+                isAuthenticated = authState.isAuthenticated,
+                onLoginClick = {
+                    authViewModel.clearError()
+                    navController.navigate(Routes.Login)
+                },
                 isAdmin = authState.isAdmin,
                 onAdminClick = { navController.navigate(Routes.Admin) },
                 onCourseClick = { navController.navigate(Routes.course(it)) }

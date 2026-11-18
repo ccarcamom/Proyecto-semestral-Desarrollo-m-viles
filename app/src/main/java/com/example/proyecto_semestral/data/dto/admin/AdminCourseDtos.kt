@@ -53,6 +53,35 @@ data class AdminCourseDto(
     val duracionTotalSegundos: Long?
 )
 
+data class UpdateLessonRequestDto(
+    val titulo: String,
+    val descripcion: String?,
+    val orden: Int,
+    val videoUrl: String,
+    val duracionSegundos: Int
+)
+
 data class ChangePublicationRequestDto(
     val publicado: Boolean
+)
+
+data class SaveCategoryRequestDto(
+    val nombre: String
+)
+
+data class ContactQueryDto(
+    val id: Long,
+    val usuarioId: Long?,
+    val email: String,
+    val telefono: String?,
+    val nombreNegocio: String,
+    val tipoNegocio: String?,
+    val tamanoNegocio: String?,
+    val descripcion: String,
+    val estado: String?,
+    val creadoEn: String?
+)
+
+data class UpdateContactStatusRequestDto(
+    val estado: String
 )

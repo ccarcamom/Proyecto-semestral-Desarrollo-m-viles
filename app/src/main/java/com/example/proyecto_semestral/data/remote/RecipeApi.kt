@@ -1,6 +1,7 @@
 package com.example.proyecto_semestral.data.remote
 
 import com.example.proyecto_semestral.data.dto.recipe.PageResponseDto
+import com.example.proyecto_semestral.data.dto.recipe.RecipeCategoryDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeDetailDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeSummaryDto
 import retrofit2.http.GET
@@ -17,4 +18,7 @@ interface RecipeApi {
 
     @GET("api/v1/recipes/{id}")
     suspend fun getRecipe(@Path("id") id: Long): RecipeDetailDto
+
+    @GET("api/v1/recipes/categorias")
+    suspend fun getCategories(): List<RecipeCategoryDto>
 }

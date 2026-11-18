@@ -1,11 +1,9 @@
 package com.example.proyecto_semestral.ui.screens.admin
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -20,20 +18,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.proyecto_semestral.model.admin.AdminLesson
 import com.example.proyecto_semestral.model.admin.AdminLessonDraft
 
 @Composable
 fun AdminLessonDialog(
     initialOrder: Int,
     isSaving: Boolean,
+    initialLesson: AdminLesson? = null,
     onDismiss: () -> Unit,
     onSubmit: (AdminLessonDraft) -> Unit
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-    var videoUrl by rememberSaveable { mutableStateOf("") }
-    var order by rememberSaveable { mutableStateOf(initialOrder.toString()) }
-    var duration by rememberSaveable { mutableStateOf("") }
+    var title by rememberSaveable(initialLesson?.id) {
+        mutableStateOf(initialLesson?.title.orEmpty())
+    }
+    var description by rememberSaveable(initialLesson?.id) {
+        mutableStateOf(initialLesson?.description.orEmpty())
+    }
+    var videoUrl by rememberSaveable(initialLesson?.id) {
+        mutableStateOf(initialLesson?.videoUrl.orEmpty())
+    }
+    var order by rememberSaveable(initialLesson?.id) {
+        mutableStateOf((initialLesson?.order ?: initialOrder).toString())
+    }
+    var duration by rememberSaveable(initialLesson?.id) {
+        mutableStateOf(initialLesson?.durationSeconds?.toString().orEmpty())
+    }
     var validationError by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun submit() {
@@ -61,7 +71,9 @@ fun AdminLessonDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Agregar lección") },
+        title = {
+            Text(if (initialLesson == null) "Agregar lección" else "Editar lección")
+        },
         text = {
             Column(
                 modifier = Modifier
@@ -112,7 +124,13 @@ fun AdminLessonDialog(
         },
         confirmButton = {
             TextButton(onClick = ::submit, enabled = !isSaving) {
-                Text(if (isSaving) "Guardando…" else "Agregar")
+                Text(
+                    when {
+                        isSaving -> "Guardando…"
+                        initialLesson == null -> "Agregar"
+                        else -> "Guardar"
+                    }
+                )
             }
         },
         dismissButton = {

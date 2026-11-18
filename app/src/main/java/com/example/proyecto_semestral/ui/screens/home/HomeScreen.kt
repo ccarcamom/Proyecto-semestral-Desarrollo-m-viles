@@ -70,6 +70,8 @@ fun HomeScreen(
     onRecipeClick: (Long) -> Unit = {},
     onCourseClick: (Long) -> Unit = {},
     onLogoutClick: () -> Unit = {},
+    isAuthenticated: Boolean = false,
+    onLoginClick: () -> Unit = {},
     isAdmin: Boolean = false,
     onAdminClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -114,8 +116,14 @@ fun HomeScreen(
                         Text("Panel admin")
                     }
                 }
-                TextButton(onClick = onLogoutClick) {
-                    Text("Cerrar sesión")
+                if (isAuthenticated) {
+                    TextButton(onClick = onLogoutClick) {
+                        Text("Cerrar sesión")
+                    }
+                } else {
+                    TextButton(onClick = onLoginClick) {
+                        Text("Iniciar sesión")
+                    }
                 }
             }
 

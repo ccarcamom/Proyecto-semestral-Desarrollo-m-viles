@@ -2,10 +2,14 @@ package com.example.proyecto_semestral.data.remote
 
 import com.example.proyecto_semestral.data.dto.admin.AdminCourseDto
 import com.example.proyecto_semestral.data.dto.admin.ChangePublicationRequestDto
+import com.example.proyecto_semestral.data.dto.admin.ContactQueryDto
 import com.example.proyecto_semestral.data.dto.admin.CourseCategoryDto
 import com.example.proyecto_semestral.data.dto.admin.CreateCourseRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateLessonRequestDto
 import com.example.proyecto_semestral.data.dto.admin.CreateRecipeRequestDto
+import com.example.proyecto_semestral.data.dto.admin.SaveCategoryRequestDto
+import com.example.proyecto_semestral.data.dto.admin.UpdateContactStatusRequestDto
+import com.example.proyecto_semestral.data.dto.admin.UpdateLessonRequestDto
 import com.example.proyecto_semestral.data.dto.admin.UpdateRecipeRequestDto
 import com.example.proyecto_semestral.data.dto.admin.LessonDto
 import com.example.proyecto_semestral.data.dto.recipe.RecipeCategoryDto
@@ -86,6 +90,43 @@ interface AdminApi {
         @Body request: CreateLessonRequestDto
     ): LessonDto
 
+    @PUT("api/cursos/{cursoId}/lecciones/{id}")
+    suspend fun updateLesson(
+        @Path("cursoId") courseId: Long,
+        @Path("id") lessonId: Long,
+        @Body request: UpdateLessonRequestDto
+    ): LessonDto
+
+    @DELETE("api/cursos/{cursoId}/lecciones/{id}")
+    suspend fun deleteLesson(
+        @Path("cursoId") courseId: Long,
+        @Path("id") lessonId: Long
+    )
+
     @GET("api/categorias")
     suspend fun getCourseCategories(): List<CourseCategoryDto>
+
+    @POST("api/categorias")
+    suspend fun createCourseCategory(@Body request: SaveCategoryRequestDto): CourseCategoryDto
+
+    @PUT("api/categorias/{id}")
+    suspend fun updateCourseCategory(
+        @Path("id") id: Long,
+        @Body request: SaveCategoryRequestDto
+    ): CourseCategoryDto
+
+    @DELETE("api/categorias/{id}")
+    suspend fun deleteCourseCategory(@Path("id") id: Long)
+
+    @GET("api/consultas")
+    suspend fun getContactQueries(): List<ContactQueryDto>
+
+    @PATCH("api/consultas/{id}/estado")
+    suspend fun updateContactQueryStatus(
+        @Path("id") id: Long,
+        @Body request: UpdateContactStatusRequestDto
+    ): ContactQueryDto
+
+    @DELETE("api/consultas/{id}")
+    suspend fun deleteContactQuery(@Path("id") id: Long)
 }

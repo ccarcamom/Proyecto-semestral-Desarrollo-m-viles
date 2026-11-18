@@ -15,17 +15,19 @@ La app incluye autenticación con JWT, almacenamiento seguro del token, listado 
 ## Funcionalidades
 
 - Registro e inicio de sesión con JWT.
+- Exploración del catálogo como invitado; el inicio de sesión es opcional para recetas y cursos.
 - Restauración de sesión y cierre de sesión.
 - Inicio con accesos directos a recetas y cursos.
 - Inicio con recetas y cursos publicados obtenidos desde sus microservicios.
 - Exploración y búsqueda de recetas contra el microservicio de recetas.
-- Filtros por recetas o cursos.
+- Filtros por recetas o cursos y por categoría.
+- Paginación con carga incremental de recetas y cursos.
 - Detalle de receta con ingredientes, preparación e insumos.
 - Cursos publicados, detalle, objetivos y lecciones obtenidos desde `ms-cursos`.
 - Reproducción de los videos reales configurados en cada lección.
 - Formulario de contacto conectado con `ms-contacto`.
 - Navegación implementada con Navigation Compose.
-- **Panel de administración** para crear, editar y eliminar recetas y cursos.
+- **Panel de administración** para crear, editar y eliminar recetas y cursos, gestionar lecciones, categorías y consultas de contacto.
 
 ## Datos de demostración
 
@@ -83,7 +85,7 @@ Rol:        ADMIN
 
 La validación se hace en dos niveles:
 
-1. **Frontend:** el botón `Panel admin` solo aparece si el usuario autenticado tiene rol `ADMIN` **y** su correo es exactamente `admin@mastermartini.cl`.
+1. **Frontend:** el botón `Panel admin` solo aparece si el usuario autenticado tiene rol `ADMIN`.
 2. **Backend:** el Gateway exige `ROLE_ADMIN` en `/api/v1/admin/**` y en las escrituras de cursos y categorías.
 
 Si un usuario normal inicia sesión, no ve ninguna entrada al panel. Si intenta llamar a los endpoints protegidos, recibe `403 Forbidden`.
@@ -170,9 +172,9 @@ ui/screens/admin/AdminFormComponents.kt
 
 ## Privacidad y almacenamiento
 
-- El token JWT se guarda con **DataStore Preferences**.
+- El token JWT se guarda cifrado con **AES/GCM** en DataStore Preferences; la clave permanece en **Android Keystore**.
 - El token se envía automáticamente como `Authorization: Bearer` mediante un interceptor de OkHttp.
-- Si el backend responde `401`, la sesión se limpia y se vuelve al login.
+- Si el backend responde `401`, la sesión se limpia y la app vuelve al inicio como invitado.
 - No se almacenan imágenes del dispositivo ni datos sensibles adicionales.
 
 ## Permisos

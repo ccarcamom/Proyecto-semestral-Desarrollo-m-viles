@@ -1,9 +1,12 @@
 package com.example.proyecto_semestral.domain.repository
 
+import com.example.proyecto_semestral.model.recipe.RecipeCategory
 import com.example.proyecto_semestral.model.recipe.RecipeDetail
 import com.example.proyecto_semestral.model.recipe.RecipePage
 
 interface RecipeRepository {
+    suspend fun getCategories(): List<RecipeCategory>
+
     suspend fun getRecipes(
         query: String? = null,
         categoryId: Long? = null,

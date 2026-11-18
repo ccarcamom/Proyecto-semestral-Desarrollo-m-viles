@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.proyecto_semestral.domain.repository.AdminRepository
 import com.example.proyecto_semestral.domain.repository.AdminRepositoryException
 import com.example.proyecto_semestral.model.admin.AdminCategory
+import com.example.proyecto_semestral.model.admin.AdminContactQuery
 import com.example.proyecto_semestral.model.admin.AdminCourse
 import com.example.proyecto_semestral.model.admin.AdminCourseDraft
 import com.example.proyecto_semestral.model.admin.AdminLessonDraft
@@ -24,6 +25,7 @@ data class AdminUiState(
     val courses: List<AdminCourse> = emptyList(),
     val recipeCategories: List<AdminCategory> = emptyList(),
     val courseCategories: List<AdminCategory> = emptyList(),
+    val contactQueries: List<AdminContactQuery> = emptyList(),
     val recipeForEdit: AdminRecipe? = null,
     val isLoadingEditor: Boolean = false,
     val error: String? = null,
@@ -45,13 +47,16 @@ class AdminViewModel(
                 val recipeCategories = repository.getRecipeCategories()
                 val courses = repository.getCourses()
                 val courseCategories = repository.getCourseCategories()
+                val contactQueries = runCatching { repository.getContactQueries() }
+                    .getOrDefault(emptyList())
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         recipes = recipes,
                         recipeCategories = recipeCategories,
                         courses = courses,
-                        courseCategories = courseCategories
+                        courseCategories = courseCategories,
+                        contactQueries = contactQueries
                     )
                 }
             } catch (exception: AdminRepositoryException) {
@@ -147,6 +152,56 @@ class AdminViewModel(
         }
     }
 
+    fun updateLesson(courseId: Long, lessonId: Long, draft: AdminLessonDraft) {
+        runAction("Lección actualizada correctamente.") {
+            repository.updateLesson(courseId, lessonId, draft)
+        }
+    }
+
+    fun deleteLesson(courseId: Long, lessonId: Long) {
+        runAction("Lección eliminada.") {
+            repository.deleteLesson(courseId, lessonId)
+        }
+    }
+
+    fun createCourseCategory(name: String) {
+        runAction("Categoría creada correctamente.") {
+            repository.createCourseCategory(name)
+            refreshCategories()
+        }
+    }
+
+    fun updateCourseCategory(id: Long, name: String) {
+        runAction("Categoría actualizada correctamente.") {
+            repository.updateCourseCategory(id, name)
+            refreshCategories()
+        }
+    }
+
+    fun deleteCourseCategory(id: Long) {
+        runAction("Categoría eliminada.") {
+            repository.deleteCourseCategory(id)
+            refreshCategories()
+        }
+    }
+
+    fun updateContactQueryStatus(id: Long, status: String) {
+        val message = when (status) {
+            "EN_PROCESO" -> "Consulta marcada en proceso."
+            "ATENDIDA" -> "Consulta marcada como atendida."
+            else -> "Consulta reabierta."
+        }
+        runAction(message) {
+            repository.updateContactQueryStatus(id, status)
+        }
+    }
+
+    fun deleteContactQuery(id: Long) {
+        runAction("Consulta eliminada.") {
+            repository.deleteContactQuery(id)
+        }
+    }
+
     fun clearFeedback() {
         _uiState.update { it.copy(error = null, message = null) }
     }
@@ -175,7 +230,20 @@ class AdminViewModel(
     private suspend fun refreshLists() {
         val recipes = repository.getRecipes()
         val courses = repository.getCourses()
-        _uiState.update { it.copy(recipes = recipes, courses = courses) }
+        val contactQueries = runCatching { repository.getContactQueries() }
+            .getOrDefault(_uiState.value.contactQueries)
+        _uiState.update {
+            it.copy(
+                recipes = recipes,
+                courses = courses,
+                contactQueries = contactQueries
+            )
+        }
+    }
+
+    private suspend fun refreshCategories() {
+        val courseCategories = repository.getCourseCategories()
+        _uiState.update { it.copy(courseCategories = courseCategories) }
     }
 
     companion object {

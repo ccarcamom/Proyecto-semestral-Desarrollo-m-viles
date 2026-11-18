@@ -57,6 +57,12 @@ fun AdminRecipeForm(
     var description by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.description.orEmpty()) }
     var duration by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.duration.orEmpty()) }
     var yield by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.yield.orEmpty()) }
+    var suppliesTitle by rememberSaveable(initialRecipe?.id) {
+        mutableStateOf(initialRecipe?.suppliesTitle.orEmpty())
+    }
+    var suppliesDescription by rememberSaveable(initialRecipe?.id) {
+        mutableStateOf(initialRecipe?.suppliesDescription.orEmpty())
+    }
     var videoUrl by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.videoUrl.orEmpty()) }
     var published by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.published ?: true) }
     var categoryId by rememberSaveable(initialRecipe?.id) { mutableStateOf(initialRecipe?.categoryId) }
@@ -113,6 +119,8 @@ fun AdminRecipeForm(
                 categoryId = selectedCategory,
                 duration = duration,
                 yield = yield,
+                suppliesTitle = suppliesTitle,
+                suppliesDescription = suppliesDescription,
                 videoUrl = videoUrl,
                 image = selectedImage,
                 published = published,
@@ -175,6 +183,20 @@ fun AdminRecipeForm(
             value = yield,
             onValueChange = { yield = it },
             label = "Rendimiento (ej: 12 porciones)"
+        )
+        Spacer(Modifier.height(12.dp))
+        AdminSectionTitle("Insumos para tu creación")
+        AdminTextField(
+            value = suppliesTitle,
+            onValueChange = { suppliesTitle = it },
+            label = "Título de insumos (opcional)"
+        )
+        Spacer(Modifier.height(12.dp))
+        AdminTextField(
+            value = suppliesDescription,
+            onValueChange = { suppliesDescription = it },
+            label = "Descripción de insumos (opcional)",
+            singleLine = false
         )
         Spacer(Modifier.height(12.dp))
         AdminTextField(

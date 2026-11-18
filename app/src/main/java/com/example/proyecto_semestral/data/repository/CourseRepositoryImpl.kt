@@ -6,6 +6,7 @@ import com.example.proyecto_semestral.data.dto.course.CourseDetailDto
 import com.example.proyecto_semestral.data.remote.CourseApi
 import com.example.proyecto_semestral.domain.repository.CourseRepository
 import com.example.proyecto_semestral.domain.repository.CourseRepositoryException
+import com.example.proyecto_semestral.model.course.CourseCategory
 import com.example.proyecto_semestral.model.course.CoursePage
 import com.example.proyecto_semestral.model.course.CourseSummary
 import com.example.proyecto_semestral.model.course.CourseDetail
@@ -17,6 +18,24 @@ class CourseRepositoryImpl(
     private val api: CourseApi,
     private val gatewayBaseUrl: String = BuildConfig.API_BASE_URL
 ) : CourseRepository {
+
+    override suspend fun getCategories(): List<CourseCategory> = try {
+        api.getCategories().map { CourseCategory(id = it.id, name = it.nombre) }
+    } catch (exception: HttpException) {
+        throw CourseRepositoryException(
+            if (exception.code() >= 500) {
+                "El servidor de cursos no está disponible."
+            } else {
+                "No se pudieron cargar las categorías de cursos."
+            },
+            exception
+        )
+    } catch (exception: IOException) {
+        throw CourseRepositoryException(
+            "No se pudo conectar con el servidor de cursos.",
+            exception
+        )
+    }
 
     override suspend fun getCourses(
         query: String?,

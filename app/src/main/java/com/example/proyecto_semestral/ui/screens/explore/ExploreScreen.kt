@@ -3,8 +3,10 @@ package com.example.proyecto_semestral.ui.screens.explore
 import androidx.compose.foundation.text.BasicTextField
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,13 +73,33 @@ fun ExploreScreen(
 ) {
     val viewModel: RecipeListViewModel = viewModel(factory = viewModelFactory)
     val recipeState by viewModel.uiState.collectAsState()
+    val recipeCategories by viewModel.categories.collectAsState()
     val courseViewModel: CourseListViewModel = viewModel(factory = courseViewModelFactory)
     val courseState by courseViewModel.uiState.collectAsState()
+    val courseCategories by courseViewModel.categories.collectAsState()
 
-    LaunchedEffect(searchQuery) {
+    var selectedRecipeCategoryId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedCourseCategoryId by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCategories()
+        courseViewModel.loadCategories()
+    }
+
+    LaunchedEffect(searchQuery, selectedRecipeCategoryId) {
         delay(300)
-        viewModel.loadRecipes(query = searchQuery)
-        courseViewModel.loadCourses(query = searchQuery)
+        viewModel.loadRecipes(
+            query = searchQuery,
+            categoryId = selectedRecipeCategoryId
+        )
+    }
+
+    LaunchedEffect(searchQuery, selectedCourseCategoryId) {
+        delay(300)
+        courseViewModel.loadCourses(
+            query = searchQuery,
+            categoryId = selectedCourseCategoryId
+        )
     }
 
     val courseItems = (courseState as? CourseListUiState.Success)
@@ -169,6 +194,26 @@ fun ExploreScreen(
                 onFilterSelected = onFilterSelected
             )
 
+            if (recipesAreVisible && recipeCategories.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(18.dp))
+                CategoryFilterChips(
+                    title = "Categoría de receta",
+                    categories = recipeCategories.map { it.id to it.name },
+                    selectedId = selectedRecipeCategoryId,
+                    onSelect = { selectedRecipeCategoryId = it }
+                )
+            }
+
+            if (coursesAreVisible && courseCategories.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(18.dp))
+                CategoryFilterChips(
+                    title = "Categoría de curso",
+                    categories = courseCategories.map { it.id to it.name },
+                    selectedId = selectedCourseCategoryId,
+                    onSelect = { selectedCourseCategoryId = it }
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
             if (recipesAreVisible) {
                 when (val state = recipeState) {
@@ -219,7 +264,13 @@ fun ExploreScreen(
                             when (item.type) {
                                 ContentFilter.Recipes -> item.id.toLongOrNull()?.let(onRecipeClick)
                                 ContentFilter.Courses -> item.id.toLongOrNull()?.let(onCourseClick)
-                                ContentFilter.All -> Unit
+                                ContentFilter.All -> item.id.toLongOrNull()?.let { id ->
+                                    if (item.eyebrow.equals("CURSO", ignoreCase = true)) {
+                                        onCourseClick(id)
+                                    } else {
+                                        onRecipeClick(id)
+                                    }
+                                }
                             }
                         }
                     )
@@ -229,9 +280,117 @@ fun ExploreScreen(
                 }
             }
 
+            if (recipesAreVisible) {
+                val recipeSuccess = recipeState as? RecipeListUiState.Success
+                if (recipeSuccess != null &&
+                    (recipeSuccess.hasMore || recipeSuccess.isLoadingMore)
+                ) {
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Button(
+                        onClick = viewModel::loadMore,
+                        enabled = !recipeSuccess.isLoadingMore,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            if (recipeSuccess.isLoadingMore) {
+                                "Cargando recetas…"
+                            } else {
+                                "Cargar más recetas"
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (coursesAreVisible) {
+                val courseSuccess = courseState as? CourseListUiState.Success
+                if (courseSuccess != null &&
+                    (courseSuccess.hasMore || courseSuccess.isLoadingMore)
+                ) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = courseViewModel::loadMore,
+                        enabled = !courseSuccess.isLoadingMore,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            if (courseSuccess.isLoadingMore) {
+                                "Cargando cursos…"
+                            } else {
+                                "Cargar más cursos"
+                            }
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+private fun CategoryFilterChips(
+    title: String,
+    categories: List<Pair<Long, String>>,
+    selectedId: Long?,
+    onSelect: (Long?) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelLarge
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            CategoryChip(
+                text = "Todas",
+                selected = selectedId == null,
+                onClick = { onSelect(null) }
+            )
+            categories.forEach { (id, name) ->
+                CategoryChip(
+                    text = name,
+                    selected = selectedId == id,
+                    onClick = { onSelect(id) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Text(
+        text = text,
+        color = if (selected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        style = MaterialTheme.typography.labelLarge,
+        modifier = Modifier
+            .background(
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                shape = RoundedCornerShape(percent = 50)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    )
 }
 
 @Composable
